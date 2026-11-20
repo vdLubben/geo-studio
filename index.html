@@ -1,0 +1,2831 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoStudio — AK in Beeld | Interactieve Uitleg-Animaties & Kaarten</title>
+  
+  <!-- Favicon: Donkerblauw kompas -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231D4E89'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23FFFFFF' stroke-width='4'/%3E%3Cpolygon points='32,20 39,32 32,44 25,32' fill='%23FFFFFF' transform='rotate(25 32 32)'/%3E%3C/svg%3E">
+  
+  <!-- Typografie: Ranade (Fontshare CDN) en Neuton (Google Fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=ranade@300,400,500,600,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Neuton:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ==========================================================================
+       1. GLOBALE VARIABELEN & RESET
+       ========================================================================== */
+    :root {
+      --bg-warm: #F6F5F0;
+      --bg-card: #FFFFFF;
+      --border-subtle: #E2E0D8;
+      --border-dark: #C5C2B6;
+      
+      --text-main: #141E30;
+      --text-muted: #576574;
+      --text-light: #8395A7;
+      
+      /* Aardse accentkleuren */
+      --ocean-blue: #1D4E89;
+      --ocean-blue-hover: #153A66;
+      --ocean-blue-light: #EBF2FA;
+      
+      --terracotta: #C85A32;
+      --terracotta-hover: #A74623;
+      --terracotta-light: #FBEFEA;
+      
+      /* Tijdatlas specifieke kleur voor actieve markeringen */
+      --active-red: #9E2A2B;
+      --active-red-hover: #7E1E20;
+      --active-red-light: #F7EAEB;
+      
+      --earth-green: #2E5A44;
+      --ochre-gold: #C07D1E;
+      
+      /* Thema-specifieke accentkleuren */
+      --theme-1-color: #1E3A8A;
+      --theme-2-color: #0284C7;
+      --theme-3-color: #854D0E;
+      --theme-4-color: #9E2A2B;
+      --theme-5-color: #047857;
+      --theme-6-color: #6D28D9;
+      --theme-7-color: #1D4E89;
+      --theme-8-color: #C2410C;
+      --theme-9-color: #9A3412;
+      --theme-10-color: #0F766E;
+      
+      --shadow-sm: 0 2px 6px rgba(20, 30, 48, 0.05);
+      --shadow-md: 0 8px 22px rgba(20, 30, 48, 0.08);
+      --shadow-lg: 0 16px 36px rgba(20, 30, 48, 0.14);
+      
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --radius-xl: 22px;
+      
+      --font-body: 'Ranade', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-title: 'Neuton', Georgia, serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    body {
+      background-color: var(--bg-warm);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      line-height: 1.55;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Subtiel cartografisch raster */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle at 1px 1px, rgba(20, 30, 48, 0.035) 1px, transparent 0);
+      background-size: 32px 32px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ==========================================================================
+       2. TOPBAR HEADER
+       ========================================================================== */
+    .top-header {
+      background: rgba(246, 245, 240, 0.96);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 12px 28px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-compass-icon {
+      width: 42px;
+      height: 42px;
+      background: var(--ocean-blue);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(29, 78, 137, 0.22);
+      flex-shrink: 0;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--terracotta);
+    }
+
+    .brand-title {
+      font-family: var(--font-title);
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+    }
+
+    .header-meta-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .header-badge-tag {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--active-red);
+      background: var(--active-red-light);
+      border: 1px solid rgba(158, 42, 43, 0.2);
+      padding: 5px 14px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ==========================================================================
+       3. INTERACTIEVE PANORAMISCHE THEMA-AFBEELDING BOVENAAN
+       ========================================================================== */
+    .panorama-section {
+      width: 100%;
+      padding: 24px 28px 12px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .panorama-container {
+      position: relative;
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 0 12px 36px rgba(20, 30, 48, 0.12);
+      border: 1px solid var(--border-subtle);
+      background: #EAE6DF;
+    }
+
+    .panorama-image {
+      width: 100%;
+      height: auto;
+      display: block;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    /* Hotspots: procentueel gepositioneerd conform opgave - VOLLEDIG ONZICHTBAAR ZONDER KADERS */
+    .panorama-hotspot {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      width: 11%;
+      height: 8.5%;
+      border: none !important;
+      background: transparent !important;
+      outline: none !important;
+      box-shadow: none !important;
+      cursor: pointer;
+      z-index: 15;
+      text-decoration: none;
+      display: block;
+    }
+
+    .panorama-hotspot:hover,
+    .panorama-hotspot:focus,
+    .panorama-hotspot:active {
+      border: none !important;
+      background: transparent !important;
+      outline: none !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    /* Statusbolletje: strak en direct rechtsboven op de bordjes */
+    .hotspot-pin {
+      position: absolute;
+      top: -3px;
+      right: -3px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    .panorama-hotspot:hover .hotspot-pin {
+      transform: scale(1.22);
+    }
+
+    .hotspot-pin.active {
+      background: var(--active-red);
+      border: 1.5px solid #FFFFFF;
+    }
+
+    .hotspot-pin.empty {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1.5px solid var(--border-dark);
+      color: var(--text-muted);
+    }
+
+    .hotspot-tooltip {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      background: #141E30;
+      color: #FFFFFF;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.18s ease;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      z-index: 25;
+    }
+
+    .hotspot-tooltip::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: #141E30;
+    }
+
+    .panorama-hotspot:hover .hotspot-tooltip {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .panorama-legend {
+      max-width: 1400px;
+      margin: 10px auto 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      padding: 6px 12px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .legend-dot-active {
+      background: var(--active-red);
+      box-shadow: 0 0 0 2px rgba(158, 42, 43, 0.2);
+    }
+
+    .legend-dot-empty {
+      background: #FFFFFF;
+      border: 2px solid var(--border-dark);
+    }
+
+    /* ==========================================================================
+       4. TIJDATLAS LAAG 1: SECTIE "ONDERWERPEN"
+       ========================================================================== */
+    .onderwerpen-section {
+      max-width: 1400px;
+      margin: 20px auto 26px;
+      padding: 0 28px;
+      text-align: center;
+    }
+
+    .onderwerpen-title {
+      font-family: var(--font-title);
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .onderwerpen-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .topic-pills-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .topic-pill {
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 7px 16px;
+      border-radius: 9999px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      user-select: none;
+      box-shadow: var(--shadow-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .topic-pill:hover {
+      border-color: var(--border-dark);
+      background: #FFFFFF;
+      transform: translateY(-1px);
+    }
+
+    .topic-pill.active {
+      background: var(--active-red);
+      border-color: var(--active-red);
+      color: #FFFFFF;
+      font-weight: 600;
+      box-shadow: 0 2px 10px rgba(158, 42, 43, 0.3);
+    }
+
+    .topic-pill .pill-count {
+      font-size: 0.75rem;
+      opacity: 0.85;
+      font-weight: 600;
+    }
+
+    .last-added-row {
+      font-size: 0.85rem;
+      font-style: italic;
+      color: var(--text-muted);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .last-added-label {
+      font-weight: 600;
+      color: var(--text-main);
+      font-style: normal;
+    }
+
+    .last-added-link {
+      background: none;
+      border: none;
+      color: var(--ocean-blue);
+      text-decoration: underline;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-style: italic;
+      padding: 0;
+      transition: color 0.15s ease;
+    }
+
+    .last-added-link:hover {
+      color: var(--active-red);
+    }
+
+    .last-added-sep {
+      color: var(--border-dark);
+      font-style: normal;
+    }
+
+    /* ==========================================================================
+       5. TIJDATLAS LAAG 2: PLATTEGROND-BALK MET CIRKELS (1 T/M 10)
+       ========================================================================== */
+    .chapter-circles-bar {
+      max-width: 1400px;
+      margin: 0 auto 18px;
+      padding: 0 28px;
+    }
+
+    .chapter-circles-track {
+      background: #EAE6DF;
+      border: 1px solid var(--border-subtle);
+      border-radius: 9999px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
+      overflow-x: auto;
+    }
+
+    .ch-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    .ch-circle-active {
+      background: var(--active-red);
+      color: #FFFFFF;
+      border: 2px solid var(--active-red);
+      box-shadow: 0 2px 6px rgba(158, 42, 43, 0.3);
+    }
+
+    .ch-circle-active:hover {
+      background: var(--active-red-hover);
+      border-color: var(--active-red-hover);
+      transform: scale(1.12);
+      box-shadow: 0 4px 12px rgba(158, 42, 43, 0.4);
+    }
+
+    .ch-circle-empty {
+      background: #FFFFFF;
+      color: var(--text-light);
+      border: 2px solid var(--border-dark);
+    }
+
+    .ch-circle-empty:hover {
+      border-color: var(--text-muted);
+      color: var(--text-main);
+      transform: scale(1.08);
+    }
+
+    /* ==========================================================================
+       6. TIJDATLAS LAAG 3: FILTER- EN ZOEKBALK MET DYNAMISCHE TOTAALTELLER
+       ========================================================================== */
+    .filter-controls-bar {
+      max-width: 1400px;
+      margin: 0 auto 36px;
+      padding: 12px 28px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .filter-dropdown-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .select-wrapper {
+      position: relative;
+    }
+
+    .custom-select {
+      appearance: none;
+      -webkit-appearance: none;
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text-main);
+      background: #FDFCF9;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 8px 32px 8px 12px;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.18s ease;
+    }
+
+    .custom-select:focus {
+      border-color: var(--ocean-blue);
+      box-shadow: 0 0 0 3px rgba(29, 78, 137, 0.12);
+    }
+
+    .select-wrapper::after {
+      content: "";
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-field-wrapper {
+      position: relative;
+      flex: 1 1 260px;
+      max-width: 380px;
+    }
+
+    .search-field-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-light);
+      pointer-events: none;
+    }
+
+    .main-search-input {
+      width: 100%;
+      padding: 8px 14px 8px 36px;
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      color: var(--text-main);
+      background: #FDFCF9;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      outline: none;
+      transition: all 0.18s ease;
+    }
+
+    .main-search-input:focus {
+      border-color: var(--ocean-blue);
+      box-shadow: 0 0 0 3px rgba(29, 78, 137, 0.12);
+    }
+
+    .search-clear-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-light);
+      cursor: pointer;
+      display: none;
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 2px 4px;
+    }
+
+    .filter-summary-tally {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-style: italic;
+      white-space: nowrap;
+    }
+
+    /* ==========================================================================
+       7. HOOFDCONTAINER MET DE 10 HOOFDSTUKKEN (BASISBOEK AARDRIJKSKUNDE)
+       ========================================================================== */
+    .main-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 28px 80px;
+      position: relative;
+      z-index: 1;
+      flex-grow: 1;
+      width: 100%;
+    }
+
+    .chapter-section {
+      margin-bottom: 56px;
+      scroll-margin-top: 90px;
+    }
+
+    .chapter-header {
+      margin-bottom: 22px;
+      padding-bottom: 14px;
+      border-bottom: 1.5px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .chapter-title-group {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Cijfer alleen in de gekleurde cirkelbadge */
+    .chapter-number-circle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 9999px;
+      background: var(--active-red);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+
+    .chapter-heading {
+      font-family: var(--font-title);
+      font-size: 1.85rem;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.01em;
+    }
+
+    .chapter-basisboek-badge {
+      display: inline-flex;
+      align-items: center;
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 3px 9px;
+      background: #FCF6EC;
+      color: var(--ochre-gold);
+      border: 1px solid rgba(192, 125, 30, 0.25);
+      border-radius: 9999px;
+    }
+
+    /* Paragrafen overzicht per hoofdstuk: strakke, klikbare pills met interactieve states */
+    .chapter-paragrafen-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 0;
+    }
+
+    .para-pill {
+      display: inline-flex;
+      align-items: center;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      color: var(--text-main);
+      background: #EDEAE3;
+      border: 1px solid var(--border-subtle);
+      padding: 5px 11px;
+      border-radius: 6px;
+      font-weight: 500;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .para-pill:hover {
+      background: #FFFFFF;
+      border-color: var(--ocean-blue);
+      color: var(--ocean-blue);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(29, 78, 137, 0.14);
+    }
+
+    .para-pill:active,
+    .para-pill.active {
+      background: var(--ocean-blue);
+      border-color: var(--ocean-blue);
+      color: #FFFFFF;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(29, 78, 137, 0.25);
+    }
+
+    .para-pill.has-module {
+      background: #FCECEE;
+      border-color: rgba(158, 42, 43, 0.28);
+      color: var(--active-red);
+      font-weight: 600;
+    }
+
+    .para-pill.has-module:hover {
+      background: var(--active-red);
+      border-color: var(--active-red);
+      color: #FFFFFF;
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(158, 42, 43, 0.3);
+    }
+
+    .para-pill.has-module:active,
+    .para-pill.has-module.active {
+      background: var(--active-red);
+      border-color: var(--active-red);
+      color: #FFFFFF;
+      box-shadow: 0 3px 10px rgba(158, 42, 43, 0.35);
+    }
+
+    /* Grid voor animatietegels */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 24px;
+    }
+
+    /* ==========================================================================
+       8. ANIMATIE-TEGEL (MET 16:9 LIVE PREVIEW & PARAGRAAF-TAGS)
+       ========================================================================== */
+    .anim-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      border-top: 4px solid var(--card-accent, var(--ocean-blue));
+    }
+
+    .anim-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-dark);
+      border-top-color: var(--card-accent, var(--ocean-blue));
+    }
+
+    .anim-card:focus-visible {
+      outline: 3px solid var(--ocean-blue);
+      outline-offset: 2px;
+    }
+
+    .card-preview-container {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      position: relative;
+      overflow: hidden;
+      background: #ECEAE4;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .card-live-frame {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 400%;
+      height: 400%;
+      border: none;
+      transform: scale(0.25);
+      transform-origin: top left;
+      pointer-events: none;
+      background: #FFFFFF;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform;
+    }
+
+    .anim-card:hover .card-live-frame {
+      transform: scale(0.258); /* ~1.03x zoom op de 16:9 preview */
+    }
+
+    /* Rustige badges in de hoek van de preview */
+    .preview-badges-overlay {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 5px;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .p-badge-bb {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(20, 30, 48, 0.88);
+      color: #FFD166;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      letter-spacing: 0.02em;
+    }
+
+    .p-badge-para {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(158, 42, 43, 0.92);
+      color: #FFFFFF;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      letter-spacing: 0.02em;
+    }
+
+    .p-badge-level {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.94);
+      color: var(--text-main);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-preview-hover {
+      position: absolute;
+      inset: 0;
+      background: rgba(20, 30, 48, 0.28);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 6;
+    }
+
+    .anim-card:hover .card-preview-hover {
+      opacity: 1;
+    }
+
+    .play-pill {
+      background: #FFFFFF;
+      color: var(--ocean-blue);
+      font-size: 0.88rem;
+      font-weight: 700;
+      padding: 9px 18px;
+      border-radius: 9999px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transform: translateY(8px);
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .anim-card:hover .play-pill {
+      transform: translateY(0);
+    }
+
+    .card-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+    }
+
+    .card-theme-tag {
+      font-size: 0.73rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--card-accent, var(--ocean-blue));
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .card-title {
+      font-family: var(--font-body);
+      font-size: 1.18rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+
+    .card-desc {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin-bottom: 18px;
+      flex-grow: 1;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 14px;
+      border-top: 1px solid #F0EEE8;
+    }
+
+    .card-action-link {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--card-accent, var(--ocean-blue));
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: gap 0.15s ease;
+    }
+
+    .anim-card:hover .card-action-link {
+      gap: 10px;
+    }
+
+    .card-submap-tag {
+      font-size: 0.72rem;
+      color: var(--text-light);
+      background: var(--bg-warm);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    /* Lege status voor hoofdstukken */
+    .empty-chapter-box {
+      background: #FAF9F5;
+      border: 1px dashed var(--border-dark);
+      border-radius: var(--radius-lg);
+      padding: 32px 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--text-muted);
+    }
+
+    .empty-chapter-icon {
+      width: 40px;
+      height: 40px;
+      color: var(--border-dark);
+    }
+
+    .empty-chapter-text {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .empty-chapter-sub {
+      font-size: 0.82rem;
+      color: var(--text-light);
+      max-width: 500px;
+    }
+
+    /* Geen zoekresultaten */
+    .no-results-state {
+      padding: 60px 20px;
+      text-align: center;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      margin: 20px 0;
+    }
+
+    /* ==========================================================================
+       9. VOLLEDIG SCHERM OVERLAY IFRAME LESVENSTER
+       ========================================================================== */
+    .viewer-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: var(--bg-warm);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .viewer-overlay.active {
+      display: flex;
+    }
+
+    .viewer-topbar {
+      height: 60px;
+      background: #141E30;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+      border-bottom: 2px solid var(--terracotta);
+    }
+
+    .viewer-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .viewer-btn {
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.1);
+      color: #FFFFFF;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.18s ease;
+      user-select: none;
+      text-decoration: none;
+    }
+
+    .viewer-btn:hover {
+      background: rgba(255, 255, 255, 0.22);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .viewer-btn-back {
+      background: var(--terracotta);
+      border-color: var(--terracotta);
+    }
+
+    .viewer-btn-back:hover {
+      background: var(--terracotta-hover);
+      border-color: var(--terracotta-hover);
+    }
+
+    .viewer-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    .viewer-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 480px;
+    }
+
+    .viewer-bb-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 4px;
+      color: #FFD166;
+    }
+
+    .viewer-para-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      background: rgba(158, 42, 43, 0.85);
+      border-radius: 4px;
+      color: #FFFFFF;
+    }
+
+    .viewer-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .viewer-iframe-container {
+      position: relative;
+      flex-grow: 1;
+      width: 100%;
+      height: calc(100vh - 60px);
+      background: #FFFFFF;
+    }
+
+    .viewer-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    .viewer-loader {
+      position: absolute;
+      inset: 0;
+      background: var(--bg-warm);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 5;
+      transition: opacity 0.3s ease;
+    }
+
+    .viewer-spinner {
+      width: 44px;
+      height: 44px;
+      border: 4px solid var(--border-subtle);
+      border-top-color: var(--ocean-blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ==========================================================================
+       10. FOOTER
+       ========================================================================== */
+    .atlas-footer {
+      border-top: 1px solid var(--border-subtle);
+      background: #FFFFFF;
+      padding: 28px;
+      margin-top: auto;
+    }
+
+    .footer-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 16px;
+    }
+
+    .footer-link {
+      color: var(--ocean-blue);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .footer-link:hover {
+      text-decoration: underline;
+    }
+
+    .footer-brand-col {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .footer-title {
+      font-size: 0.88rem;
+      color: var(--text-main);
+    }
+
+    .footer-credits {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      letter-spacing: 0.01em;
+    }
+
+    .footer-btn-colofon {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--ocean-blue-light);
+      border: 1px solid rgba(29, 78, 137, 0.2);
+      color: var(--ocean-blue);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .footer-btn-colofon:hover {
+      background: var(--ocean-blue);
+      color: #FFFFFF;
+      border-color: var(--ocean-blue);
+    }
+
+    .header-info-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 5px 11px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .header-info-pill:hover {
+      background: var(--ocean-blue-light);
+      border-color: var(--ocean-blue);
+      color: var(--ocean-blue);
+    }
+
+    .info-icon-circle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--ocean-blue);
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    /* Colofon Modal */
+    .colofon-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(20, 30, 48, 0.65);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+
+    .colofon-modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .colofon-modal-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      max-width: 580px;
+      width: 100%;
+      box-shadow: 0 20px 48px rgba(0,0,0,0.22);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalSlideUp {
+      from { transform: translateY(16px) scale(0.98); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .colofon-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: #FAFAF7;
+    }
+
+    .colofon-header-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .colofon-icon-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--ocean-blue);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .colofon-title {
+      font-family: var(--font-title);
+      font-size: 1.25rem;
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    .colofon-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin: 2px 0 0;
+    }
+
+    .colofon-close-btn {
+      background: transparent;
+      border: none;
+      font-size: 1.6rem;
+      color: var(--text-light);
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+      border-radius: 4px;
+      transition: color 0.15s ease;
+    }
+
+    .colofon-close-btn:hover {
+      color: var(--text-main);
+    }
+
+    .colofon-modal-body {
+      padding: 22px 24px;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      line-height: 1.55;
+    }
+
+    .colofon-section h4 {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ocean-blue);
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .colofon-highlight {
+      background: var(--ocean-blue-light);
+      border: 1px solid rgba(29, 78, 137, 0.15);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+
+    .colofon-license-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .license-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .license-badge {
+      display: inline-block;
+      padding: 3px 7px;
+      border-radius: 4px;
+      background: #E2E8F0;
+      color: #334155;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    .license-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin: 2px 0 0;
+    }
+
+    .colofon-credit-line {
+      margin-top: 6px;
+      padding: 10px 12px;
+      background: #F1F5F9;
+      border-radius: 6px;
+      border-left: 3px solid var(--ocean-blue);
+    }
+
+    .colofon-credit-line code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.82rem;
+      color: var(--text-main);
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .colofon-modal-footer {
+      padding: 14px 24px;
+      background: #FAFAF7;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    /* ==========================================================================
+       11. RESPONSIVE DESIGN (DIGIBORD, TABLET, MOBIEL)
+       ========================================================================== */
+    @media (max-width: 1024px) {
+      .viewer-title {
+        max-width: 240px;
+      }
+      .filter-controls-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .filter-dropdown-group {
+        width: 100%;
+      }
+      .search-field-wrapper {
+        max-width: 100%;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header-inner {
+        padding: 10px 16px;
+      }
+      .brand-title {
+        font-size: 1.4rem;
+      }
+      .panorama-section {
+        padding: 14px 16px 8px;
+      }
+      .onderwerpen-section,
+      .chapter-circles-bar,
+      .filter-controls-bar,
+      .main-container {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+      .chapter-circles-track {
+        justify-content: flex-start;
+      }
+      .panorama-legend {
+        flex-direction: column;
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       TOPHEADER: MERK & STATUS
+       ========================================================================== -->
+  <header class="top-header">
+    <div class="header-inner">
+      <div class="brand-group">
+        <div class="brand-compass-icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="#F6F5F0"></polygon>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-badge">AK in Beeld</div>
+          <h1 class="brand-title">GeoStudio</h1>
+        </div>
+      </div>
+
+      <div class="header-meta-group">
+        <button id="headerInfoBtn" class="header-info-pill" title="Colofon en licentie (CC BY-SA 4.0 / MIT)">
+          <span class="info-icon-circle">ⓘ</span>
+          <span>Over GeoStudio</span>
+        </button>
+        <span class="header-badge-tag">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--active-red); display: inline-block;"></span>
+          <strong id="headerTotalCounter">7</strong> interactieve modules
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       1. INTERACTIEVE PANORAMISCHE THEMA-AFBEELDING MET 10 KLIKBARE HOTSPOTS
+       ========================================================================== -->
+  <section class="panorama-section" aria-label="Interactieve themakaart van de atlas">
+    <div class="panorama-container">
+      <img src="atlas-panorama.jpg" alt="GeoStudio — AK in Beeld Panorama Landschap" class="panorama-image" width="2912" height="1440">
+      
+      <!-- Hotspot 1: Vaardigheden (53%, 9%) -->
+      <a href="#thema-1" class="panorama-hotspot" style="top: 53%; left: 9%;" data-theme-target="1" aria-label="Hoofdstuk 1: Vaardigheden (2 animaties)">
+        <span class="hotspot-pin active">1</span>
+        <div class="hotspot-tooltip">1. Vaardigheden &bull; 2 animaties</div>
+      </a>
+
+      <!-- Hotspot 2: Weer en klimaat (23%, 19%) -->
+      <a href="#thema-2" class="panorama-hotspot" style="top: 23%; left: 19%;" data-theme-target="2" aria-label="Hoofdstuk 2: Weer en klimaat (2 animaties)">
+        <span class="hotspot-pin active">2</span>
+        <div class="hotspot-tooltip">2. Weer en klimaat &bull; 2 animaties (3D)</div>
+      </a>
+
+      <!-- Hotspot 3: Systeem aarde (51%, 29%) - Nu leeg -->
+      <a href="#thema-3" class="panorama-hotspot" style="top: 51%; left: 29%;" data-theme-target="3" aria-label="Hoofdstuk 3: Systeem aarde (Nog onontdekt gebied)">
+        <span class="hotspot-pin empty">3</span>
+        <div class="hotspot-tooltip">3. Systeem aarde &bull; Onontdekt gebied</div>
+      </a>
+
+      <!-- Hotspot 4: Actieve aarde (17%, 41%) - 1 animatie (3D) -->
+      <a href="#thema-4" class="panorama-hotspot" style="top: 17%; left: 41%;" data-theme-target="4" aria-label="Hoofdstuk 4: Actieve aarde (1 animatie)">
+        <span class="hotspot-pin active">4</span>
+        <div class="hotspot-tooltip">4. Actieve aarde &bull; 1 animatie (3D)</div>
+      </a>
+
+      <!-- Hotspot 5: Duurzaamheid (22%, 59%) -->
+      <a href="#thema-5" class="panorama-hotspot" style="top: 22%; left: 59%;" data-theme-target="5" aria-label="Hoofdstuk 5: Duurzaamheid (Nog onontdekt gebied)">
+        <span class="hotspot-pin empty">5</span>
+        <div class="hotspot-tooltip">5. Duurzaamheid &bull; Onontdekt gebied</div>
+      </a>
+
+      <!-- Hotspot 6: Bevolking, migratie en cultuur (50%, 48%) -->
+      <a href="#thema-6" class="panorama-hotspot" style="top: 50%; left: 48%;" data-theme-target="6" aria-label="Hoofdstuk 6: Bevolking, migratie en cultuur (1 interactieve kaart)">
+        <span class="hotspot-pin active">6</span>
+        <div class="hotspot-tooltip">6. Bevolking &amp; cultuur &bull; 1 interactieve kaart</div>
+      </a>
+
+      <!-- Hotspot 7: Stedelijke en landelijke omgeving (66%, 62%) -->
+      <a href="#thema-7" class="panorama-hotspot" style="top: 66%; left: 62%;" data-theme-target="7" aria-label="Hoofdstuk 7: Stedelijke en landelijke omgeving (1 animatie)">
+        <span class="hotspot-pin active">7</span>
+        <div class="hotspot-tooltip">7. Stedelijke omgeving &bull; 1 animatie</div>
+      </a>
+
+      <!-- Hotspot 8: Mensen en hun activiteiten (50%, 82%) -->
+      <a href="#thema-8" class="panorama-hotspot" style="top: 50%; left: 82%;" data-theme-target="8" aria-label="Hoofdstuk 8: Mensen en hun activiteiten (Nog onontdekt gebied)">
+        <span class="hotspot-pin empty">8</span>
+        <div class="hotspot-tooltip">8. Mensen &amp; activiteiten &bull; Onontdekt gebied</div>
+      </a>
+
+      <!-- Hotspot 9: Ontwikkelingspeil (22%, 86%) -->
+      <a href="#thema-9" class="panorama-hotspot" style="top: 22%; left: 86%;" data-theme-target="9" aria-label="Hoofdstuk 9: Ontwikkelingspeil (Nog onontdekt gebied)">
+        <span class="hotspot-pin empty">9</span>
+        <div class="hotspot-tooltip">9. Ontwikkelingspeil &bull; Onontdekt gebied</div>
+      </a>
+
+      <!-- Hotspot 10: Globalisering (76%, 91%) -->
+      <a href="#thema-10" class="panorama-hotspot" style="top: 76%; left: 91%;" data-theme-target="10" aria-label="Hoofdstuk 10: Globalisering (Nog onontdekt gebied)">
+        <span class="hotspot-pin empty">10</span>
+        <div class="hotspot-tooltip">10. Globalisering &bull; Onontdekt gebied</div>
+      </a>
+    </div>
+
+    <!-- Legenda direct onder de afbeelding -->
+    <div class="panorama-legend">
+      <div class="legend-item">
+        <span class="legend-dot legend-dot-active"></span>
+        <span><strong>Animatie of kaart beschikbaar</strong> (Thema 1, 2, 4, 6, 7)</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot legend-dot-empty"></span>
+        <span><strong>Nog onontdekt gebied</strong> (Thema 3, 5, 8, 9, 10)</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       2. TIJDATLAS LAAG 1: SECTIE "ONDERWERPEN"
+       ========================================================================== -->
+  <section class="onderwerpen-section" aria-label="Selecteer een onderwerp">
+    <h2 class="onderwerpen-title">ONDERWERPEN</h2>
+    <p class="onderwerpen-subtitle">Kies een onderwerp om alleen dat materiaal te zien</p>
+
+    <div class="topic-pills-row" role="radiogroup" aria-label="Onderwerp filters">
+      <button class="topic-pill active" data-topic="all">Toon alles</button>
+      <button class="topic-pill" data-topic="kaartvaardigheden">Kaartvaardigheden <span class="pill-count">[1]</span></button>
+      <button class="topic-pill" data-topic="seizoenen">Aarde &amp; Seizoenen <span class="pill-count">[1]</span></button>
+      <button class="topic-pill" data-topic="itcz">ITCZ &amp; Moesson <span class="pill-count">[1]</span></button>
+      <button class="topic-pill" data-topic="platentektoniek">Platentektoniek &amp; Subductie <span class="pill-count">[1]</span></button>
+      <button class="topic-pill" data-topic="vulkanisme">Vulkanisme &amp; Woordspin <span class="pill-count">[1]</span></button>
+      <button class="topic-pill" data-topic="vergrijzing">Vergrijzing &amp; Ontgroening <span class="pill-count">[1]</span></button>
+      <button class="topic-pill" data-topic="stadsgeleding">Stadsgeleding &amp; CBD <span class="pill-count">[1]</span></button>
+    </div>
+
+    <div class="last-added-row">
+      <span class="last-added-label">Laatst toegevoegd:</span>
+      <button class="last-added-link" data-open-target="seizoenen" title="Open direct in lesvenster">Zon, Aarde &amp; Seizoenen (3D)</button>
+      <span class="last-added-sep">&bull;</span>
+      <button class="last-added-link" data-open-target="vergrijzing" title="Open direct in lesvenster">Vergrijzing in Nederland (1990–2050)</button>
+      <span class="last-added-sep">&bull;</span>
+      <button class="last-added-link" data-open-target="itcz" title="Open direct in lesvenster">3D ITCZ &amp; Moesson</button>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       3. TIJDATLAS LAAG 2: PLATTEGROND-BALK MET GENUMMERDE CIRKELS (1 T/M 10)
+       ========================================================================== -->
+  <nav class="chapter-circles-bar" aria-label="Hoofdstukken snelschakelaar">
+    <div class="chapter-circles-track">
+      <a href="#thema-1" class="ch-circle ch-circle-active" title="Hoofdstuk 1: Vaardigheden (2 animaties)">1</a>
+      <a href="#thema-2" class="ch-circle ch-circle-active" title="Hoofdstuk 2: Weer en klimaat (2 3D-animaties)">2</a>
+      <a href="#thema-3" class="ch-circle ch-circle-empty" title="Hoofdstuk 3: Systeem aarde (Onontdekt gebied)">3</a>
+      <a href="#thema-4" class="ch-circle ch-circle-active" title="Hoofdstuk 4: Actieve aarde (1 animatie)">4</a>
+      <a href="#thema-5" class="ch-circle ch-circle-empty" title="Hoofdstuk 5: Duurzaamheid (Onontdekt gebied)">5</a>
+      <a href="#thema-6" class="ch-circle ch-circle-active" title="Hoofdstuk 6: Bevolking, migratie en cultuur (1 kaart)">6</a>
+      <a href="#thema-7" class="ch-circle ch-circle-active" title="Hoofdstuk 7: Stedelijke en landelijke omgeving (1 animatie)">7</a>
+      <a href="#thema-8" class="ch-circle ch-circle-empty" title="Hoofdstuk 8: Mensen en hun activiteiten (Onontdekt gebied)">8</a>
+      <a href="#thema-9" class="ch-circle ch-circle-empty" title="Hoofdstuk 9: Ontwikkelingspeil (Onontdekt gebied)">9</a>
+      <a href="#thema-10" class="ch-circle ch-circle-empty" title="Hoofdstuk 10: Globalisering (Onontdekt gebied)">10</a>
+    </div>
+  </nav>
+
+  <!-- ==========================================================================
+       4. TIJDATLAS LAAG 3: FILTER- EN ZOEKBALK MET DYNAMISCHE TOTAALTELLER
+       ========================================================================== -->
+  <div class="filter-controls-bar">
+    <div class="filter-dropdown-group">
+      <div class="select-wrapper">
+        <select id="typeSelect" class="custom-select" aria-label="Filter op type materiaal">
+          <option value="all">Alles (alle types)</option>
+          <option value="3d">3D-animatie</option>
+          <option value="kaart">Interactieve kaart</option>
+          <option value="simulatie">Simulatie</option>
+        </select>
+      </div>
+
+      <div class="select-wrapper">
+        <select id="gradeSelect" class="custom-select" aria-label="Filter op leerjaar">
+          <option value="all">Alle leerjaren</option>
+          <option value="onderbouw">Klas 1 / Brugklas</option>
+          <option value="klas2">Klas 2</option>
+          <option value="havo3">Havo 3</option>
+          <option value="vwo">Vwo</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="search-field-wrapper">
+      <span class="search-field-icon" aria-hidden="true">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </span>
+      <input 
+        type="text" 
+        id="mainSearchInput" 
+        class="main-search-input" 
+        placeholder="Zoek, bijv. moesson, vulkaan, B62 of § 2.8..."
+        aria-label="Zoeken naar animaties en kaarten"
+      >
+      <button id="mainClearSearchBtn" class="search-clear-btn" title="Wis zoekopdracht" aria-label="Wis zoekopdracht">&times;</button>
+    </div>
+
+    <div class="filter-summary-tally" id="filterSummaryTally">
+      <em>3 3D-animaties &bull; 3 interactieve kaarten &bull; 1 simulatie</em>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       5. HOOFDCONTAINER: DE 10 HOOFDSTUKKEN (OFFICIËLE BASISBOEK INDELING)
+       ========================================================================== -->
+  <main class="main-container">
+
+    <!-- Geen resultaten melding -->
+    <div id="noResultsNotice" class="no-results-state">
+      <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="var(--border-dark)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        <line x1="8" y1="11" x2="14" y2="11"></line>
+      </svg>
+      <h3 style="font-family: var(--font-title); font-size: 1.35rem; color: var(--text-main); margin-bottom: 6px;">Geen animaties gevonden</h3>
+      <p style="color: var(--text-muted); font-size: 0.92rem; max-width: 440px;">Er zijn geen animaties die voldoen aan de geselecteerde filters.</p>
+      <button id="resetSearchBtn" class="viewer-btn" style="margin-top: 16px; background: var(--active-red); color: #fff; border-color: var(--active-red);">Reset alle filters</button>
+    </div>
+
+    <!-- ========================================================================
+         HOOFDSTUK 1: VAARDIGHEDEN (B1–B41)
+         ======================================================================== -->
+    <section class="chapter-section" id="thema-1" data-chapter="1">
+      <header class="chapter-header">
+        <div class="chapter-title-group">
+          <span class="chapter-number-circle" style="background: var(--theme-1-color);">1</span>
+          <h2 class="chapter-heading">Vaardigheden</h2>
+          <span class="chapter-basisboek-badge">B1 &ndash; B41</span>
+        </div>
+        <div class="chapter-paragrafen-bar">
+          <span class="para-pill">§ 1.1 Vaardigheden</span>
+          <span class="para-pill has-module" title="Module beschikbaar">§ 1.2 Beschrijven en verklaren</span>
+          <span class="para-pill">§ 1.3 Regio in beeld</span>
+          <span class="para-pill has-module" title="Module beschikbaar">§ 1.4 Aardrijkskundige werkwijzen</span>
+          <span class="para-pill has-module" title="Module beschikbaar">§ 1.5 Kaartsoorten: overzichtskaarten</span>
+          <span class="para-pill">§ 1.6 Kaartsoorten: thematische kaarten</span>
+          <span class="para-pill has-module" title="Module beschikbaar">§ 1.7 Plaatsbepaling op aarde</span>
+          <span class="para-pill">§ 1.8 Aardrijkskundig onderzoek</span>
+          <span class="para-pill">§ 1.9 Buurtprofiel</span>
+          <span class="para-pill has-module" title="Module beschikbaar">§ 1.10 Informatie verzamelen en verwerken</span>
+          <span class="para-pill">§ 1.11 Foto's en satellietbeelden</span>
+        </div>
+      </header>
+
+      <div class="cards-grid">
+        <!-- KaartMeester -->
+        <article class="anim-card" 
+          tabindex="0"
+          id="card-kaartmeester"
+          style="--card-accent: var(--theme-1-color);"
+          data-url="../GitHub_Kaartmeester_English/index_nl.html"
+          data-title="KaartMeester – Interactieve Kaartvaardigheden"
+          data-bb="B12, B14, B22"
+          data-para="§ 1.4 Aardrijkskundige werkwijzen • § 1.5 Kaartsoorten • § 1.7 Plaatsbepaling"
+          data-type="kaart"
+          data-topic="kaartvaardigheden"
+          data-level="onderbouw"
+          data-keywords="kaartmeester kaartlezen schaal schaalstok legenda coordinaten windrichtingen brugklas kaartanalyse kaartvaardigheden b12 b14 b22 1.4 1.5 1.7">
+          <div class="card-preview-container">
+            <iframe class="card-live-frame" src="../GitHub_Kaartmeester_English/index_nl.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+            <div class="preview-badges-overlay">
+              <span class="p-badge-bb">B12, B14, B22</span>
+              <span class="p-badge-para">§ 1.4 &bull; § 1.5 &bull; § 1.7</span>
+              <span class="p-badge-level">Brugklas / Klas 1</span>
+            </div>
+            <div class="card-preview-hover">
+              <span class="play-pill">Start animatie &rarr;</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-theme-tag">Thema 1 &bull; Vaardigheden &bull; § 1.4 Werkwijzen &bull; § 1.5 Kaarten &bull; § 1.7 Plaatsbepaling</div>
+            <h3 class="card-title">KaartMeester &ndash; Interactieve Kaartvaardigheden</h3>
+            <p class="card-desc">Interactieve kaartlessen waarin leerlingen oefenen met schaalberekeningen, coördinaten bepalen en windrichtingen via 3 duidelijke niveaus.</p>
+            <div class="card-footer">
+              <span class="card-action-link">Openen op Digibord &rarr;</span>
+              <span class="card-submap-tag">Interactieve kaart</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Kernzinnen & Woordspin (Vulkanen) - Vaardigheden: Informatie verzamelen & structureren -->
+        <article class="anim-card" 
+          tabindex="0"
+          id="card-woordspin"
+          style="--card-accent: var(--theme-1-color);"
+          data-url="../Tekststructuur_Mindmap/index.html"
+          data-title="Kernzinnen & Woordspin: Vulkanen"
+          data-bb="B5, B34"
+          data-para="§ 1.10 Informatie verzamelen en verwerken • § 1.2 Beschrijven en verklaren"
+          data-type="simulatie"
+          data-topic="vulkanisme"
+          data-level="onderbouw"
+          data-keywords="kernzinnen woordspin mindmap tekststructuur vulkanen vaardigheden informatie verzamelen verwerken beschrijven verklaren brugklas b5 b34 1.2 1.10">
+          <div class="card-preview-container">
+            <iframe class="card-live-frame" src="../Tekststructuur_Mindmap/index.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+            <div class="preview-badges-overlay">
+              <span class="p-badge-bb">B5, B34</span>
+              <span class="p-badge-para">§ 1.10 &bull; § 1.2</span>
+              <span class="p-badge-level">Brugklas</span>
+            </div>
+            <div class="card-preview-hover">
+              <span class="play-pill">Start animatie &rarr;</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-theme-tag">Thema 1 &bull; Vaardigheden &bull; § 1.10 Informatie verzamelen en verwerken</div>
+            <h3 class="card-title">Kernzinnen &amp; Woordspin: Vulkanen</h3>
+            <p class="card-desc">Interactieve leermodule om kernzinnen uit informatieve teksten te filteren en direct om te zetten in een visuele woordspin / mindmap.</p>
+            <div class="card-footer">
+              <span class="card-action-link">Openen op Digibord &rarr;</span>
+              <span class="card-submap-tag">Simulatie</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         HOOFDSTUK 2: WEER EN KLIMAAT (B42–B74)
+         ======================================================================== -->
+    <section class="chapter-section" id="thema-2" data-chapter="2">
+      <header class="chapter-header">
+        <div class="chapter-title-group">
+          <span class="chapter-number-circle" style="background: var(--theme-2-color);">2</span>
+          <h2 class="chapter-heading">Weer en klimaat</h2>
+          <span class="chapter-basisboek-badge">B42 &ndash; B74</span>
+        </div>
+        <div class="chapter-paragrafen-bar">
+          <span class="para-pill">§ 2.1 Weer en klimaat</span>
+          <span class="para-pill has-module" title="Module beschikbaar">§ 2.2 Zon en aarde</span>
+          <span class="para-pill has-module" title="Module beschikbaar">§ 2.3 Temperatuurfactoren: breedteligging</span>
+          <span class="para-pill">§ 2.4 Temperatuurfactoren: hoogteligging</span>
+          <span class="para-pill">§ 2.5 Temperatuurfactoren: land en zee</span>
+          <span class="para-pill">§ 2.6 Neerslagfactoren</span>
+          <span class="para-pill has-module" title="Module beschikbaar">§ 2.7 Wind</span>
+          <span class="para-pill has-module" title="Module beschikbaar">§ 2.8 Moesson, orkaan en tornado</span>
+          <span class="para-pill">§ 2.9 Weer en klimaat</span>
+          <span class="para-pill">§ 2.10 Klimaten op aarde</span>
+        </div>
+      </header>
+
+      <div class="cards-grid">
+        <!-- Zon, Aarde & Seizoenen Animatie (3D) -->
+        <article class="anim-card" 
+          tabindex="0"
+          id="card-seizoenen"
+          style="--card-accent: var(--theme-2-color);"
+          data-url="seizoenen-3d.html"
+          data-title="Zon, Aarde &amp; Seizoenen 3D"
+          data-bb="B43, B44, B45, B46, B48, B49"
+          data-para="§ 2.2 Zon en aarde • § 2.3 Temperatuurfactoren: breedteligging"
+          data-type="3d"
+          data-topic="seizoenen"
+          data-level="onderbouw klas2 havo3 vwo"
+          data-keywords="aarde zon seizoenen 3d threejs aardas daglengte invalshoek zonnestand keerkring poolcirkel poolnacht middernachtzon equinox zonnestralen stralingsbalans atmosfeer dampkring breedteligging b43 b44 b45 b46 b47 b48 b49 havo vwo 2.2 2.3">
+          <div class="card-preview-container">
+            <iframe class="card-live-frame" src="seizoenen-3d.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+            <div class="preview-badges-overlay">
+              <span class="p-badge-bb">B43, B44, B46, B48</span>
+              <span class="p-badge-para">§ 2.2 &bull; § 2.3</span>
+              <span class="p-badge-level">Klas 1-3 &bull; Havo / Vwo</span>
+            </div>
+            <div class="card-preview-hover">
+              <span class="play-pill">Start 3D-animatie &rarr;</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-theme-tag">Thema 2 &bull; Weer en klimaat &bull; § 2.2 Zon &amp; aarde &bull; § 2.3 Breedteligging</div>
+            <h3 class="card-title">Zon, Aarde &amp; Seizoenen 3D</h3>
+            <p class="card-desc">Interactief 3D-wereldmodel over de schuine aardas (23,5°), seizoenswisselingen, de veranderende invalshoek van zonnestralen, daglengte en de weg door de dampkring.</p>
+            <div class="card-footer">
+              <span class="card-action-link">Openen op Digibord &rarr;</span>
+              <span class="card-submap-tag">3D-Animatie</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- ITCZ en Moesson Animatie (3D) -->
+        <article class="anim-card" 
+          tabindex="0"
+          id="card-itcz"
+          style="--card-accent: var(--theme-2-color);"
+          data-url="itcz_moesson_3d.html"
+          data-title="Interactieve 3D ITCZ &amp; Moesson in India"
+          data-bb="B58, B62, B64, B65"
+          data-para="§ 2.7 Wind • § 2.8 Moesson, orkaan en tornado"
+          data-type="3d"
+          data-topic="itcz"
+          data-level="havo3 vwo"
+          data-keywords="itcz moesson 3d threejs hadley hadleycel passaat passaten luchtcirculatie windsystemen india neerslag lagedruk b58 b62 b64 b65 stijgingsregen stuwingsregen buys ballot klimaat weer havo 3 vwo 2.7 2.8">
+          <div class="card-preview-container">
+            <iframe class="card-live-frame" src="itcz_moesson_3d.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+            <div class="preview-badges-overlay">
+              <span class="p-badge-bb">B58, B62, B64, B65</span>
+              <span class="p-badge-para">§ 2.7 &bull; § 2.8</span>
+              <span class="p-badge-level">Havo 3 / Vwo</span>
+            </div>
+            <div class="card-preview-hover">
+              <span class="play-pill">Start 3D-animatie &rarr;</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-theme-tag">Thema 2 &bull; Weer en klimaat &bull; § 2.7 Wind &bull; § 2.8 Moesson</div>
+            <h3 class="card-title">Interactieve 3D ITCZ &amp; Moesson in India</h3>
+            <p class="card-desc">Dynamisch 3D-wereldmodel en terreinmodel van India over de seizoensverschuiving van de ITCZ, het ontstaan van passaatwinden en de natte en droge moesson.</p>
+            <div class="card-footer">
+              <span class="card-action-link">Openen op Digibord &rarr;</span>
+              <span class="card-submap-tag">3D-Animatie</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         HOOFDSTUK 3: SYSTEEM AARDE (B75–B96)
+         ======================================================================== -->
+    <section class="chapter-section" id="thema-3" data-chapter="3">
+      <header class="chapter-header">
+        <div class="chapter-title-group">
+          <span class="chapter-number-circle" style="background: var(--theme-3-color);">3</span>
+          <h2 class="chapter-heading">Systeem aarde</h2>
+          <span class="chapter-basisboek-badge">B75 &ndash; B96</span>
+        </div>
+        <div class="chapter-paragrafen-bar">
+          <span class="para-pill">§ 3.1 Systeem aarde</span>
+          <span class="para-pill">§ 3.2 Landschapszones en mensen</span>
+          <span class="para-pill">§ 3.3 Oorspronkelijke vegetatie: van nat naar droog</span>
+          <span class="para-pill">§ 3.4 Oorspronkelijke vegetatie: van warm naar koud</span>
+          <span class="para-pill">§ 3.5 Bodems</span>
+          <span class="para-pill">§ 3.6 Hydrosfeer: water</span>
+        </div>
+      </header>
+
+      <div class="empty-chapter-box">
+        <svg class="empty-chapter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M8 12h8"></path>
+        </svg>
+        <div class="empty-chapter-text">Nog geen interactieve uitleg-animaties toegevoegd in dit hoofdstuk</div>
+        <div class="empty-chapter-sub">Animaties over de waterkringloop, rivieren of vegetatiezones verschijnen hier zodra ze worden gekoppeld.</div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         HOOFDSTUK 4: ACTIEVE AARDE (B97–B124) - ENDOGENE & EXOGENE KRACHTEN
+         ======================================================================== -->
+    <section class="chapter-section" id="thema-4" data-chapter="4">
+      <header class="chapter-header">
+        <div class="chapter-title-group">
+          <span class="chapter-number-circle" style="background: var(--theme-4-color);">4</span>
+          <h2 class="chapter-heading">Actieve aarde</h2>
+          <span class="chapter-basisboek-badge">B97 &ndash; B124</span>
+        </div>
+        <div class="chapter-paragrafen-bar">
+          <span class="para-pill">§ 4.1 Actieve aarde</span>
+          <span class="para-pill has-module" title="Module beschikbaar">§ 4.2 Platen en breuken</span>
+          <span class="para-pill has-module" title="Module beschikbaar">§ 4.3 Divergentie en convergentie</span>
+          <span class="para-pill">§ 4.4 Vulkanisme</span>
+          <span class="para-pill">§ 4.5 Aardbevingen</span>
+          <span class="para-pill">§ 4.6 Gebergtevorming</span>
+          <span class="para-pill">§ 4.7 Verwering en erosie</span>
+          <span class="para-pill">§ 4.8 Afbraak en opbouw: ijs, water en wind</span>
+          <span class="para-pill">§ 4.9 Afbraak en opbouw: ijs</span>
+          <span class="para-pill">§ 4.10 Afbraak en opbouw: water en wind</span>
+        </div>
+      </header>
+
+      <div class="cards-grid">
+        <!-- Plaattektoniek 3D -->
+        <article class="anim-card" 
+          tabindex="0"
+          id="card-plaattektoniek"
+          style="--card-accent: var(--theme-4-color);"
+          data-url="../plaattektoniek-3d/index.html"
+          data-title="Plaatgrens Lab: Plaattektoniek 3D"
+          data-bb="B98, B99, B100, B101"
+          data-para="§ 4.2 Platen en breuken • § 4.3 Divergentie en convergentie"
+          data-type="3d"
+          data-topic="platentektoniek"
+          data-level="klas2 havo3 vwo"
+          data-keywords="plaattektoniek 3d subductie trog vulkaan vulkanisme convectiestroom oceanische plaat continentale plaat magma lithosfeer continentverschuiving b98 b99 b100 b101 b102 4.2 4.3">
+          <div class="card-preview-container">
+            <iframe class="card-live-frame" src="../plaattektoniek-3d/index.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+            <div class="preview-badges-overlay">
+              <span class="p-badge-bb">B98, B99, B100, B101</span>
+              <span class="p-badge-para">§ 4.2 &bull; § 4.3</span>
+              <span class="p-badge-level">Klas 2-3 &bull; Havo / Vwo</span>
+            </div>
+            <div class="card-preview-hover">
+              <span class="play-pill">Start animatie &rarr;</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-theme-tag">Thema 4 &bull; Actieve aarde &bull; § 4.2 Platen &bull; § 4.3 Convergentie</div>
+            <h3 class="card-title">Plaatgrens Lab &ndash; Plaattektoniek 3D</h3>
+            <p class="card-desc">Realtime 3D-simulatie van subductiezones, oceanische troggen, continentale platen en magmavorming met interactieve dwarsdoorsneden.</p>
+            <div class="card-footer">
+              <span class="card-action-link">Openen op Digibord &rarr;</span>
+              <span class="card-submap-tag">3D-animatie</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         HOOFDSTUK 5: DUURZAAMHEID (B125–B147)
+         ======================================================================== -->
+    <section class="chapter-section" id="thema-5" data-chapter="5">
+      <header class="chapter-header">
+        <div class="chapter-title-group">
+          <span class="chapter-number-circle" style="background: var(--theme-5-color);">5</span>
+          <h2 class="chapter-heading">Duurzaamheid</h2>
+          <span class="chapter-basisboek-badge">B125 &ndash; B147</span>
+        </div>
+        <div class="chapter-paragrafen-bar">
+          <span class="para-pill">§ 5.1 Duurzaamheid</span>
+          <span class="para-pill">§ 5.2 Voetafdrukken</span>
+          <span class="para-pill">§ 5.3 Energie en voedsel</span>
+          <span class="para-pill">§ 5.4 Landdegradatie</span>
+          <span class="para-pill">§ 5.5 Bodemerosie</span>
+          <span class="para-pill">§ 5.6 Vervuiling, uitputting en aantasting</span>
+          <span class="para-pill">§ 5.7 Klimaatverandering</span>
+        </div>
+      </header>
+
+      <div class="empty-chapter-box">
+        <svg class="empty-chapter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M8 12h8"></path>
+        </svg>
+        <div class="empty-chapter-text">Nog geen interactieve uitleg-animaties toegevoegd in dit hoofdstuk</div>
+        <div class="empty-chapter-sub">Simulaties voor energietransitie, voetafdrukken of de koolstofkringloop verschijnen hier zodra ze worden gekoppeld.</div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         HOOFDSTUK 6: BEVOLKING, MIGRATIE EN CULTUUR (B148–B170)
+         ======================================================================== -->
+    <section class="chapter-section" id="thema-6" data-chapter="6">
+      <header class="chapter-header">
+        <div class="chapter-title-group">
+          <span class="chapter-number-circle" style="background: var(--theme-6-color);">6</span>
+          <h2 class="chapter-heading">Bevolking, migratie en cultuur</h2>
+          <span class="chapter-basisboek-badge">B148 &ndash; B170</span>
+        </div>
+        <div class="chapter-paragrafen-bar">
+          <span class="para-pill">§ 6.1 Bevolking en inrichting</span>
+          <span class="para-pill has-module" title="Module beschikbaar">§ 6.2 Bevolkingscijfers</span>
+          <span class="para-pill has-module" title="Module beschikbaar">§ 6.3 Leeftijdsopbouw van de bevolking</span>
+          <span class="para-pill">§ 6.4 Migratie</span>
+          <span class="para-pill">§ 6.5 Staat, volk en cultuur</span>
+          <span class="para-pill">§ 6.6 De multiculturele samenleving</span>
+        </div>
+      </header>
+
+      <div class="cards-grid">
+        <!-- Kaart 6: Vergrijzing in Nederland (1990–2050) -->
+        <article class="anim-card" 
+          tabindex="0"
+          id="card-vergrijzing"
+          style="--card-accent: var(--theme-6-color);"
+          data-url="kaart6_vergrijzing.html"
+          data-title="Vergrijzing in Nederland (1990–2050)"
+          data-bb="B152, B153, B154, B155, B157"
+          data-para="§ 6.2 Bevolkingscijfers • § 6.3 Leeftijdsopbouw van de bevolking"
+          data-type="kaart"
+          data-topic="vergrijzing"
+          data-level="havo3 vwo"
+          data-keywords="vergrijzing ontgroening bevolkingscijfers demografische druk leeftijdsopbouw bevolkingsdiagram transitie nederland krimp regio kaart6 kaart 6 1990 2020 2050 b152 b153 b154 b155 b157 havo vwo 6.2 6.3">
+          <div class="card-preview-container">
+            <iframe class="card-live-frame" src="kaart6_vergrijzing.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+            <div class="preview-badges-overlay">
+              <span class="p-badge-bb">B152, B153, B154</span>
+              <span class="p-badge-para">§ 6.2 &bull; § 6.3</span>
+              <span class="p-badge-level">Havo / Vwo</span>
+            </div>
+            <div class="card-preview-hover">
+              <span class="play-pill">Open interactieve kaart &rarr;</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-theme-tag">Thema 6 &bull; Bevolking &bull; § 6.2 Bevolkingscijfers &bull; § 6.3 Leeftijdsopbouw</div>
+            <h3 class="card-title">Vergrijzing in Nederland (1990–2050)</h3>
+            <p class="card-desc">Interactieve atlaskaart met vloeiende tijdlijn (1990, 2020 en prognose 2050), demografische indicatoren, vergrijzingsdruk, ontgroening en regionale krimpgebieden.</p>
+            <div class="card-footer">
+              <span class="card-action-link">Openen op Digibord &rarr;</span>
+              <span class="card-submap-tag">Interactieve Kaart</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         HOOFDSTUK 7: STEDELIJKE EN LANDELIJKE OMGEVING (B171–B192)
+         ======================================================================== -->
+    <section class="chapter-section" id="thema-7" data-chapter="7">
+      <header class="chapter-header">
+        <div class="chapter-title-group">
+          <span class="chapter-number-circle" style="background: var(--theme-7-color);">7</span>
+          <h2 class="chapter-heading">Stedelijke en landelijke omgeving</h2>
+          <span class="chapter-basisboek-badge">B171 &ndash; B192</span>
+        </div>
+        <div class="chapter-paragrafen-bar">
+          <span class="para-pill">§ 7.1 Stad en dorp</span>
+          <span class="para-pill has-module" title="Module beschikbaar">§ 7.2 Verstedelijking</span>
+          <span class="para-pill">§ 7.3 Mobiliteit</span>
+          <span class="para-pill has-module" title="Module beschikbaar">§ 7.4 Stedelijke groei en planning</span>
+          <span class="para-pill has-module" title="Module beschikbaar">§ 7.5 Wijken en buurten in beeld</span>
+          <span class="para-pill">§ 7.6 Stedelijke vernieuwing in beeld</span>
+          <span class="para-pill">§ 7.7 Stad van de toekomst</span>
+        </div>
+      </header>
+
+      <div class="cards-grid">
+        <!-- Amerikaanse Stad Bouwer -->
+        <article class="anim-card" 
+          tabindex="0"
+          id="card-stad"
+          style="--card-accent: var(--theme-7-color);"
+          data-url="../Amerikaanse_Stad_Bouwer_App/index.html"
+          data-title="Amerikaanse Stad Bouwer: Stadsgeleding & Inrichting"
+          data-bb="B180, B181, B182, B185, B188"
+          data-para="§ 7.4 Stedelijke groei en planning • § 7.2 Verstedelijking • § 7.5 Wijken en buurten"
+          data-type="kaart"
+          data-topic="stadsgeleding"
+          data-level="havo3 vwo"
+          data-keywords="amerikaanse stad bouwer cbd central business district suburb suburbs urban sprawl getto gentrificatie stadsgeleding model van een stad cityvorming grondprijs ruimtelijke ordening havo 3 vwo b174 b175 b180 b181 b182 b185 b188 7.2 7.4 7.5">
+          <div class="card-preview-container">
+            <iframe class="card-live-frame" src="../Amerikaanse_Stad_Bouwer_App/index.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+            <div class="preview-badges-overlay">
+              <span class="p-badge-bb">B180, B181, B188</span>
+              <span class="p-badge-para">§ 7.4 &bull; § 7.2 &bull; § 7.5</span>
+              <span class="p-badge-level">Havo 3</span>
+            </div>
+            <div class="card-preview-hover">
+              <span class="play-pill">Start animatie &rarr;</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-theme-tag">Thema 7 &bull; Stedelijke omgeving &bull; § 7.4 Planning &bull; § 7.2 Verstedelijking &bull; § 7.5 Wijken</div>
+            <h3 class="card-title">Amerikaanse Stad Bouwer &ndash; Stadsgeleding</h3>
+            <p class="card-desc">Interactieve modelbouwer van een Amerikaanse stad met Central Business District (CBD), suburbs, urban sprawl en gentrificatie.</p>
+            <div class="card-footer">
+              <span class="card-action-link">Openen op Digibord &rarr;</span>
+              <span class="card-submap-tag">Interactieve kaart</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         HOOFDSTUK 8: MENSEN EN HUN ACTIVITEITEN (B193–B222)
+         ======================================================================== -->
+    <section class="chapter-section" id="thema-8" data-chapter="8">
+      <header class="chapter-header">
+        <div class="chapter-title-group">
+          <span class="chapter-number-circle" style="background: var(--theme-8-color);">8</span>
+          <h2 class="chapter-heading">Mensen en hun activiteiten</h2>
+          <span class="chapter-basisboek-badge">B193 &ndash; B222</span>
+        </div>
+        <div class="chapter-paragrafen-bar">
+          <span class="para-pill">§ 8.1 Mensen en hun activiteiten</span>
+          <span class="para-pill">§ 8.2 Natuur, arbeid en kapitaal</span>
+          <span class="para-pill">§ 8.3 Landbouw</span>
+          <span class="para-pill">§ 8.4 Landbouw en inrichting</span>
+          <span class="para-pill">§ 8.5 Industrie en diensten</span>
+          <span class="para-pill">§ 8.6 Industrie en diensten: locatie</span>
+          <span class="para-pill">§ 8.7 Voorzieningen</span>
+          <span class="para-pill">§ 8.8 Vrije tijd en toerisme</span>
+        </div>
+      </header>
+
+      <div class="empty-chapter-box">
+        <svg class="empty-chapter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M8 12h8"></path>
+        </svg>
+        <div class="empty-chapter-text">Nog geen interactieve uitleg-animaties toegevoegd in dit hoofdstuk</div>
+        <div class="empty-chapter-sub">Nieuwe modules voor economische sectoren, landbouw, industrie en voorzieningen verschijnen hier zodra ze worden toegevoegd.</div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         HOOFDSTUK 9: ONTWIKKELINGSPEIL (B223–B246)
+         ======================================================================== -->
+    <section class="chapter-section" id="thema-9" data-chapter="9">
+      <header class="chapter-header">
+        <div class="chapter-title-group">
+          <span class="chapter-number-circle" style="background: var(--theme-9-color);">9</span>
+          <h2 class="chapter-heading">Ontwikkelingspeil</h2>
+          <span class="chapter-basisboek-badge">B223 &ndash; B246</span>
+        </div>
+        <div class="chapter-paragrafen-bar">
+          <span class="para-pill">§ 9.1 Ontwikkelingspeil</span>
+          <span class="para-pill">§ 9.2 Hoe meet je ontwikkeling?</span>
+          <span class="para-pill">§ 9.3 Wereld in delen</span>
+          <span class="para-pill">§ 9.4 Arme en rijke landen: werken</span>
+          <span class="para-pill">§ 9.5 Arme landen: levensomstandigheden</span>
+          <span class="para-pill">§ 9.6 Arme landen: bevolkingsgroei en verstedelijking</span>
+          <span class="para-pill">§ 9.7 Bestuur en beleid</span>
+        </div>
+      </header>
+
+      <div class="empty-chapter-box">
+        <svg class="empty-chapter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M8 12h8"></path>
+        </svg>
+        <div class="empty-chapter-text">Nog geen interactieve uitleg-animaties toegevoegd in dit hoofdstuk</div>
+        <div class="empty-chapter-sub">Interactieve kaarten en data-animaties voor ontwikkelingsindicatoren worden hier klaargezet zodra ze beschikbaar zijn.</div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         HOOFDSTUK 10: GLOBALISERING (B247–B269)
+         ======================================================================== -->
+    <section class="chapter-section" id="thema-10" data-chapter="10">
+      <header class="chapter-header">
+        <div class="chapter-title-group">
+          <span class="chapter-number-circle" style="background: var(--theme-10-color);">10</span>
+          <h2 class="chapter-heading">Globalisering</h2>
+          <span class="chapter-basisboek-badge">B247 &ndash; B269</span>
+        </div>
+        <div class="chapter-paragrafen-bar">
+          <span class="para-pill">§ 10.1 Globalisering</span>
+          <span class="para-pill">§ 10.2 De wereld als systeem</span>
+          <span class="para-pill">§ 10.3 Een wereld</span>
+          <span class="para-pill">§ 10.4 Mondiale productie</span>
+          <span class="para-pill">§ 10.5 Verkeer en vervoer</span>
+          <span class="para-pill">§ 10.6 Handel en samenwerking</span>
+        </div>
+      </header>
+
+      <div class="empty-chapter-box">
+        <svg class="empty-chapter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M8 12h8"></path>
+        </svg>
+        <div class="empty-chapter-text">Nog geen interactieve uitleg-animaties toegevoegd in dit hoofdstuk</div>
+        <div class="empty-chapter-sub">Interactieve visualisaties over mondiale handelsstromen en transportnetwerken verschijnen hier zodra ze worden gekoppeld.</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==========================================================================
+       VOLLEDIG SCHERM OVERLAY IFRAME LESVENSTER
+       ========================================================================== -->
+  <div id="viewerOverlay" class="viewer-overlay" role="dialog" aria-modal="true" aria-label="Interactief lesvenster">
+    <div class="viewer-topbar">
+      <div class="viewer-left">
+        <button id="closeViewerBtn" class="viewer-btn viewer-btn-back" title="Sluit venster (Escape)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>&larr; Terug naar overzicht</span>
+        </button>
+        <div class="viewer-info">
+          <span id="viewerBBBadge" class="viewer-bb-badge">Atlas</span>
+          <span id="viewerParaBadge" class="viewer-para-badge">Basisboek</span>
+          <span id="viewerTitle" class="viewer-title">Titel van de animatie</span>
+        </div>
+      </div>
+
+      <div class="viewer-right">
+        <!-- Knop Over deze module & Licentie -->
+        <button id="viewerInfoBtn" class="viewer-btn" title="Over deze module & Licentie">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <span>Over deze module</span>
+        </button>
+
+        <!-- Knop Schermvullend Digibord -->
+        <button id="fullscreenToggleBtn" class="viewer-btn" title="Volledig scherm digibord">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <polyline points="9 21 3 21 3 15"></polyline>
+            <line x1="21" y1="3" x2="14" y2="10"></line>
+            <line x1="3" y1="21" x2="10" y2="14"></line>
+          </svg>
+          <span>Digibord</span>
+        </button>
+
+        <!-- Knop Open in nieuw tabblad -->
+        <a id="viewerExternalBtn" href="#" target="_blank" rel="noopener noreferrer" class="viewer-btn" title="Open in nieuw tabblad">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+          <span>Open in nieuw tabblad</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Iframe Container met laadindicator -->
+    <div class="viewer-iframe-container">
+      <div id="viewerLoader" class="viewer-loader">
+        <div class="viewer-spinner"></div>
+        <p style="color: var(--text-muted); font-size: 0.95rem; font-weight: 500;">Animatie wordt geladen...</p>
+      </div>
+      <iframe id="viewerIframe" class="viewer-iframe" title="Aardrijkskunde Animatie" allow="fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope"></iframe>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       FOOTER MET LICENTIE & CREDITS
+       ========================================================================== -->
+  <footer class="atlas-footer">
+    <div class="footer-inner">
+      <div class="footer-brand-col">
+        <div class="footer-title"><strong>GeoStudio</strong> &bull; AK in Beeld &bull; Digibord en Uitleg-Animaties &bull; Offici&euml;le Basisboek Indeling (VO)</div>
+        <div class="footer-credits">
+          Gemaakt door Rens van der Lubben &bull; Code: MIT-licentie &bull; Lesmateriaal: CC BY-SA 4.0
+        </div>
+      </div>
+      <div class="footer-links">
+        <button id="openColofonBtn" class="footer-btn-colofon" title="Informatie en licentie voor docenten">
+          <span class="info-icon-circle">ⓘ</span> Over GeoStudio &amp; Licentie
+        </button>
+        <a href="#thema-1" class="footer-link">Naar boven &uarr;</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==========================================================================
+       MODAL: COLOFON, OVER DEZE ATLAS & LICENTIE (CC BY-SA 4.0 / MIT)
+       ========================================================================== -->
+  <div id="colofonModal" class="colofon-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="colofonModalTitle" hidden>
+    <div class="colofon-modal-card">
+      <div class="colofon-modal-header">
+        <div class="colofon-header-title-group">
+          <span class="colofon-icon-badge">ⓘ</span>
+          <div>
+            <h3 id="colofonModalTitle" class="colofon-title">Over GeoStudio — AK in Beeld</h3>
+            <p class="colofon-subtitle">Open leermateriaal voor aardrijkskunde in het voortgezet onderwijs</p>
+          </div>
+        </div>
+        <button id="closeColofonBtn" class="colofon-close-btn" aria-label="Sluit infovenster">&times;</button>
+      </div>
+
+      <div class="colofon-modal-body">
+        <div class="colofon-section">
+          <h4 class="colofon-heading">Colofon &amp; Maker</h4>
+          <p>
+            Ontwikkeld en ontworpen door <strong>Rens van der Lubben</strong> voor het aardrijkskundeonderwijs (havo / vwo / onderbouw).
+          </p>
+        </div>
+
+        <div class="colofon-section colofon-highlight">
+          <h4 class="colofon-heading">Open Onderwijs &amp; Vrij Gebruik voor Docenten</h4>
+          <p>
+            Deze interactieve leeromgeving (GeoStudio: AK in Beeld) en alle bijbehorende animatiemodules zijn speciaal ontwikkeld als open digitaal leermateriaal. 
+            <strong>Collega-docenten en scholen mogen deze webapplicatie vrij gebruiken op het digibord, delen met leerlingen en aanpassen</strong> voor eigen lessen, practica of lesprojecten onder vermelding van de maker.
+          </p>
+        </div>
+
+        <div class="colofon-section">
+          <h4 class="colofon-heading">Licentievoorwaarden</h4>
+          <div class="colofon-license-box">
+            <div class="license-item">
+              <span class="license-badge">Lesmateriaal</span>
+              <div>
+                <strong>Creative Commons Naamsvermelding-GelijkDelen 4.0 Internationaal (CC BY-SA 4.0)</strong>
+                <p class="license-desc">Vrij om te delen en te bewerken voor educatieve doeleinden, mits met naamsvermelding van Rens van der Lubben en verspreiding onder dezelfde licentie.</p>
+              </div>
+            </div>
+            <div class="license-item">
+              <span class="license-badge">Broncode</span>
+              <div>
+                <strong>MIT-licentie</strong>
+                <p class="license-desc">De code van de interactieve kaarten, 3D-simulaties en de atlasinterface is vrij herbruikbaar en open source.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="colofon-credit-line">
+          <code>Gemaakt door Rens van der Lubben • Code: MIT-licentie • Lesmateriaal: CC BY-SA 4.0</code>
+        </div>
+      </div>
+
+      <div class="colofon-modal-footer">
+        <button id="dismissColofonBtn" class="viewer-btn" style="background: var(--ocean-blue); color: #fff; border-color: var(--ocean-blue);">Begrepen &amp; Sluiten</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       JAVASCRIPT LOGICA VOOR FILTEREN, ZOEKEN, MODAL EN PANORAMA
+       ========================================================================== -->
+  <script>
+    (function() {
+      'use strict';
+
+      // DOM Elementen
+      const mainSearchInput = document.getElementById('mainSearchInput');
+      const mainClearSearchBtn = document.getElementById('mainClearSearchBtn');
+      const typeSelect = document.getElementById('typeSelect');
+      const gradeSelect = document.getElementById('gradeSelect');
+      const topicPills = document.querySelectorAll('.topic-pill');
+      const animCards = document.querySelectorAll('.anim-card');
+      const chapterSections = document.querySelectorAll('.chapter-section');
+      const noResultsNotice = document.getElementById('noResultsNotice');
+      const resetSearchBtn = document.getElementById('resetSearchBtn');
+      const filterSummaryTally = document.getElementById('filterSummaryTally');
+      const headerTotalCounter = document.getElementById('headerTotalCounter');
+      const lastAddedLinks = document.querySelectorAll('.last-added-link');
+      const paraPills = document.querySelectorAll('.para-pill');
+
+      // Viewer Elements
+      const viewerOverlay = document.getElementById('viewerOverlay');
+      const viewerIframe = document.getElementById('viewerIframe');
+      const viewerLoader = document.getElementById('viewerLoader');
+      const viewerTitle = document.getElementById('viewerTitle');
+      const viewerBBBadge = document.getElementById('viewerBBBadge');
+      const viewerParaBadge = document.getElementById('viewerParaBadge');
+      const viewerExternalBtn = document.getElementById('viewerExternalBtn');
+      const closeViewerBtn = document.getElementById('closeViewerBtn');
+      const fullscreenToggleBtn = document.getElementById('fullscreenToggleBtn');
+
+      let activeTopic = 'all';
+      let activeType = 'all';
+      let activeGrade = 'all';
+      let searchQuery = '';
+
+      if (headerTotalCounter) {
+        headerTotalCounter.textContent = animCards.length;
+      }
+
+      // ========================================================================
+      // 1. FILTER- EN ZOEKFUNCTIE MET DYNAMISCHE TOTAALTELLER
+      // ========================================================================
+      function updateFilterAndTally() {
+        const query = searchQuery.trim().toLowerCase();
+        let count3d = 0;
+        let countKaart = 0;
+        let countSim = 0;
+        let totalVisibleCards = 0;
+
+        if (mainClearSearchBtn) {
+          mainClearSearchBtn.style.display = query.length > 0 ? 'block' : 'none';
+        }
+
+        chapterSections.forEach(section => {
+          const cardsInSection = section.querySelectorAll('.anim-card');
+          let visibleInSection = 0;
+
+          cardsInSection.forEach(card => {
+            const cardType = (card.getAttribute('data-type') || '').toLowerCase();
+            const cardTopic = (card.getAttribute('data-topic') || '').toLowerCase();
+            const cardLevel = (card.getAttribute('data-level') || '').toLowerCase();
+            const cardKeywords = (card.getAttribute('data-keywords') || '').toLowerCase();
+            const cardTitle = (card.getAttribute('data-title') || '').toLowerCase();
+            const cardBB = (card.getAttribute('data-bb') || '').toLowerCase();
+            const cardPara = (card.getAttribute('data-para') || '').toLowerCase();
+
+            // Onderwerp check
+            let matchesTopic = (activeTopic === 'all') || (cardTopic === activeTopic);
+
+            // Type check
+            let matchesType = (activeType === 'all') || cardType.includes(activeType);
+
+            // Leerjaar check
+            let matchesGrade = false;
+            if (activeGrade === 'all') {
+              matchesGrade = true;
+            } else if (activeGrade === 'onderbouw' && cardLevel.includes('onderbouw')) {
+              matchesGrade = true;
+            } else if (activeGrade === 'klas2' && cardLevel.includes('klas2')) {
+              matchesGrade = true;
+            } else if (activeGrade === 'havo3' && cardLevel.includes('havo3')) {
+              matchesGrade = true;
+            } else if (activeGrade === 'vwo' && cardLevel.includes('vwo')) {
+              matchesGrade = true;
+            }
+
+            // Zoekterm check (inclusief paragraaf)
+            let matchesQuery = true;
+            if (query.length > 0) {
+              const fullSearchSpace = `${cardTitle} ${cardKeywords} ${cardBB} ${cardPara}`;
+              matchesQuery = fullSearchSpace.includes(query);
+            }
+
+            if (matchesTopic && matchesType && matchesGrade && matchesQuery) {
+              card.style.display = 'flex';
+              visibleInSection++;
+              totalVisibleCards++;
+
+              if (cardType.includes('3d')) count3d++;
+              if (cardType.includes('kaart')) countKaart++;
+              if (cardType.includes('simulatie')) countSim++;
+            } else {
+              card.style.display = 'none';
+            }
+          });
+
+          // Beheer zichtbaarheid van de sectie
+          if (cardsInSection.length === 0) {
+            // Lege hoofdstukken verbergen als er gefilterd of gezocht wordt
+            if (query.length > 0 || activeTopic !== 'all' || activeType !== 'all' || activeGrade !== 'all') {
+              section.style.display = 'none';
+            } else {
+              section.style.display = 'block';
+            }
+          } else {
+            if (visibleInSection > 0) {
+              section.style.display = 'block';
+            } else {
+              section.style.display = 'none';
+            }
+          }
+        });
+
+        // Werk de samenvattingstally rechts bij
+        if (filterSummaryTally) {
+          const text3d = `${count3d} 3D-animatie${count3d === 1 ? '' : 's'}`;
+          const textKaart = `${countKaart} interactieve kaart${countKaart === 1 ? '' : 'en'}`;
+          const textSim = `${countSim} simulatie${countSim === 1 ? '' : 's'}`;
+          filterSummaryTally.innerHTML = `<em>${text3d} &bull; ${textKaart} &bull; ${textSim}</em>`;
+        }
+
+        // Toon geen-resultaten melding indien nodig
+        if (noResultsNotice) {
+          if (totalVisibleCards === 0 && (query.length > 0 || activeTopic !== 'all' || activeType !== 'all' || activeGrade !== 'all')) {
+            noResultsNotice.style.display = 'flex';
+          } else {
+            noResultsNotice.style.display = 'none';
+          }
+        }
+      }
+
+      // Event Listeners voor Zoeken
+      if (mainSearchInput) {
+        mainSearchInput.addEventListener('input', function(e) {
+          searchQuery = e.target.value;
+          updateFilterAndTally();
+        });
+      }
+
+      if (mainClearSearchBtn) {
+        mainClearSearchBtn.addEventListener('click', function() {
+          if (mainSearchInput) mainSearchInput.value = '';
+          searchQuery = '';
+          updateFilterAndTally();
+          if (mainSearchInput) mainSearchInput.focus();
+        });
+      }
+
+      if (typeSelect) {
+        typeSelect.addEventListener('change', function(e) {
+          activeType = e.target.value;
+          updateFilterAndTally();
+        });
+      }
+
+      if (gradeSelect) {
+        gradeSelect.addEventListener('change', function(e) {
+          activeGrade = e.target.value;
+          updateFilterAndTally();
+        });
+      }
+
+      topicPills.forEach(pill => {
+        pill.addEventListener('click', function() {
+          topicPills.forEach(p => p.classList.remove('active'));
+          this.classList.add('active');
+          activeTopic = this.getAttribute('data-topic') || 'all';
+          updateFilterAndTally();
+        });
+      });
+
+      // Klikbare paragraaf-knoppen met kleurverandering en directe filtering
+      paraPills.forEach(pill => {
+        pill.addEventListener('click', function() {
+          const wasActive = this.classList.contains('active');
+          paraPills.forEach(p => p.classList.remove('active'));
+
+          if (wasActive) {
+            if (mainSearchInput) mainSearchInput.value = '';
+            searchQuery = '';
+          } else {
+            this.classList.add('active');
+            const pillText = this.textContent.trim();
+            const match = pillText.match(/§\s*([\d\.]+)/);
+            const queryTerm = match ? match[1] : pillText;
+            if (mainSearchInput) mainSearchInput.value = queryTerm;
+            searchQuery = queryTerm;
+          }
+          updateFilterAndTally();
+        });
+      });
+
+      if (mainClearSearchBtn) {
+        mainClearSearchBtn.addEventListener('click', function() {
+          paraPills.forEach(p => p.classList.remove('active'));
+        });
+      }
+
+      if (mainSearchInput) {
+        mainSearchInput.addEventListener('input', function(e) {
+          if (!e.target.value.trim()) {
+            paraPills.forEach(p => p.classList.remove('active'));
+          }
+        });
+      }
+
+      if (resetSearchBtn) {
+        resetSearchBtn.addEventListener('click', function() {
+          if (mainSearchInput) mainSearchInput.value = '';
+          searchQuery = '';
+          activeTopic = 'all';
+          activeType = 'all';
+          activeGrade = 'all';
+
+          if (typeSelect) typeSelect.value = 'all';
+          if (gradeSelect) gradeSelect.value = 'all';
+
+          topicPills.forEach(p => {
+            p.classList.toggle('active', p.getAttribute('data-topic') === 'all');
+          });
+
+          paraPills.forEach(p => p.classList.remove('active'));
+
+          updateFilterAndTally();
+        });
+      }
+
+      // ========================================================================
+      // 2. OVERLAY IFRAME LESVENSTER LOGICA
+      // ========================================================================
+      function openLessonViewer(url, title, bb, para) {
+        if (!viewerOverlay || !viewerIframe) return;
+
+        viewerTitle.textContent = title || 'Aardrijkskunde Animatie';
+        viewerBBBadge.textContent = bb ? `Basisboek ${bb}` : 'Atlas';
+        
+        if (viewerParaBadge) {
+          if (para) {
+            viewerParaBadge.textContent = para;
+            viewerParaBadge.style.display = 'inline-block';
+          } else {
+            viewerParaBadge.style.display = 'none';
+          }
+        }
+
+        viewerExternalBtn.href = url;
+
+        if (viewerLoader) {
+          viewerLoader.style.opacity = '1';
+          viewerLoader.style.display = 'flex';
+        }
+
+        viewerIframe.src = url;
+        viewerOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        viewerIframe.onload = function() {
+          if (viewerLoader) {
+            viewerLoader.style.opacity = '0';
+            setTimeout(() => {
+              viewerLoader.style.display = 'none';
+            }, 300);
+          }
+        };
+      }
+
+      function closeLessonViewer() {
+        if (!viewerOverlay || !viewerIframe) return;
+        viewerOverlay.classList.remove('active');
+        viewerIframe.src = 'about:blank';
+        document.body.style.overflow = '';
+      }
+
+      animCards.forEach(card => {
+        const url = card.getAttribute('data-url');
+        const title = card.getAttribute('data-title');
+        const bb = card.getAttribute('data-bb');
+        const para = card.getAttribute('data-para');
+
+        card.addEventListener('click', function() {
+          openLessonViewer(url, title, bb, para);
+        });
+
+        card.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openLessonViewer(url, title, bb, para);
+          }
+        });
+      });
+
+      // Laatst toegevoegd links openen direct het lesvenster
+      lastAddedLinks.forEach(link => {
+        link.addEventListener('click', function() {
+          const targetId = this.getAttribute('data-open-target');
+          let targetCard = document.getElementById('card-' + targetId);
+          if (!targetCard) {
+            if (targetId === 'plaattektoniek') targetCard = document.getElementById('card-plaattektoniek');
+            if (targetId === 'woordspin') targetCard = document.getElementById('card-woordspin');
+            if (targetId === 'itcz') targetCard = document.getElementById('card-itcz');
+            if (targetId === 'vergrijzing') targetCard = document.getElementById('card-vergrijzing');
+          }
+
+          if (targetCard) {
+            const url = targetCard.getAttribute('data-url');
+            const title = targetCard.getAttribute('data-title');
+            const bb = targetCard.getAttribute('data-bb');
+            const para = targetCard.getAttribute('data-para');
+            openLessonViewer(url, title, bb, para);
+          }
+        });
+      });
+
+      if (closeViewerBtn) {
+        closeViewerBtn.addEventListener('click', closeLessonViewer);
+      }
+
+      // ========================================================================
+      // 3. COLOFON & LICENTIE MODAL LOGICA
+      // ========================================================================
+      const colofonModal = document.getElementById('colofonModal');
+      const headerInfoBtn = document.getElementById('headerInfoBtn');
+      const viewerInfoBtn = document.getElementById('viewerInfoBtn');
+      const openColofonBtn = document.getElementById('openColofonBtn');
+      const closeColofonBtn = document.getElementById('closeColofonBtn');
+      const dismissColofonBtn = document.getElementById('dismissColofonBtn');
+
+      function openColofon() {
+        if (!colofonModal) return;
+        colofonModal.removeAttribute('hidden');
+        // Force reflow for transition
+        void colofonModal.offsetWidth;
+        colofonModal.classList.add('active');
+      }
+
+      function closeColofon() {
+        if (!colofonModal) return;
+        colofonModal.classList.remove('active');
+        setTimeout(() => {
+          colofonModal.setAttribute('hidden', '');
+        }, 250);
+      }
+
+      if (headerInfoBtn) headerInfoBtn.addEventListener('click', openColofon);
+      if (viewerInfoBtn) viewerInfoBtn.addEventListener('click', openColofon);
+      if (openColofonBtn) openColofonBtn.addEventListener('click', openColofon);
+      if (closeColofonBtn) closeColofonBtn.addEventListener('click', closeColofon);
+      if (dismissColofonBtn) dismissColofonBtn.addEventListener('click', closeColofon);
+
+      if (colofonModal) {
+        colofonModal.addEventListener('click', function(e) {
+          if (e.target === colofonModal) {
+            closeColofon();
+          }
+        });
+      }
+
+      window.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          if (colofonModal && colofonModal.classList.contains('active')) {
+            closeColofon();
+            return;
+          }
+          if (viewerOverlay && viewerOverlay.classList.contains('active')) {
+            closeLessonViewer();
+          }
+        }
+      });
+
+      if (fullscreenToggleBtn) {
+        fullscreenToggleBtn.addEventListener('click', function() {
+          if (!document.fullscreenElement) {
+            viewerOverlay.requestFullscreen().catch(err => {
+              console.warn('Fullscreen niet beschikbaar:', err);
+            });
+          } else {
+            document.exitFullscreen().catch(err => console.warn(err));
+          }
+        });
+      }
+
+    })();
+  </script>
+</body>
+</html>
