@@ -840,6 +840,53 @@
       transform: scale(0.258); /* ~1.03x zoom op de 16:9 preview */
     }
 
+    /* Opgeslagen miniatuurweergave snapshot (0% CPU / 0% GPU lag) */
+    .card-thumb-img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform;
+    }
+
+    .anim-card:hover .card-thumb-img {
+      transform: scale(1.04);
+    }
+
+    /* Snelle en scherpe statische vectorpreview voor zware 3D-animaties */
+    .card-svg-preview {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .anim-card:hover .card-svg-preview {
+      transform: scale(1.04);
+    }
+
+    /* Pauzeer en verberg achtergrond-DOM tijdens geopend lesvenster voor 0% CPU/GPU overhead */
+    body.viewer-mode .panorama-hero-section,
+    body.viewer-mode .onderwerpen-section,
+    body.viewer-mode .chapter-circles-bar,
+    body.viewer-mode .filter-controls-bar,
+    body.viewer-mode .main-container,
+    body.viewer-mode .atlas-footer {
+      visibility: hidden !important;
+    }
+
     /* Rustige badges in de hoek van de preview */
     .preview-badges-overlay {
       position: absolute;
@@ -1057,29 +1104,44 @@
     }
 
     .viewer-topbar {
-      height: 60px;
+      height: 48px;
       background: #141E30;
       color: #FFFFFF;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 20px;
+      padding: 0 16px;
       flex-shrink: 0;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
       border-bottom: 2px solid var(--terracotta);
+      white-space: nowrap;
+      position: relative;
+      z-index: 20;
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), margin-top 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .viewer-topbar.collapsed,
+    .viewer-overlay.topbar-collapsed .viewer-topbar {
+      transform: translateY(-100%);
+      margin-top: -48px;
     }
 
     .viewer-left {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
     }
 
     .viewer-btn {
       font-family: var(--font-body);
-      font-size: 0.9rem;
+      font-size: 0.82rem;
       font-weight: 600;
-      padding: 8px 16px;
+      height: 32px;
+      padding: 0 10px;
       border-radius: var(--radius-sm);
       border: 1px solid rgba(255, 255, 255, 0.2);
       background: rgba(255, 255, 255, 0.1);
@@ -1087,10 +1149,12 @@
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       transition: all 0.18s ease;
       user-select: none;
       text-decoration: none;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .viewer-btn:hover {
@@ -1101,6 +1165,8 @@
     .viewer-btn-back {
       background: var(--terracotta);
       border-color: var(--terracotta);
+      padding: 0 12px;
+      font-size: 0.84rem;
     }
 
     .viewer-btn-back:hover {
@@ -1108,52 +1174,130 @@
       border-color: var(--terracotta-hover);
     }
 
+    .viewer-btn-toggle {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .viewer-btn-toggle:hover {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.45);
+    }
+
     .viewer-info {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
       overflow: hidden;
+      white-space: nowrap;
     }
 
     .viewer-title {
-      font-size: 1.05rem;
+      font-size: 0.95rem;
       font-weight: 600;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 480px;
+      flex: 1;
+      min-width: 0;
+      color: #FFFFFF;
     }
 
     .viewer-bb-badge {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 700;
-      padding: 2px 8px;
+      padding: 2px 7px;
       background: rgba(255, 255, 255, 0.18);
       border-radius: 4px;
       color: #FFD166;
+      white-space: nowrap;
+      flex-shrink: 0;
+      letter-spacing: 0.02em;
     }
 
     .viewer-para-badge {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 700;
-      padding: 2px 8px;
+      padding: 2px 7px;
       background: rgba(158, 42, 43, 0.85);
       border-radius: 4px;
       color: #FFFFFF;
+      white-space: nowrap;
+      flex-shrink: 0;
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.02em;
     }
 
     .viewer-right {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      margin-left: 12px;
+    }
+
+    /* Zwevend lipje om balk op digibord met 1 tik terug te halen */
+    .viewer-unhide-pill {
+      position: absolute;
+      top: 8px;
+      right: 18px;
+      z-index: 99;
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 20px;
+      background: rgba(20, 30, 48, 0.88);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #FFFFFF;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-14px);
+      transition: opacity 0.22s ease, transform 0.22s ease, background 0.15s ease;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .viewer-unhide-pill:hover {
+      background: #141E30;
+      border-color: rgba(255, 255, 255, 0.55);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    }
+
+    .viewer-overlay.topbar-collapsed .viewer-unhide-pill {
+      opacity: 0.9;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .viewer-overlay.topbar-collapsed .viewer-unhide-pill:hover {
+      opacity: 1;
     }
 
     .viewer-iframe-container {
       position: relative;
       flex-grow: 1;
       width: 100%;
-      height: calc(100vh - 60px);
+      height: calc(100vh - 48px);
       background: #FFFFFF;
+      transition: height 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .viewer-overlay.topbar-collapsed .viewer-iframe-container {
+      height: 100vh;
     }
 
     .viewer-iframe {
@@ -1485,9 +1629,6 @@
        11. RESPONSIVE DESIGN (DIGIBORD, TABLET, MOBIEL)
        ========================================================================== */
     @media (max-width: 1024px) {
-      .viewer-title {
-        max-width: 240px;
-      }
       .filter-controls-bar {
         flex-direction: column;
         align-items: stretch;
@@ -1557,7 +1698,7 @@
         </button>
         <span class="header-badge-tag">
           <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--active-red); display: inline-block;"></span>
-          <strong id="headerTotalCounter">7</strong> interactieve modules
+          <strong id="headerTotalCounter">9</strong> interactieve modules
         </span>
       </div>
     </div>
@@ -1582,10 +1723,10 @@
         <div class="hotspot-tooltip">2. Weer en klimaat &bull; 2 animaties (3D)</div>
       </a>
 
-      <!-- Hotspot 3: Systeem aarde (51%, 29%) - Nu leeg -->
-      <a href="#thema-3" class="panorama-hotspot" style="top: 51%; left: 29%;" data-theme-target="3" aria-label="Hoofdstuk 3: Systeem aarde (Nog onontdekt gebied)">
-        <span class="hotspot-pin empty">3</span>
-        <div class="hotspot-tooltip">3. Systeem aarde &bull; Onontdekt gebied</div>
+      <!-- Hotspot 3: Systeem aarde (51%, 29%) - 1 animatie (3D) -->
+      <a href="#thema-3" class="panorama-hotspot" style="top: 51%; left: 29%;" data-theme-target="3" aria-label="Hoofdstuk 3: Systeem aarde (1 animatie)">
+        <span class="hotspot-pin active">3</span>
+        <div class="hotspot-tooltip">3. Systeem aarde &bull; 1 animatie (3D)</div>
       </a>
 
       <!-- Hotspot 4: Actieve aarde (17%, 41%) - 1 animatie (3D) -->
@@ -1601,15 +1742,15 @@
       </a>
 
       <!-- Hotspot 6: Bevolking, migratie en cultuur (50%, 48%) -->
-      <a href="#thema-6" class="panorama-hotspot" style="top: 50%; left: 48%;" data-theme-target="6" aria-label="Hoofdstuk 6: Bevolking, migratie en cultuur (1 interactieve kaart)">
+      <a href="#thema-6" class="panorama-hotspot" style="top: 50%; left: 48%;" data-theme-target="6" aria-label="Hoofdstuk 6: Bevolking, migratie en cultuur (2 interactieve modules)">
         <span class="hotspot-pin active">6</span>
-        <div class="hotspot-tooltip">6. Bevolking &amp; cultuur &bull; 1 interactieve kaart</div>
+        <div class="hotspot-tooltip">6. Bevolking &amp; cultuur &bull; 2 modules</div>
       </a>
 
-      <!-- Hotspot 7: Stedelijke en landelijke omgeving (66%, 62%) -->
-      <a href="#thema-7" class="panorama-hotspot" style="top: 66%; left: 62%;" data-theme-target="7" aria-label="Hoofdstuk 7: Stedelijke en landelijke omgeving (1 animatie)">
-        <span class="hotspot-pin active">7</span>
-        <div class="hotspot-tooltip">7. Stedelijke omgeving &bull; 1 animatie</div>
+      <!-- Hotspot 7: Stedelijke en landelijke omgeving (66%, 62%) - Nu leeg -->
+      <a href="#thema-7" class="panorama-hotspot" style="top: 66%; left: 62%;" data-theme-target="7" aria-label="Hoofdstuk 7: Stedelijke en landelijke omgeving (Nog onontdekt gebied)">
+        <span class="hotspot-pin empty">7</span>
+        <div class="hotspot-tooltip">7. Stedelijke omgeving &bull; Onontdekt gebied</div>
       </a>
 
       <!-- Hotspot 8: Mensen en hun activiteiten (50%, 82%) -->
@@ -1625,9 +1766,9 @@
       </a>
 
       <!-- Hotspot 10: Globalisering (76%, 91%) -->
-      <a href="#thema-10" class="panorama-hotspot" style="top: 76%; left: 91%;" data-theme-target="10" aria-label="Hoofdstuk 10: Globalisering (Nog onontdekt gebied)">
-        <span class="hotspot-pin empty">10</span>
-        <div class="hotspot-tooltip">10. Globalisering &bull; Onontdekt gebied</div>
+      <a href="#thema-10" class="panorama-hotspot" style="top: 76%; left: 91%;" data-theme-target="10" aria-label="Hoofdstuk 10: Globalisering (1 module)">
+        <span class="hotspot-pin active">10</span>
+        <div class="hotspot-tooltip">10. Globalisering &bull; 1 module</div>
       </a>
     </div>
 
@@ -1635,11 +1776,11 @@
     <div class="panorama-legend">
       <div class="legend-item">
         <span class="legend-dot legend-dot-active"></span>
-        <span><strong>Animatie of kaart beschikbaar</strong> (Thema 1, 2, 4, 6, 7)</span>
+        <span><strong>Animatie of kaart beschikbaar</strong> (Thema 1, 2, 3, 4, 6, 10)</span>
       </div>
       <div class="legend-item">
         <span class="legend-dot legend-dot-empty"></span>
-        <span><strong>Nog onontdekt gebied</strong> (Thema 3, 5, 8, 9, 10)</span>
+        <span><strong>Nog onontdekt gebied</strong> (Thema 5, 7, 8, 9)</span>
       </div>
     </div>
   </section>
@@ -1656,19 +1797,21 @@
       <button class="topic-pill" data-topic="kaartvaardigheden">Kaartvaardigheden <span class="pill-count">[1]</span></button>
       <button class="topic-pill" data-topic="seizoenen">Aarde &amp; Seizoenen <span class="pill-count">[1]</span></button>
       <button class="topic-pill" data-topic="itcz">ITCZ &amp; Moesson <span class="pill-count">[1]</span></button>
+      <button class="topic-pill" data-topic="waterkringloop">Waterkringloop 3D <span class="pill-count">[1]</span></button>
       <button class="topic-pill" data-topic="platentektoniek">Platentektoniek &amp; Subductie <span class="pill-count">[1]</span></button>
       <button class="topic-pill" data-topic="vulkanisme">Vulkanisme &amp; Woordspin <span class="pill-count">[1]</span></button>
       <button class="topic-pill" data-topic="vergrijzing">Vergrijzing &amp; Ontgroening <span class="pill-count">[1]</span></button>
-      <button class="topic-pill" data-topic="stadsgeleding">Stadsgeleding &amp; CBD <span class="pill-count">[1]</span></button>
+      <button class="topic-pill" data-topic="vruchtbaarheid">Vruchtbaarheid &amp; Geboorte <span class="pill-count">[1]</span></button>
+      <button class="topic-pill" data-topic="handel">Handel &amp; Globalisering <span class="pill-count">[1]</span></button>
     </div>
 
     <div class="last-added-row">
       <span class="last-added-label">Laatst toegevoegd:</span>
-      <button class="last-added-link" data-open-target="seizoenen" title="Open direct in lesvenster">Zon, Aarde &amp; Seizoenen (3D)</button>
+      <button class="last-added-link" data-open-target="waterkringloop" title="Open direct in lesvenster">Waterkringloop 3D</button>
       <span class="last-added-sep">&bull;</span>
-      <button class="last-added-link" data-open-target="vergrijzing" title="Open direct in lesvenster">Vergrijzing in Nederland (1990–2050)</button>
+      <button class="last-added-link" data-open-target="cbs-handel" title="Open direct in lesvenster">CBS Goederenhandel</button>
       <span class="last-added-sep">&bull;</span>
-      <button class="last-added-link" data-open-target="itcz" title="Open direct in lesvenster">3D ITCZ &amp; Moesson</button>
+      <button class="last-added-link" data-open-target="cbs-vruchtbaarheid" title="Open direct in lesvenster">CBS Vruchtbaarheidscijfers</button>
     </div>
   </section>
 
@@ -1679,14 +1822,14 @@
     <div class="chapter-circles-track">
       <a href="#thema-1" class="ch-circle ch-circle-active" title="Hoofdstuk 1: Vaardigheden (2 animaties)">1</a>
       <a href="#thema-2" class="ch-circle ch-circle-active" title="Hoofdstuk 2: Weer en klimaat (2 3D-animaties)">2</a>
-      <a href="#thema-3" class="ch-circle ch-circle-empty" title="Hoofdstuk 3: Systeem aarde (Onontdekt gebied)">3</a>
+      <a href="#thema-3" class="ch-circle ch-circle-active" title="Hoofdstuk 3: Systeem aarde (1 3D-animatie)">3</a>
       <a href="#thema-4" class="ch-circle ch-circle-active" title="Hoofdstuk 4: Actieve aarde (1 animatie)">4</a>
       <a href="#thema-5" class="ch-circle ch-circle-empty" title="Hoofdstuk 5: Duurzaamheid (Onontdekt gebied)">5</a>
-      <a href="#thema-6" class="ch-circle ch-circle-active" title="Hoofdstuk 6: Bevolking, migratie en cultuur (1 kaart)">6</a>
-      <a href="#thema-7" class="ch-circle ch-circle-active" title="Hoofdstuk 7: Stedelijke en landelijke omgeving (1 animatie)">7</a>
+      <a href="#thema-6" class="ch-circle ch-circle-active" title="Hoofdstuk 6: Bevolking, migratie en cultuur (2 modules)">6</a>
+      <a href="#thema-7" class="ch-circle ch-circle-empty" title="Hoofdstuk 7: Stedelijke en landelijke omgeving (Onontdekt gebied)">7</a>
       <a href="#thema-8" class="ch-circle ch-circle-empty" title="Hoofdstuk 8: Mensen en hun activiteiten (Onontdekt gebied)">8</a>
       <a href="#thema-9" class="ch-circle ch-circle-empty" title="Hoofdstuk 9: Ontwikkelingspeil (Onontdekt gebied)">9</a>
-      <a href="#thema-10" class="ch-circle ch-circle-empty" title="Hoofdstuk 10: Globalisering (Onontdekt gebied)">10</a>
+      <a href="#thema-10" class="ch-circle ch-circle-active" title="Hoofdstuk 10: Globalisering (1 module)">10</a>
     </div>
   </nav>
 
@@ -1733,7 +1876,7 @@
     </div>
 
     <div class="filter-summary-tally" id="filterSummaryTally">
-      <em>3 3D-animaties &bull; 3 interactieve kaarten &bull; 1 simulatie</em>
+      <em>4 3D-animaties &bull; 4 interactieve kaarten &bull; 1 simulatie</em>
     </div>
   </div>
 
@@ -1794,7 +1937,7 @@
           data-level="onderbouw"
           data-keywords="kaartmeester kaartlezen schaal schaalstok legenda coordinaten windrichtingen brugklas kaartanalyse kaartvaardigheden b12 b14 b22 1.4 1.5 1.7">
           <div class="card-preview-container">
-            <iframe class="card-live-frame" src="../GitHub_Kaartmeester_English/index_nl.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+            <iframe class="card-live-frame" src="about:blank" data-src="../GitHub_Kaartmeester_English/index_nl.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
             <div class="preview-badges-overlay">
               <span class="p-badge-bb">B12, B14, B22</span>
               <span class="p-badge-para">§ 1.4 &bull; § 1.5 &bull; § 1.7</span>
@@ -1829,7 +1972,7 @@
           data-level="onderbouw"
           data-keywords="kernzinnen woordspin mindmap tekststructuur vulkanen vaardigheden informatie verzamelen verwerken beschrijven verklaren brugklas b5 b34 1.2 1.10">
           <div class="card-preview-container">
-            <iframe class="card-live-frame" src="../Tekststructuur_Mindmap/index.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+            <iframe class="card-live-frame" src="about:blank" data-src="../Tekststructuur_Mindmap/index.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
             <div class="preview-badges-overlay">
               <span class="p-badge-bb">B5, B34</span>
               <span class="p-badge-para">§ 1.10 &bull; § 1.2</span>
@@ -1891,7 +2034,7 @@
           data-level="onderbouw klas2 havo3 vwo"
           data-keywords="aarde zon seizoenen 3d threejs aardas daglengte invalshoek zonnestand keerkring poolcirkel poolnacht middernachtzon equinox zonnestralen stralingsbalans atmosfeer dampkring breedteligging b43 b44 b45 b46 b47 b48 b49 havo vwo 2.2 2.3">
           <div class="card-preview-container">
-            <iframe class="card-live-frame" src="seizoenen-3d.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+            <iframe class="card-live-frame" src="about:blank" data-src="seizoenen-3d.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
             <div class="preview-badges-overlay">
               <span class="p-badge-bb">B43, B44, B46, B48</span>
               <span class="p-badge-para">§ 2.2 &bull; § 2.3</span>
@@ -1926,7 +2069,7 @@
           data-level="havo3 vwo"
           data-keywords="itcz moesson 3d threejs hadley hadleycel passaat passaten luchtcirculatie windsystemen india neerslag lagedruk b58 b62 b64 b65 stijgingsregen stuwingsregen buys ballot klimaat weer havo 3 vwo 2.7 2.8">
           <div class="card-preview-container">
-            <iframe class="card-live-frame" src="itcz_moesson_3d.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+            <iframe class="card-live-frame" src="about:blank" data-src="itcz_moesson_3d.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
             <div class="preview-badges-overlay">
               <span class="p-badge-bb">B58, B62, B64, B65</span>
               <span class="p-badge-para">§ 2.7 &bull; § 2.8</span>
@@ -1965,17 +2108,200 @@
           <span class="para-pill">§ 3.3 Oorspronkelijke vegetatie: van nat naar droog</span>
           <span class="para-pill">§ 3.4 Oorspronkelijke vegetatie: van warm naar koud</span>
           <span class="para-pill">§ 3.5 Bodems</span>
-          <span class="para-pill">§ 3.6 Hydrosfeer: water</span>
+          <span class="para-pill has-module" title="Module beschikbaar">§ 3.6 Hydrosfeer: water</span>
         </div>
       </header>
 
-      <div class="empty-chapter-box">
-        <svg class="empty-chapter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"></circle>
-          <path d="M8 12h8"></path>
-        </svg>
-        <div class="empty-chapter-text">Nog geen interactieve uitleg-animaties toegevoegd in dit hoofdstuk</div>
-        <div class="empty-chapter-sub">Animaties over de waterkringloop, rivieren of vegetatiezones verschijnen hier zodra ze worden gekoppeld.</div>
+      <div class="cards-grid">
+        <!-- Waterkringloop & Stroomgebied 3D -->
+        <article class="anim-card" 
+          tabindex="0"
+          id="card-waterkringloop"
+          style="--card-accent: var(--theme-3-color);"
+          data-url="waterkringloop-3d.html"
+          data-title="Waterkringloop &amp; Stroomgebied 3D"
+          data-bb="B89, B90, B91, B92, B93, B94, B95, B96"
+          data-para="§ 3.6 Hydrosfeer: water"
+          data-type="3d"
+          data-topic="waterkringloop"
+          data-level="klas2 havo3 vwo"
+          data-keywords="waterkringloop 3d threejs hydrosfeer stroomgebied rivier bovenloop middenloop benedenloop meanders delta sedimentatie erosie infiltratie grondwater verdamping condensatie neerslag debiet regiem b89 b90 b91 b92 b93 b94 b95 b96 3.6">
+          <div class="card-preview-container">
+            <!-- Scherpe vectorpreview als directe fallback -->
+            <svg class="card-svg-preview" viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <defs>
+                <linearGradient id="skyGradWk" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#0c233c"/>
+                  <stop offset="55%" stop-color="#2a5f8a"/>
+                  <stop offset="100%" stop-color="#7eb5d8"/>
+                </linearGradient>
+                <linearGradient id="mountainGradWk" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#475569"/>
+                  <stop offset="50%" stop-color="#334155"/>
+                  <stop offset="100%" stop-color="#1e293b"/>
+                </linearGradient>
+                <linearGradient id="valleyGradWk" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#166534"/>
+                  <stop offset="60%" stop-color="#15803d"/>
+                  <stop offset="100%" stop-color="#22c55e"/>
+                </linearGradient>
+                <linearGradient id="seaGradWk" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#0369a1"/>
+                  <stop offset="100%" stop-color="#0284c7"/>
+                </linearGradient>
+                <linearGradient id="riverGradWk" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#e0f2fe"/>
+                  <stop offset="50%" stop-color="#38bdf8"/>
+                  <stop offset="100%" stop-color="#0284c7"/>
+                </linearGradient>
+                <linearGradient id="groundGradWk" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#854d0e"/>
+                  <stop offset="35%" stop-color="#5a3818"/>
+                  <stop offset="100%" stop-color="#2a1b0c"/>
+                </linearGradient>
+                <linearGradient id="groundwaterGradWk" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#0284c7" stop-opacity="0.5"/>
+                  <stop offset="100%" stop-color="#0369a1" stop-opacity="0.85"/>
+                </linearGradient>
+                <radialGradient id="sunGradWk" cx="82%" cy="18%" r="45%">
+                  <stop offset="0%" stop-color="#fef08a" stop-opacity="0.95"/>
+                  <stop offset="30%" stop-color="#facc15" stop-opacity="0.6"/>
+                  <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
+                </radialGradient>
+                <filter id="glowWk">
+                  <feGaussianBlur stdDeviation="2.5" result="glow"/>
+                  <feMerge>
+                    <feMergeNode in="glow"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+
+              <!-- Lucht & Zon -->
+              <rect width="640" height="240" fill="url(#skyGradWk)"/>
+              <rect width="640" height="240" fill="url(#sunGradWk)"/>
+              <circle cx="525" cy="45" r="22" fill="#fef08a" opacity="0.9" filter="url(#glowWk)"/>
+
+              <!-- Achterste gebergte & Gletsjers -->
+              <polygon points="0,210 60,110 120,160 170,95 240,195 0,225" fill="#334155" opacity="0.7"/>
+              <polygon points="170,95 145,130 195,130" fill="#f8fafc" opacity="0.95"/>
+              <polygon points="60,110 40,140 80,140" fill="#f8fafc" opacity="0.95"/>
+
+              <!-- Voorste gebergte (Bovenloop) -->
+              <polygon points="0,240 85,135 150,210 210,150 310,245 0,250" fill="url(#mountainGradWk)"/>
+              <!-- Sneeuwkappen bovenloop -->
+              <polygon points="85,135 65,165 80,160 90,170 105,162" fill="#ffffff"/>
+              <polygon points="210,150 195,175 210,170 225,176" fill="#ffffff"/>
+
+              <!-- Heuvels & Middenloop dal -->
+              <path d="M120,225 Q230,190 360,220 L440,245 L150,255 Z" fill="url(#valleyGradWk)"/>
+              <path d="M280,225 Q400,210 520,230 L520,260 L280,260 Z" fill="#15803d"/>
+
+              <!-- Benedenloop kustvlakte & Zee (Rechts) -->
+              <path d="M430,230 L640,230 L640,285 L430,285 Z" fill="url(#seaGradWk)"/>
+              <!-- Golfjes op zee -->
+              <path d="M470,240 Q485,236 500,240 T530,240 T560,240 T590,240 T620,240" fill="none" stroke="#7dd3fc" stroke-width="1.8" opacity="0.75"/>
+              <path d="M490,255 Q505,251 520,255 T550,255 T580,255 T610,255" fill="none" stroke="#bae6fd" stroke-width="1.4" opacity="0.6"/>
+
+              <!-- Meanderende Rivier van Bovenloop naar Zee -->
+              <path d="M92,168 Q110,200 135,215 Q175,230 190,228 Q240,220 270,238 Q310,255 350,235 Q390,215 445,235 L475,242" fill="none" stroke="url(#riverGradWk)" stroke-width="7" stroke-linecap="round"/>
+              <!-- Rivier delta vertakkingen -->
+              <path d="M445,235 Q465,232 490,235" fill="none" stroke="#38bdf8" stroke-width="4"/>
+              <path d="M445,235 Q460,245 480,248" fill="none" stroke="#38bdf8" stroke-width="3.5"/>
+
+              <!-- Grond / Bodem Dwarsdoorsnede (Onderste deel) -->
+              <rect x="0" y="260" width="640" height="100" fill="url(#groundGradWk)"/>
+              <!-- Grondwaterlaag -->
+              <path d="M0,305 Q180,295 340,300 T640,285 L640,360 L0,360 Z" fill="url(#groundwaterGradWk)"/>
+              <!-- Grondwaterspiegel (stippellijn) -->
+              <path d="M0,305 Q180,295 340,300 T640,285" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="6,4"/>
+
+              <!-- Infiltratie druppels / pijlen -->
+              <g fill="#38bdf8" opacity="0.9">
+                <circle cx="210" cy="275" r="2.5"/>
+                <circle cx="210" cy="285" r="2.5"/>
+                <path d="M207,290 L213,290 L210,295 Z"/>
+
+                <circle cx="340" cy="272" r="2.5"/>
+                <circle cx="340" cy="282" r="2.5"/>
+                <path d="M337,287 L343,287 L340,292 Z"/>
+              </g>
+
+              <!-- Wolken & Neerslag -->
+              <!-- Regenwolk boven gebergte -->
+              <g fill="#475569" opacity="0.95">
+                <ellipse cx="140" cy="75" rx="55" ry="24"/>
+                <ellipse cx="115" cy="70" rx="35" ry="22"/>
+                <ellipse cx="170" cy="70" rx="38" ry="22"/>
+                <ellipse cx="140" cy="58" rx="32" ry="20" fill="#64748b"/>
+              </g>
+              <!-- Regenstrepen -->
+              <g stroke="#93c5fd" stroke-width="2" stroke-linecap="round" opacity="0.85">
+                <line x1="105" y1="102" x2="98" y2="122"/>
+                <line x1="125" y1="104" x2="118" y2="124"/>
+                <line x1="145" y1="102" x2="138" y2="122"/>
+                <line x1="165" y1="105" x2="158" y2="125"/>
+                <line x1="185" y1="103" x2="178" y2="123"/>
+              </g>
+
+              <!-- Stapelwolk boven zee/kust -->
+              <g fill="#ffffff" opacity="0.92">
+                <ellipse cx="430" cy="95" rx="50" ry="20"/>
+                <ellipse cx="405" cy="90" rx="32" ry="18"/>
+                <ellipse cx="455" cy="90" rx="34" ry="18"/>
+                <ellipse cx="430" cy="80" rx="28" ry="16"/>
+              </g>
+
+              <!-- Pijlen Waterkringloop -->
+              <!-- Verdamping boven zee (omhoog) -->
+              <g fill="none" stroke="#60a5fa" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M520,215 Q515,185 525,160 Q535,135 528,110"/>
+                <path d="M523,115 L528,107 L535,114" fill="#60a5fa"/>
+
+                <path d="M560,215 Q555,185 565,160 Q575,135 568,110"/>
+                <path d="M563,115 L568,107 L575,114" fill="#60a5fa"/>
+
+                <!-- Wolkentransport / Advectie naar land (links) -->
+                <path d="M370,75 L220,75"/>
+                <path d="M230,70 L218,75 L230,80" fill="#60a5fa"/>
+              </g>
+
+              <!-- Didactische Labels -->
+              <rect x="500" y="162" width="85" height="18" rx="4" fill="rgba(12,21,33,0.82)"/>
+              <text x="542" y="175" fill="#93c5fd" font-family="system-ui, sans-serif" font-size="10.5" font-weight="700" text-anchor="middle">Verdamping</text>
+
+              <rect x="260" y="62" width="92" height="18" rx="4" fill="rgba(12,21,33,0.82)"/>
+              <text x="306" y="75" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="10.5" font-weight="700" text-anchor="middle">Condensatie &rarr;</text>
+
+              <rect x="110" y="28" width="65" height="18" rx="4" fill="rgba(12,21,33,0.82)"/>
+              <text x="142" y="41" fill="#7dd3fc" font-family="system-ui, sans-serif" font-size="10.5" font-weight="700" text-anchor="middle">Neerslag</text>
+
+              <rect x="18" y="328" width="135" height="20" rx="4" fill="rgba(12,21,33,0.88)"/>
+              <text x="85" y="342" fill="#38bdf8" font-family="system-ui, sans-serif" font-size="11" font-weight="700" text-anchor="middle">Grondwater &bull; Infiltratie</text>
+
+              <rect x="495" y="328" width="128" height="20" rx="4" fill="rgba(12,21,33,0.88)"/>
+              <text x="559" y="342" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="11" font-weight="700" text-anchor="middle">Oceaan &bull; Hydrosfeer</text>
+            </svg>
+            <iframe class="card-live-frame" src="about:blank" data-src="waterkringloop-3d.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+            <div class="preview-badges-overlay">
+              <span class="p-badge-bb">B89 &ndash; B96</span>
+              <span class="p-badge-para">§ 3.6</span>
+              <span class="p-badge-level">Klas 2-3 &bull; Havo / Vwo</span>
+            </div>
+            <div class="card-preview-hover">
+              <span class="play-pill">Start animatie &rarr;</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-theme-tag">Thema 3 &bull; Systeem aarde &bull; § 3.6 Hydrosfeer &bull; B89–B96</div>
+            <h3 class="card-title">Waterkringloop &amp; Stroomgebied 3D</h3>
+            <p class="card-desc">Interactieve 3D-simulatie van de waterkringloop, het stroomgebied van een rivier (boven-, midden- en benedenloop), grondwater, meanders en deltagebieden.</p>
+            <div class="card-footer">
+              <span class="card-action-link">Openen op Digibord &rarr;</span>
+              <span class="card-submap-tag">3D-animatie</span>
+            </div>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -2018,7 +2344,69 @@
           data-level="klas2 havo3 vwo"
           data-keywords="plaattektoniek 3d subductie trog vulkaan vulkanisme convectiestroom oceanische plaat continentale plaat magma lithosfeer continentverschuiving b98 b99 b100 b101 b102 4.2 4.3">
           <div class="card-preview-container">
-            <iframe class="card-live-frame" src="../plaattektoniek-3d/index.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+            <!-- Scherpe vectorpreview als directe fallback (voorkomt zwart vlak bij WebGL alpha/inladen) -->
+            <svg class="card-svg-preview" viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <defs>
+                <linearGradient id="skyGradPt" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#b8d5e5"/>
+                  <stop offset="100%" stop-color="#e2ebf0"/>
+                </linearGradient>
+                <linearGradient id="oceanGradPt" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#1496a6"/>
+                  <stop offset="100%" stop-color="#0a4b57"/>
+                </linearGradient>
+                <linearGradient id="mantleGradPt" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#a34316"/>
+                  <stop offset="100%" stop-color="#541b08"/>
+                </linearGradient>
+                <linearGradient id="oceanCrustPt" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#2c3e50"/>
+                  <stop offset="100%" stop-color="#34495e"/>
+                </linearGradient>
+                <linearGradient id="contCrustPt" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#5a6872"/>
+                  <stop offset="100%" stop-color="#3b4852"/>
+                </linearGradient>
+                <linearGradient id="magmaPt" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stop-color="#ff3b00"/>
+                  <stop offset="70%" stop-color="#ff8c00"/>
+                  <stop offset="100%" stop-color="#ffee55"/>
+                </linearGradient>
+                <filter id="glowPt">
+                  <feGaussianBlur stdDeviation="3" result="glow"/>
+                  <feMerge>
+                    <feMergeNode in="glow"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+              <rect width="640" height="190" fill="url(#skyGradPt)"/>
+              <rect y="190" width="640" height="170" fill="url(#mantleGradPt)"/>
+              <path d="M0,230 Q160,210 320,240 T640,225 L640,360 L0,360 Z" fill="#421405" opacity="0.6"/>
+              <path d="M0,140 L280,140 L240,195 L0,195 Z" fill="url(#oceanGradPt)"/>
+              <line x1="0" y1="140" x2="280" y2="140" stroke="#72d6e3" stroke-width="2"/>
+              <path d="M0,175 L230,175 L430,345 L380,360 L180,215 L0,215 Z" fill="url(#oceanCrustPt)"/>
+              <path d="M0,175 L230,175 L300,235 L285,245 L200,185 L0,185 Z" fill="#e0c088" opacity="0.85"/>
+              <path d="M225,175 Q245,190 270,175 L330,150 L380,110 L410,135 L450,95 L490,140 L640,135 L640,245 L410,245 L225,175 Z" fill="url(#contCrustPt)"/>
+              <path d="M435,95 L450,105 L465,95 Z" fill="#2c3e50"/>
+              <ellipse cx="400" cy="285" rx="36" ry="24" fill="url(#magmaPt)" filter="url(#glowPt)"/>
+              <path d="M396,275 Q410,210 445,140 Q448,110 450,102 Q452,110 455,140 Q425,210 404,275 Z" fill="url(#magmaPt)" filter="url(#glowPt)"/>
+              <circle cx="450" cy="98" r="8" fill="#ffdd44" filter="url(#glowPt)"/>
+              <ellipse cx="454" cy="82" rx="20" ry="8" fill="#888899" opacity="0.6"/>
+              <g fill="#ffffff" opacity="0.9">
+                <path d="M90,195 L150,195 L150,190 L168,198 L150,206 L150,201 L90,201 Z"/>
+                <path d="M275,225 L320,265 L316,269 L335,274 L328,255 L324,259 L279,219 Z"/>
+              </g>
+              <rect x="24" y="148" width="124" height="20" rx="4" fill="rgba(19,33,42,0.75)"/>
+              <text x="86" y="162" fill="#ffffff" font-family="system-ui, sans-serif" font-size="11" font-weight="600" text-anchor="middle">Oceanische plaat</text>
+              <rect x="195" y="118" width="70" height="20" rx="4" fill="rgba(19,33,42,0.75)"/>
+              <text x="230" y="132" fill="#38bdf8" font-family="system-ui, sans-serif" font-size="11" font-weight="600" text-anchor="middle">Trog</text>
+              <rect x="490" y="110" width="130" height="20" rx="4" fill="rgba(19,33,42,0.75)"/>
+              <text x="555" y="124" fill="#ffffff" font-family="system-ui, sans-serif" font-size="11" font-weight="600" text-anchor="middle">Continentale plaat</text>
+              <rect x="40" y="325" width="160" height="22" rx="4" fill="rgba(0,0,0,0.65)"/>
+              <text x="120" y="340" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="11.5" font-weight="700" text-anchor="middle">Subductie &amp; Vulkanisme</text>
+            </svg>
+            <iframe class="card-live-frame" src="about:blank" data-src="../plaattektoniek-3d/index.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
             <div class="preview-badges-overlay">
               <span class="p-badge-bb">B98, B99, B100, B101</span>
               <span class="p-badge-para">§ 4.2 &bull; § 4.3</span>
@@ -2093,6 +2481,41 @@
       </header>
 
       <div class="cards-grid">
+        <!-- Kaart CBS Vruchtbaarheidscijfers -->
+        <article class="anim-card" 
+          tabindex="0"
+          id="card-cbs-vruchtbaarheid"
+          style="--card-accent: var(--theme-6-color);"
+          data-url="cbs-vruchtbaarheid.html"
+          data-title="CBS Bevolkingscijfers & Vruchtbaarheid"
+          data-bb="B149, B150, B152"
+          data-para="§ 6.2 Bevolkingscijfers"
+          data-type="kaart"
+          data-topic="vruchtbaarheid"
+          data-level="havo3 vwo"
+          data-keywords="cbs vruchtbaarheid geboorte geboortecijfer bevolkingscijfers natuurlijke bevolkingsgroei vergrijzing kinderen per vrouw odata provincie gemeente interactieve kaart b149 b150 b152 havo vwo 6.2">
+          <div class="card-preview-container">
+            <iframe class="card-live-frame" src="about:blank" data-src="cbs-vruchtbaarheid.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+            <div class="preview-badges-overlay">
+              <span class="p-badge-bb">B149, B150, B152</span>
+              <span class="p-badge-para">§ 6.2</span>
+              <span class="p-badge-level">Havo / Vwo</span>
+            </div>
+            <div class="card-preview-hover">
+              <span class="play-pill">Open interactief dashboard &rarr;</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-theme-tag">Thema 6 &bull; Bevolking &bull; § 6.2 Bevolkingscijfers</div>
+            <h3 class="card-title">CBS Bevolkingscijfers &amp; Vruchtbaarheid</h3>
+            <p class="card-desc">Interactief demografisch dashboard op basis van live CBS Open Data (1950&ndash;heden): geboortecijfers, vruchtbaarheid per provincie en gemeente, leeftijd moeders en natuurlijke bevolkingsgroei.</p>
+            <div class="card-footer">
+              <span class="card-action-link">Openen op Digibord &rarr;</span>
+              <span class="card-submap-tag">Interactieve Kaart</span>
+            </div>
+          </div>
+        </article>
+
         <!-- Kaart 6: Vergrijzing in Nederland (1990–2050) -->
         <article class="anim-card" 
           tabindex="0"
@@ -2107,7 +2530,7 @@
           data-level="havo3 vwo"
           data-keywords="vergrijzing ontgroening bevolkingscijfers demografische druk leeftijdsopbouw bevolkingsdiagram transitie nederland krimp regio kaart6 kaart 6 1990 2020 2050 b152 b153 b154 b155 b157 havo vwo 6.2 6.3">
           <div class="card-preview-container">
-            <iframe class="card-live-frame" src="kaart6_vergrijzing.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+            <iframe class="card-live-frame" src="about:blank" data-src="kaart6_vergrijzing.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
             <div class="preview-badges-overlay">
               <span class="p-badge-bb">B152, B153, B154</span>
               <span class="p-badge-para">§ 6.2 &bull; § 6.3</span>
@@ -2142,50 +2565,22 @@
         </div>
         <div class="chapter-paragrafen-bar">
           <span class="para-pill">§ 7.1 Stad en dorp</span>
-          <span class="para-pill has-module" title="Module beschikbaar">§ 7.2 Verstedelijking</span>
+          <span class="para-pill">§ 7.2 Verstedelijking</span>
           <span class="para-pill">§ 7.3 Mobiliteit</span>
-          <span class="para-pill has-module" title="Module beschikbaar">§ 7.4 Stedelijke groei en planning</span>
-          <span class="para-pill has-module" title="Module beschikbaar">§ 7.5 Wijken en buurten in beeld</span>
+          <span class="para-pill">§ 7.4 Stedelijke groei en planning</span>
+          <span class="para-pill">§ 7.5 Wijken en buurten in beeld</span>
           <span class="para-pill">§ 7.6 Stedelijke vernieuwing in beeld</span>
           <span class="para-pill">§ 7.7 Stad van de toekomst</span>
         </div>
       </header>
 
-      <div class="cards-grid">
-        <!-- Amerikaanse Stad Bouwer -->
-        <article class="anim-card" 
-          tabindex="0"
-          id="card-stad"
-          style="--card-accent: var(--theme-7-color);"
-          data-url="../Amerikaanse_Stad_Bouwer_App/index.html"
-          data-title="Amerikaanse Stad Bouwer: Stadsgeleding & Inrichting"
-          data-bb="B180, B181, B182, B185, B188"
-          data-para="§ 7.4 Stedelijke groei en planning • § 7.2 Verstedelijking • § 7.5 Wijken en buurten"
-          data-type="kaart"
-          data-topic="stadsgeleding"
-          data-level="havo3 vwo"
-          data-keywords="amerikaanse stad bouwer cbd central business district suburb suburbs urban sprawl getto gentrificatie stadsgeleding model van een stad cityvorming grondprijs ruimtelijke ordening havo 3 vwo b174 b175 b180 b181 b182 b185 b188 7.2 7.4 7.5">
-          <div class="card-preview-container">
-            <iframe class="card-live-frame" src="../Amerikaanse_Stad_Bouwer_App/index.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
-            <div class="preview-badges-overlay">
-              <span class="p-badge-bb">B180, B181, B188</span>
-              <span class="p-badge-para">§ 7.4 &bull; § 7.2 &bull; § 7.5</span>
-              <span class="p-badge-level">Havo 3</span>
-            </div>
-            <div class="card-preview-hover">
-              <span class="play-pill">Start animatie &rarr;</span>
-            </div>
-          </div>
-          <div class="card-body">
-            <div class="card-theme-tag">Thema 7 &bull; Stedelijke omgeving &bull; § 7.4 Planning &bull; § 7.2 Verstedelijking &bull; § 7.5 Wijken</div>
-            <h3 class="card-title">Amerikaanse Stad Bouwer &ndash; Stadsgeleding</h3>
-            <p class="card-desc">Interactieve modelbouwer van een Amerikaanse stad met Central Business District (CBD), suburbs, urban sprawl en gentrificatie.</p>
-            <div class="card-footer">
-              <span class="card-action-link">Openen op Digibord &rarr;</span>
-              <span class="card-submap-tag">Interactieve kaart</span>
-            </div>
-          </div>
-        </article>
+      <div class="empty-chapter-box">
+        <svg class="empty-chapter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M8 12h8"></path>
+        </svg>
+        <div class="empty-chapter-text">Nog geen interactieve uitleg-animaties toegevoegd in dit hoofdstuk</div>
+        <div class="empty-chapter-sub">Animaties over stadsgeleding, verstedelijking of dorpen en wijken verschijnen hier zodra ze worden gekoppeld.</div>
       </div>
     </section>
 
@@ -2268,17 +2663,45 @@
           <span class="para-pill">§ 10.3 Een wereld</span>
           <span class="para-pill">§ 10.4 Mondiale productie</span>
           <span class="para-pill">§ 10.5 Verkeer en vervoer</span>
-          <span class="para-pill">§ 10.6 Handel en samenwerking</span>
+          <span class="para-pill has-module" title="Module beschikbaar">§ 10.6 Handel en samenwerking</span>
         </div>
       </header>
 
-      <div class="empty-chapter-box">
-        <svg class="empty-chapter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"></circle>
-          <path d="M8 12h8"></path>
-        </svg>
-        <div class="empty-chapter-text">Nog geen interactieve uitleg-animaties toegevoegd in dit hoofdstuk</div>
-        <div class="empty-chapter-sub">Interactieve visualisaties over mondiale handelsstromen en transportnetwerken verschijnen hier zodra ze worden gekoppeld.</div>
+      <div class="cards-grid">
+        <!-- Kaart CBS Internationale Goederenhandel -->
+        <article class="anim-card" 
+          tabindex="0"
+          id="card-cbs-handel"
+          style="--card-accent: var(--theme-10-color);"
+          data-url="cbs-handel.html"
+          data-title="CBS Internationale Goederenhandel"
+          data-bb="B264, B266, B267, B268, B269"
+          data-para="§ 10.6 Handel en samenwerking"
+          data-type="kaart"
+          data-topic="handel"
+          data-level="havo3 vwo"
+          data-keywords="cbs goederenhandel handel export import handelsoverschot handelstekort handelsbalans doorvoerland wederuitvoer mainports rotterdam eu europese unie handelsstromen werelddelen sitc geonom b264 b266 b267 b268 b269 havo vwo 10.6 10.5">
+          <div class="card-preview-container">
+            <iframe class="card-live-frame" src="about:blank" data-src="cbs-handel.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+            <div class="preview-badges-overlay">
+              <span class="p-badge-bb">B266, B268, B269</span>
+              <span class="p-badge-para">§ 10.6</span>
+              <span class="p-badge-level">Havo / Vwo</span>
+            </div>
+            <div class="card-preview-hover">
+              <span class="play-pill">Open interactief dashboard &rarr;</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-theme-tag">Thema 10 &bull; Globalisering &bull; § 10.6 Handel en samenwerking</div>
+            <h3 class="card-title">CBS Internationale Goederenhandel</h3>
+            <p class="card-desc">Interactief handelsdashboard op basis van live CBS Open Data: invoer, uitvoer, handelsbalans per partnerland, goederensoorten (SITC) en de rol van Nederland als doorvoerland en wederuitvoer.</p>
+            <div class="card-footer">
+              <span class="card-action-link">Openen op Digibord &rarr;</span>
+              <span class="card-submap-tag">Interactieve Kaart</span>
+            </div>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -2288,14 +2711,14 @@
        VOLLEDIG SCHERM OVERLAY IFRAME LESVENSTER
        ========================================================================== -->
   <div id="viewerOverlay" class="viewer-overlay" role="dialog" aria-modal="true" aria-label="Interactief lesvenster">
-    <div class="viewer-topbar">
+    <div id="viewerTopbar" class="viewer-topbar">
       <div class="viewer-left">
-        <button id="closeViewerBtn" class="viewer-btn viewer-btn-back" title="Sluit venster (Escape)">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <button id="closeViewerBtn" class="viewer-btn viewer-btn-back" title="Sluit lesvenster en ga terug naar overzicht (Escape)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
           </svg>
-          <span>&larr; Terug naar overzicht</span>
+          <span>Overzicht</span>
         </button>
         <div class="viewer-info">
           <span id="viewerBBBadge" class="viewer-bb-badge">Atlas</span>
@@ -2305,19 +2728,19 @@
       </div>
 
       <div class="viewer-right">
-        <!-- Knop Over deze module & Licentie -->
-        <button id="viewerInfoBtn" class="viewer-btn" title="Over deze module & Licentie">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <!-- Knop Info & Licentie -->
+        <button id="viewerInfoBtn" class="viewer-btn" title="Over deze module &amp; Licentie">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="16" x2="12" y2="12"></line>
             <line x1="12" y1="8" x2="12.01" y2="8"></line>
           </svg>
-          <span>Over deze module</span>
+          <span>Info</span>
         </button>
 
         <!-- Knop Schermvullend Digibord -->
         <button id="fullscreenToggleBtn" class="viewer-btn" title="Volledig scherm digibord">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 3 21 3 21 9"></polyline>
             <polyline points="9 21 3 21 3 15"></polyline>
             <line x1="21" y1="3" x2="14" y2="10"></line>
@@ -2328,15 +2751,31 @@
 
         <!-- Knop Open in nieuw tabblad -->
         <a id="viewerExternalBtn" href="#" target="_blank" rel="noopener noreferrer" class="viewer-btn" title="Open in nieuw tabblad">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
             <polyline points="15 3 21 3 21 9"></polyline>
             <line x1="10" y1="14" x2="21" y2="3"></line>
           </svg>
-          <span>Open in nieuw tabblad</span>
+          <span>Nieuw tabblad</span>
         </a>
+
+        <!-- Knop Werkbalk inklappen voor digibord -->
+        <button id="toggleTopbarBtn" class="viewer-btn viewer-btn-toggle" title="Werkbalk inklappen voor digibord">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+          </svg>
+          <span>▲ Balk verbergen</span>
+        </button>
       </div>
     </div>
+
+    <!-- Zwevend lipje om werkbalk op het digibord met één tik weer terug te halen -->
+    <button id="viewerUnhideBtn" class="viewer-unhide-pill" title="Werkbalk tonen" aria-label="Werkbalk tonen">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+      <span>▼ Werkbalk</span>
+    </button>
 
     <!-- Iframe Container met laadindicator -->
     <div class="viewer-iframe-container">
@@ -2360,6 +2799,9 @@
         </div>
       </div>
       <div class="footer-links">
+        <button id="refreshPreviewsBtn" class="footer-btn-colofon" title="Miniatuurweergaven opnieuw vastleggen en cachen">
+          <span style="font-size:13px;">📸</span> Previews verversen
+        </button>
         <button id="openColofonBtn" class="footer-btn-colofon" title="Informatie en licentie voor docenten">
           <span class="info-icon-circle">ⓘ</span> Over GeoStudio &amp; Licentie
         </button>
@@ -2455,6 +2897,7 @@
 
       // Viewer Elements
       const viewerOverlay = document.getElementById('viewerOverlay');
+      const viewerTopbar = document.getElementById('viewerTopbar');
       const viewerIframe = document.getElementById('viewerIframe');
       const viewerLoader = document.getElementById('viewerLoader');
       const viewerTitle = document.getElementById('viewerTitle');
@@ -2463,6 +2906,8 @@
       const viewerExternalBtn = document.getElementById('viewerExternalBtn');
       const closeViewerBtn = document.getElementById('closeViewerBtn');
       const fullscreenToggleBtn = document.getElementById('fullscreenToggleBtn');
+      const toggleTopbarBtn = document.getElementById('toggleTopbarBtn');
+      const viewerUnhideBtn = document.getElementById('viewerUnhideBtn');
 
       let activeTopic = 'all';
       let activeType = 'all';
@@ -2672,35 +3117,359 @@
       }
 
       // ========================================================================
-      // 2. OVERLAY IFRAME LESVENSTER LOGICA
+      // 1B. AUTOMATISCHE MINIATUURWEERGAVE-SNAPSHOT CACHE (0% LAG) & SEQUENTIELE LADER
       // ========================================================================
-      function openLessonViewer(url, title, bb, para) {
-        if (!viewerOverlay || !viewerIframe) return;
-
-        viewerTitle.textContent = title || 'Aardrijkskunde Animatie';
-        viewerBBBadge.textContent = bb ? `Basisboek ${bb}` : 'Atlas';
-        
-        if (viewerParaBadge) {
-          if (para) {
-            viewerParaBadge.textContent = para;
-            viewerParaBadge.style.display = 'inline-block';
-          } else {
-            viewerParaBadge.style.display = 'none';
+      function isSnapshotDark(imgElement, callback) {
+        try {
+          const testCanvas = document.createElement('canvas');
+          testCanvas.width = 32;
+          testCanvas.height = 18;
+          const tctx = testCanvas.getContext('2d');
+          tctx.drawImage(imgElement, 0, 0, 32, 18);
+          const d = tctx.getImageData(0, 0, 32, 18).data;
+          let sum = 0;
+          for (let i = 0; i < d.length; i += 4) {
+            sum += (d[i] + d[i+1] + d[i+2]) / 3;
           }
+          const avg = sum / (d.length / 4);
+          callback(avg < 28);
+        } catch(e) {
+          callback(false);
+        }
+      }
+
+      function applyCardSnapshot(card, dataUrl) {
+        if (!card || !dataUrl) return;
+        const container = card.querySelector('.card-preview-container');
+        if (!container) return;
+
+        let img = container.querySelector('.card-thumb-img');
+        if (!img) {
+          img = document.createElement('img');
+          img.className = 'card-thumb-img';
+          img.alt = card.getAttribute('data-title') || 'Voorbeeld';
+          const firstOverlay = container.querySelector('.preview-badges-overlay') || container.firstChild;
+          container.insertBefore(img, firstOverlay);
         }
 
-        viewerExternalBtn.href = url;
+        img.onload = function() {
+          // Valideer dat de preview niet zwart/leeg is (ruimte-animaties zoals seizoenen mogen wel donker zijn)
+          if (card.id !== 'card-seizoenen') {
+            isSnapshotDark(img, function(isDark) {
+              if (isDark) {
+                try { localStorage.removeItem('geostudio_thumb_' + card.id); } catch(e) {}
+                img.style.display = 'none';
+                return;
+              }
+              img.style.display = 'block';
+              const iframe = container.querySelector('.card-live-frame');
+              if (iframe) {
+                try { iframe.src = 'about:blank'; } catch(e) {}
+                iframe.remove();
+              }
+            });
+          } else {
+            img.style.display = 'block';
+            const iframe = container.querySelector('.card-live-frame');
+            if (iframe) {
+              try { iframe.src = 'about:blank'; } catch(e) {}
+              iframe.remove();
+            }
+          }
+        };
+        img.src = dataUrl;
+      }
+
+      // Verwijder direct eventuele corrupte/zwarte plaattektoniek thumbnail uit localStorage van eerdere sessie
+      try {
+        const cachedPt = localStorage.getItem('geostudio_thumb_card-plaattektoniek');
+        if (cachedPt) {
+          const testPt = new Image();
+          testPt.onload = function() {
+            isSnapshotDark(testPt, function(isDark) {
+              if (isDark) {
+                localStorage.removeItem('geostudio_thumb_card-plaattektoniek');
+                const badImg = document.querySelector('#card-plaattektoniek .card-thumb-img');
+                if (badImg) badImg.remove();
+              }
+            });
+          };
+          testPt.src = cachedPt;
+        }
+      } catch(e) {}
+
+      // Check direct bij opstarten of er opgeslagen snapshots in localStorage staan
+      animCards.forEach(card => {
+        try {
+          const cached = localStorage.getItem('geostudio_thumb_' + card.id);
+          if (cached && cached.length > 500) {
+            applyCardSnapshot(card, cached);
+          }
+        } catch(e) {}
+      });
+
+      // Luister naar automatische snapshot postMessages vanuit child modules
+      window.addEventListener('message', function(e) {
+        if (!e.data || e.data.type !== 'GEOSTUDIO_THUMBNAIL') return;
+        const targetSlug = e.data.module;
+        const dataUrl = e.data.dataUrl;
+        if (!targetSlug || !dataUrl) return;
+
+        animCards.forEach(card => {
+          if (card.id === 'card-' + targetSlug || card.getAttribute('data-topic') === targetSlug || card.id.includes(targetSlug)) {
+            // Controleer vooraf of de snapshot geen zwarte pixeldata is
+            const testImg = new Image();
+            testImg.onload = function() {
+              isSnapshotDark(testImg, function(isDark) {
+                if (isDark && card.id !== 'card-seizoenen') return;
+                try {
+                  localStorage.setItem('geostudio_thumb_' + card.id, dataUrl);
+                } catch(storageErr) {}
+                applyCardSnapshot(card, dataUrl);
+              });
+            };
+            testImg.src = dataUrl;
+          }
+        });
+      });
+
+      function tryCaptureAndStore(card, iframe) {
+        try {
+          const doc = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);
+          if (!doc) return false;
+
+          // 1. Zoek naar een getekend canvas (Three.js WebGL of Chart.js)
+          const canvases = doc.querySelectorAll('canvas');
+          for (const canvas of canvases) {
+            if (canvas.width > 40 && canvas.height > 40) {
+              const offCanvas = document.createElement('canvas');
+              offCanvas.width = 640;
+              offCanvas.height = 360;
+              const ctx = offCanvas.getContext('2d');
+              
+              // Bepaal de achtergrondkleur of gradient voor scènes met transparantie (zoals Three.js alpha: true)
+              if (card.id === 'card-plaattektoniek') {
+                const sky = ctx.createLinearGradient(0, 0, 0, 360);
+                sky.addColorStop(0, '#c9dfeb');
+                sky.addColorStop(1, '#eef2f4');
+                ctx.fillStyle = sky;
+              } else if (card.id === 'card-seizoenen') {
+                ctx.fillStyle = '#060a12';
+              } else if (card.id === 'card-waterkringloop') {
+                ctx.fillStyle = '#0d1722';
+              } else {
+                ctx.fillStyle = '#f8fafc';
+              }
+              ctx.fillRect(0, 0, 640, 360);
+
+              // Teken het 3D / 2D canvas er op
+              ctx.drawImage(canvas, 0, 0, 640, 360);
+
+              // Valideer helderheid
+              const imgData = ctx.getImageData(0, 0, 640, 360).data;
+              let sum = 0, samples = 0;
+              for (let i = 0; i < imgData.length; i += 400) {
+                sum += (imgData[i] + imgData[i+1] + imgData[i+2]) / 3;
+                samples++;
+              }
+              const avg = sum / (samples || 1);
+              if (avg < 28 && card.id !== 'card-seizoenen') {
+                continue; // Nog niet klaar met renderen
+              }
+
+              const dataUrl = offCanvas.toDataURL('image/jpeg', 0.86);
+              if (dataUrl && dataUrl.length > 800) {
+                try {
+                  localStorage.setItem('geostudio_thumb_' + card.id, dataUrl);
+                } catch(storageErr) {}
+                applyCardSnapshot(card, dataUrl);
+                return true;
+              }
+            }
+          }
+
+          // 2. Probeer SVG-kaarten (bijv. provinciekaart in CBS dashboards)
+          const svg = doc.querySelector('svg.nl-map-svg, svg.theme-map-svg');
+          if (svg && svg.clientWidth > 100) {
+            const svgString = new XMLSerializer().serializeToString(svg);
+            const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            const URL = window.URL || window.webkitURL || window;
+            const blobUrl = URL.createObjectURL(svgBlob);
+            const tempImg = new Image();
+            tempImg.onload = function() {
+              const c = document.createElement('canvas');
+              c.width = 640;
+              c.height = 360;
+              const ctx = c.getContext('2d');
+              ctx.fillStyle = '#f8fafc';
+              ctx.fillRect(0, 0, 640, 360);
+              ctx.drawImage(tempImg, 120, 10, 400, 340);
+              URL.revokeObjectURL(blobUrl);
+              const dataUrl = c.toDataURL('image/jpeg', 0.85);
+              if (dataUrl && dataUrl.length > 800) {
+                try {
+                  localStorage.setItem('geostudio_thumb_' + card.id, dataUrl);
+                } catch(storageErr) {}
+                applyCardSnapshot(card, dataUrl);
+              }
+            };
+            tempImg.src = blobUrl;
+            return true;
+          }
+        } catch (err) {
+          console.debug('Directe snapshot-inspectie niet mogelijk:', card.id, err);
+        }
+        return false;
+      }
+
+      let isSequentiallyLoading = false;
+
+      function loadAllCardsSequentially(forceRefresh) {
+        if (isSequentiallyLoading) return;
+        isSequentiallyLoading = true;
+
+        const cards = Array.from(animCards);
+        let index = 0;
+
+        function loadNextCard() {
+          if (index >= cards.length) {
+            isSequentiallyLoading = false;
+            const refreshBtn = document.getElementById('refreshPreviewsBtn');
+            if (refreshBtn) {
+              refreshBtn.innerHTML = '<span>✓</span> Previews bijgewerkt';
+              setTimeout(() => {
+                refreshBtn.innerHTML = '<span style="font-size:13px;">📸</span> Previews verversen';
+              }, 2200);
+            }
+            return;
+          }
+
+          const card = cards[index];
+          index++;
+
+          const cardId = card.id;
+          const url = card.getAttribute('data-url');
+          const container = card.querySelector('.card-preview-container');
+          if (!container || !url) {
+            loadNextCard();
+            return;
+          }
+
+          // Als we niet forceren en er is al een geldige snapshot in localStorage: direct tonen en overslaan
+          if (!forceRefresh) {
+            try {
+              const cachedThumb = localStorage.getItem('geostudio_thumb_' + cardId);
+              if (cachedThumb && cachedThumb.length > 500) {
+                applyCardSnapshot(card, cachedThumb);
+                setTimeout(loadNextCard, 30);
+                return;
+              }
+            } catch(e) {}
+          }
+
+          // Maak of hergebruik het preview-iframe
+          let iframe = container.querySelector('.card-live-frame');
+          if (!iframe) {
+            iframe = document.createElement('iframe');
+            iframe.className = 'card-live-frame';
+            iframe.tabIndex = -1;
+            iframe.setAttribute('aria-hidden', 'true');
+            iframe.loading = 'eager';
+            const firstOverlay = container.querySelector('.preview-badges-overlay') || container.firstChild;
+            container.insertBefore(iframe, firstOverlay);
+          }
+
+          let loaded = false;
+          let timer = null;
+
+          function handleIframeReady() {
+            if (loaded) return;
+            loaded = true;
+            if (timer) clearTimeout(timer);
+
+            try {
+              if (iframe.contentWindow) {
+                iframe.contentWindow.postMessage({ type: 'REQUEST_GEOSTUDIO_THUMBNAIL' }, '*');
+              }
+            } catch(e) {}
+
+            // Wacht totdat de kaart / WebGL frame getekend is
+            setTimeout(() => {
+              tryCaptureAndStore(card, iframe);
+              // Sequentieel 400ms pauze tussen modules zoals gevraagd
+              setTimeout(loadNextCard, 400);
+            }, 600);
+          }
+
+          iframe.onload = handleIframeReady;
+          timer = setTimeout(handleIframeReady, 4000); // veiligheidstimeout
+
+          iframe.src = url;
+        }
+
+        loadNextCard();
+      }
+
+      // Start de sequentiële lader zodra DOM gereed is
+      setTimeout(() => {
+        loadAllCardsSequentially(false);
+      }, 200);
+
+      // Knop: Previews verversen
+      const refreshPreviewsBtn = document.getElementById('refreshPreviewsBtn');
+      if (refreshPreviewsBtn) {
+        refreshPreviewsBtn.addEventListener('click', function() {
+          refreshPreviewsBtn.innerHTML = '<span>⏳</span> Bezig met vastleggen...';
+          // Wis opgeslagen snapshots
+          animCards.forEach(card => {
+            try {
+              localStorage.removeItem('geostudio_thumb_' + card.id);
+            } catch(e) {}
+            const img = card.querySelector('.card-thumb-img');
+            if (img) img.remove();
+          });
+          loadAllCardsSequentially(true);
+        });
+      }
+
+      // ========================================================================
+      // 2. OVERLAY IFRAME LESVENSTER LOGICA (INCLUSIEF BROWSERGESCHIEDENIS API)
+      // ========================================================================
+      function createSlug(text) {
+        if (!text) return 'animatie';
+        return text.toString().toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+      }
+
+      function setupFreshViewerIframe(url, title) {
+        const container = document.querySelector('.viewer-iframe-container');
+        if (!container) return null;
+
+        // Verwijder het oude iframe om geheugen direct vrij te geven en geen history entry achter te laten
+        const oldIframe = document.getElementById('viewerIframe');
+        if (oldIframe) {
+          try {
+            oldIframe.src = 'about:blank';
+          } catch(e) {}
+          oldIframe.remove();
+        }
 
         if (viewerLoader) {
           viewerLoader.style.opacity = '1';
           viewerLoader.style.display = 'flex';
         }
 
-        viewerIframe.src = url;
-        viewerOverlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
+        // Maak een vers iframe element aan: een nieuw element dat in de DOM geplaatst wordt
+        // voegt gegarandeerd géén extra stap toe aan window.history
+        const newIframe = document.createElement('iframe');
+        newIframe.id = 'viewerIframe';
+        newIframe.className = 'viewer-iframe';
+        newIframe.title = title || 'Aardrijkskunde Animatie';
+        newIframe.setAttribute('allow', 'fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope');
 
-        viewerIframe.onload = function() {
+        newIframe.onload = function() {
           if (viewerLoader) {
             viewerLoader.style.opacity = '0';
             setTimeout(() => {
@@ -2708,29 +3477,119 @@
             }, 300);
           }
         };
+
+        newIframe.src = url;
+        container.appendChild(newIframe);
+        return newIframe;
       }
 
-      function closeLessonViewer() {
-        if (!viewerOverlay || !viewerIframe) return;
-        viewerOverlay.classList.remove('active');
-        viewerIframe.src = 'about:blank';
-        document.body.style.overflow = '';
+      function openLessonViewer(url, title, bb, para, cardId, isHistoryNavigation) {
+        if (!viewerOverlay) return;
+
+        const wasOpen = viewerOverlay.classList.contains('active');
+        const slug = (cardId ? cardId.replace(/^card-/, '') : '') || createSlug(title);
+
+        viewerTitle.textContent = title || 'Aardrijkskunde Animatie';
+        viewerTitle.title = title || '';
+        
+        const shortBB = bb ? bb.replace(/^Basisboek\s*/i, '') : 'Atlas';
+        viewerBBBadge.textContent = shortBB;
+        viewerBBBadge.title = bb ? `Basisboek ${shortBB}` : 'Atlas';
+        
+        if (viewerParaBadge) {
+          if (para) {
+            viewerParaBadge.textContent = para;
+            viewerParaBadge.title = para;
+            viewerParaBadge.style.display = 'inline-block';
+          } else {
+            viewerParaBadge.style.display = 'none';
+          }
+        }
+
+        // Zorg dat de werkbalk standaard altijd weer netjes uitgeklapt is bij het openen van een lesmodule
+        viewerOverlay.classList.remove('topbar-collapsed');
+        if (viewerTopbar) {
+          viewerTopbar.classList.remove('collapsed');
+        }
+
+        if (viewerExternalBtn) {
+          viewerExternalBtn.href = url;
+        }
+
+        // Pauzeer en verberg preview-iframes op de achtergrond voor 0% CPU/GPU overhead
+        document.body.classList.add('viewer-mode');
+        document.body.style.overflow = 'hidden';
+
+        // Maak een vers iframe aan (geen vervuiling van de browsergeschiedenis)
+        setupFreshViewerIframe(url, title);
+
+        viewerOverlay.classList.add('active');
+
+        // Browsergeschiedenis koppelen: exact één pushState als het venster nog niet open was
+        if (!wasOpen && !isHistoryNavigation) {
+          try {
+            history.pushState({ viewerOpen: true, slug: slug, url: url, title: title, bb: bb, para: para, cardId: cardId }, '', '#module-' + slug);
+          } catch (err) {
+            console.warn('history.pushState niet ondersteund:', err);
+          }
+        }
       }
+
+      function closeLessonViewer(fromHistory) {
+        if (!viewerOverlay) return;
+        if (!viewerOverlay.classList.contains('active')) return;
+
+        viewerOverlay.classList.remove('active');
+        
+        // Vernietig/leeg het iframe zodat audio, Three.js en netwerkcalls direct stoppen
+        const iframe = document.getElementById('viewerIframe');
+        if (iframe) {
+          try {
+            iframe.src = 'about:blank';
+          } catch(e) {}
+          iframe.remove();
+        }
+
+        // Herstel zichtbaarheid van de overzichtspagina en herstel scrollen
+        document.body.classList.remove('viewer-mode');
+        document.body.style.overflow = '';
+
+        // Bij sluiten via UI-knop (← Terug naar overzicht) of Escape:
+        // Verwijder de hash direct synchroon met history.replaceState (geen history.back())
+        if (!fromHistory) {
+          try {
+            history.replaceState(null, '', window.location.pathname + window.location.search);
+          } catch (err) {
+            console.warn('history.replaceState mislukt:', err);
+          }
+        }
+      }
+
+      // Luister naar de terugknop van de browser en muis
+      window.addEventListener('popstate', function(e) {
+        if (viewerOverlay && viewerOverlay.classList.contains('active')) {
+          // Sluit direct in 1 klik zonder wit scherm!
+          closeLessonViewer(true);
+        } else if (e.state && e.state.viewerOpen && e.state.url) {
+          openLessonViewer(e.state.url, e.state.title, e.state.bb, e.state.para, e.state.cardId, true);
+        }
+      });
 
       animCards.forEach(card => {
         const url = card.getAttribute('data-url');
         const title = card.getAttribute('data-title');
         const bb = card.getAttribute('data-bb');
         const para = card.getAttribute('data-para');
+        const cardId = card.id;
 
         card.addEventListener('click', function() {
-          openLessonViewer(url, title, bb, para);
+          openLessonViewer(url, title, bb, para, cardId);
         });
 
         card.addEventListener('keydown', function(e) {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            openLessonViewer(url, title, bb, para);
+            openLessonViewer(url, title, bb, para, cardId);
           }
         });
       });
@@ -2741,6 +3600,8 @@
           const targetId = this.getAttribute('data-open-target');
           let targetCard = document.getElementById('card-' + targetId);
           if (!targetCard) {
+            if (targetId === 'seizoenen') targetCard = document.getElementById('card-seizoenen');
+            if (targetId === 'waterkringloop') targetCard = document.getElementById('card-waterkringloop');
             if (targetId === 'plaattektoniek') targetCard = document.getElementById('card-plaattektoniek');
             if (targetId === 'woordspin') targetCard = document.getElementById('card-woordspin');
             if (targetId === 'itcz') targetCard = document.getElementById('card-itcz');
@@ -2752,13 +3613,54 @@
             const title = targetCard.getAttribute('data-title');
             const bb = targetCard.getAttribute('data-bb');
             const para = targetCard.getAttribute('data-para');
-            openLessonViewer(url, title, bb, para);
+            openLessonViewer(url, title, bb, para, targetCard.id);
           }
         });
       });
 
       if (closeViewerBtn) {
-        closeViewerBtn.addEventListener('click', closeLessonViewer);
+        closeViewerBtn.addEventListener('click', function() {
+          closeLessonViewer(false);
+        });
+      }
+
+      // Inklappen & uitklappen van de werkbalk voor digibord
+      if (toggleTopbarBtn) {
+        toggleTopbarBtn.addEventListener('click', function() {
+          if (viewerOverlay) viewerOverlay.classList.add('topbar-collapsed');
+          if (viewerTopbar) viewerTopbar.classList.add('collapsed');
+        });
+      }
+
+      if (viewerUnhideBtn) {
+        viewerUnhideBtn.addEventListener('click', function() {
+          if (viewerOverlay) viewerOverlay.classList.remove('topbar-collapsed');
+          if (viewerTopbar) viewerTopbar.classList.remove('collapsed');
+        });
+      }
+
+      // Optionele dieplinking bij laden via URL-hash #module-...
+      if (window.location.hash && window.location.hash.startsWith('#module-')) {
+        const hashSlug = window.location.hash.replace('#module-', '').toLowerCase();
+        let directCard = null;
+        animCards.forEach(c => {
+          const cSlug = (c.id || '').replace(/^card-/, '').toLowerCase();
+          const cTopic = (c.getAttribute('data-topic') || '').toLowerCase();
+          const cTitleSlug = createSlug(c.getAttribute('data-title') || '');
+          if (cSlug === hashSlug || cTopic === hashSlug || cTitleSlug === hashSlug) {
+            directCard = c;
+          }
+        });
+        if (directCard) {
+          const url = directCard.getAttribute('data-url');
+          const title = directCard.getAttribute('data-title');
+          const bb = directCard.getAttribute('data-bb');
+          const para = directCard.getAttribute('data-para');
+          openLessonViewer(url, title, bb, para, directCard.id, true);
+          try {
+            history.replaceState({ viewerOpen: true, title: title, url: url, bb: bb, para: para, cardId: directCard.id, slug: hashSlug }, '', window.location.hash);
+          } catch(err) {}
+        }
       }
 
       // ========================================================================
@@ -2808,7 +3710,7 @@
             return;
           }
           if (viewerOverlay && viewerOverlay.classList.contains('active')) {
-            closeLessonViewer();
+            closeLessonViewer(false);
           }
         }
       });
