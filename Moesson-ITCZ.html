@@ -1,0 +1,2566 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aardrijkskunde: ITCZ, Hadleycel & Moesson in India</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231D4E89'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23FFFFFF' stroke-width='4'/%3E%3Cpolygon points='32,20 39,32 32,44 25,32' fill='%23FFFFFF' transform='rotate(25 32 32)'/%3E%3C/svg%3E">
+  
+  <!-- Three.js en OrbitControls via betrouwbare CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  
+  <!-- Inter Typography (Overal afgedwongen voor strakke, professionele redactionele stijl) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-space: #07090e;
+      --panel-bg: rgba(11, 13, 18, 0.92);
+      --panel-border: rgba(255, 255, 255, 0.12);
+      --panel-border-subtle: rgba(255, 255, 255, 0.06);
+      --text-pure: #ffffff;
+      --text-muted: #8b92a0;
+      --text-dim: #555c6d;
+      --nasa-blue: #38bdf8;
+      --nasa-red: #ef4444;
+      --nasa-amber: #f59e0b;
+      --nasa-cyan: #06b6d4;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    }
+
+    body {
+      background-color: var(--bg-space);
+      color: var(--text-pure);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      transition: background-color 0.4s ease, color 0.3s ease;
+    }
+
+    #webgl-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    /* UI Layer */
+    .ui-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px 28px;
+    }
+
+    .interactive {
+      pointer-events: auto;
+    }
+
+    /* 1. Header Linksboven */
+    .header-branding {
+      max-width: 440px;
+    }
+
+    .meta-tag {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--nasa-blue);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .meta-tag::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: var(--nasa-blue);
+      border-radius: 50%;
+    }
+
+    .app-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      line-height: 1.2;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+
+    .app-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      font-weight: 400;
+    }
+
+    /* 2. Navigatiemenu Rechtsboven (Strak NASA Paneel) */
+    .nav-panel {
+      position: absolute;
+      top: 24px;
+      right: 28px;
+      width: 270px;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 4px;
+      padding: 14px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+      transition: transform 0.25s ease, opacity 0.2s ease, background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+      z-index: 20;
+    }
+
+    .nav-panel.collapsed {
+      transform: translateX(310px);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .panel-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--panel-border-subtle);
+    }
+
+    .panel-caption {
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .text-toggle-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 11px;
+      cursor: pointer;
+      padding: 2px 4px;
+      transition: color 0.15s ease;
+    }
+
+    .text-toggle-btn:hover {
+      color: #ffffff;
+    }
+
+    .nav-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-item-btn {
+      width: 100%;
+      text-align: left;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid transparent;
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.15s ease;
+    }
+
+    .nav-item-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #ffffff;
+    }
+
+    .nav-item-btn.active {
+      background: rgba(56, 189, 248, 0.08);
+      border-color: rgba(56, 189, 248, 0.35);
+      color: #ffffff;
+    }
+
+    .nav-item-btn .step-num {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .nav-item-btn.active .step-num {
+      color: var(--nasa-blue);
+    }
+
+    /* Schakelaar voor Moesson (alleen in stap 4) */
+    .season-box {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--panel-border-subtle);
+    }
+
+    .season-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .season-switch-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 3px;
+      border: 1px solid var(--panel-border-subtle);
+      border-radius: 4px;
+    }
+
+    .season-btn {
+      padding: 6px 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.15s ease;
+      border-radius: 3px;
+    }
+
+    .season-btn.active-summer {
+      background: var(--nasa-red);
+      color: #ffffff;
+    }
+
+    .season-btn.active-winter {
+      background: var(--nasa-blue);
+      color: #07090e;
+    }
+
+    /* Strakke knoppenrij onderaan paneel: 4 knoppen op één lijn */
+    .panel-footer-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 34px;
+      gap: 6px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--panel-border-subtle);
+    }
+
+    .panel-license-text {
+      font-size: 10px;
+      color: var(--text-dim);
+      text-align: center;
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+    body.theme-light .panel-license-text {
+      color: #64748b;
+    }
+
+    /* Colofon Dialog */
+    .itcz-info-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .itcz-info-overlay[hidden] { display: none !important; }
+    .itcz-info-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      max-width: 480px;
+      width: 100%;
+      padding: 22px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text-pure);
+    }
+    body.theme-light .itcz-info-card {
+      background: #ffffff;
+      color: #0f172a;
+      border-color: rgba(0,0,0,0.15);
+    }
+    .itcz-info-card h3 {
+      font-size: 16px;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-pure);
+    }
+    body.theme-light .itcz-info-card h3 {
+      color: #0f172a;
+    }
+    .itcz-info-card .info-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .itcz-info-card .info-close:hover { color: var(--text-pure); }
+    .itcz-info-box {
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 12.5px;
+    }
+    body.theme-light .itcz-info-box {
+      background: #f0f9ff;
+      border-color: #bae6fd;
+      color: #0369a1;
+    }
+    .itcz-info-code {
+      background: rgba(255, 255, 255, 0.04);
+      padding: 8px 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 11px;
+      border-left: 3px solid var(--nasa-blue);
+      color: var(--text-pure);
+    }
+    body.theme-light .itcz-info-code {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .footer-action-btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--panel-border-subtle);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 6px 4px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: center;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .footer-action-btn:hover {
+      border-color: var(--panel-border);
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .footer-action-btn.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: var(--nasa-blue);
+    }
+
+    /* Floating restore button wanneer paneel ingeklapt is */
+    .menu-open-pill {
+      position: absolute;
+      top: 24px;
+      right: 28px;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      color: var(--text-pure);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: none;
+      z-index: 20;
+    }
+
+    .menu-open-pill:hover {
+      border-color: var(--nasa-blue);
+    }
+
+    /* 3. Uitlegbalk Onderin (Strakke, smalle balk) */
+    .bottom-bar {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      pointer-events: none;
+    }
+
+    .explanation-strip {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 4px;
+      padding: 10px 18px;
+      width: 100%;
+      max-width: 680px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      transition: transform 0.25s ease, background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+      pointer-events: auto;
+    }
+
+    .explanation-strip.minimized {
+      transform: translateY(calc(100% - 28px));
+      padding-bottom: 4px;
+    }
+
+    .exp-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .exp-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .exp-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--nasa-amber);
+      border-radius: 50%;
+    }
+
+    .exp-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #ffffff;
+    }
+
+    .exp-body-text {
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: #cbd5e1;
+      margin-top: 6px;
+    }
+
+    .explanation-strip.minimized .exp-body-text {
+      display: none;
+    }
+
+    .exp-body-text b {
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    /* Panning indicator (Toets A) */
+    #pan-indicator {
+      position: absolute;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(11, 13, 18, 0.95);
+      border: 1px solid var(--nasa-amber);
+      color: var(--nasa-amber);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 4px;
+      display: none;
+      z-index: 30;
+      pointer-events: none;
+    }
+
+    /* 4. Zwevende 3D Labels in de Scene (Strakke, identieke matte vormgeving met subtiele kleur-dot) */
+    .hud-label {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 5;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      padding: 4px 10px;
+      border-radius: 4px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: opacity 0.2s, transform 0.2s, background 0.3s, color 0.3s, border-color 0.3s;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(15, 23, 42, 0.85);
+      color: #f8fafc;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    .hud-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: inline-block;
+    }
+
+    .hud-label.interactive-hint,
+    .hud-label.back-btn-pill {
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
+    .hud-label.interactive-hint:hover,
+    .hud-label.back-btn-pill:hover {
+      transform: translate(-50%, -50%) scale(1.04);
+      border-color: rgba(56, 189, 248, 0.5);
+    }
+
+    #hover-tooltip {
+      position: absolute;
+      display: none;
+      background: rgba(11, 13, 18, 0.95);
+      border: 1px solid var(--nasa-blue);
+      color: white;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 8px;
+      border-radius: 4px;
+      pointer-events: none;
+      z-index: 100;
+      transform: translate(-50%, -130%);
+    }
+
+    /* ==========================================================================
+       DYNAMISCH LICHT THEMA (FASE 2 & FASE 4: DAGLICHT & TERREIN)
+       Frisse, lichte glassmorphism panelen met donkere tekst (#0f172a / #334155)
+       ========================================================================== */
+    body.theme-light {
+      background-color: #dce6f0;
+      color: #0f172a;
+    }
+
+    body.theme-light .header-branding .meta-tag {
+      color: #0284c7;
+    }
+    body.theme-light .header-branding .meta-tag::before {
+      background: #0284c7;
+    }
+    body.theme-light .header-branding .app-title {
+      color: #0f172a;
+    }
+    body.theme-light .header-branding .app-subtitle {
+      color: #475569;
+    }
+
+    body.theme-light .nav-panel {
+      background: rgba(255, 255, 255, 0.90);
+      border-color: rgba(0, 0, 0, 0.10);
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    }
+    body.theme-light .panel-top-row {
+      border-bottom-color: rgba(0, 0, 0, 0.08);
+    }
+    body.theme-light .panel-caption {
+      color: #64748b;
+    }
+    body.theme-light .text-toggle-btn {
+      color: #64748b;
+    }
+    body.theme-light .text-toggle-btn:hover {
+      color: #0f172a;
+    }
+    body.theme-light .nav-item-btn {
+      background: rgba(0, 0, 0, 0.02);
+      color: #475569;
+    }
+    body.theme-light .nav-item-btn:hover {
+      background: rgba(0, 0, 0, 0.05);
+      color: #0f172a;
+    }
+    body.theme-light .nav-item-btn.active {
+      background: rgba(2, 132, 199, 0.08);
+      border-color: rgba(2, 132, 199, 0.35);
+      color: #0284c7;
+    }
+    body.theme-light .nav-item-btn .step-num {
+      color: #94a3b8;
+    }
+    body.theme-light .nav-item-btn.active .step-num {
+      color: #0284c7;
+    }
+
+    body.theme-light .season-box {
+      border-top-color: rgba(0, 0, 0, 0.08);
+    }
+    body.theme-light .season-label {
+      color: #64748b;
+    }
+    body.theme-light .season-switch-grid {
+      background: rgba(0, 0, 0, 0.04);
+      border-color: rgba(0, 0, 0, 0.08);
+    }
+    body.theme-light .season-btn {
+      color: #64748b;
+    }
+    body.theme-light .season-btn.active-summer {
+      background: #ef4444;
+      color: #ffffff;
+    }
+    body.theme-light .season-btn.active-winter {
+      background: #0284c7;
+      color: #ffffff;
+    }
+
+    body.theme-light .panel-footer-actions {
+      border-top-color: rgba(0, 0, 0, 0.08);
+    }
+    body.theme-light .footer-action-btn {
+      background: rgba(0, 0, 0, 0.02);
+      border-color: rgba(0, 0, 0, 0.10);
+      color: #475569;
+    }
+    body.theme-light .footer-action-btn:hover {
+      background: rgba(0, 0, 0, 0.06);
+      color: #0f172a;
+      border-color: rgba(0, 0, 0, 0.20);
+    }
+    body.theme-light .footer-action-btn.active {
+      background: rgba(2, 132, 199, 0.12);
+      border-color: rgba(2, 132, 199, 0.40);
+      color: #0284c7;
+    }
+
+    body.theme-light .menu-open-pill {
+      background: rgba(255, 255, 255, 0.90);
+      border-color: rgba(0, 0, 0, 0.12);
+      color: #0f172a;
+    }
+
+    body.theme-light .explanation-strip {
+      background: rgba(255, 255, 255, 0.92);
+      border-color: rgba(0, 0, 0, 0.10);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    }
+    body.theme-light .exp-title {
+      color: #0f172a;
+    }
+    body.theme-light .exp-body-text {
+      color: #334155;
+    }
+    body.theme-light .exp-body-text b {
+      color: #0f172a;
+    }
+
+    body.theme-light .hud-label {
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    }
+
+    body.theme-light #pan-indicator {
+      background: rgba(255, 255, 255, 0.95);
+      border-color: #d97706;
+      color: #b45309;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- WebGL Canvas Container -->
+  <div id="webgl-container"></div>
+
+  <!-- Panning Notification -->
+  <div id="pan-indicator">Vrij Verschuiven Actief [Toets A]</div>
+
+  <!-- Hover Tooltip -->
+  <div id="hover-tooltip">Klik om te openen</div>
+
+  <!-- Re-open Menu Button -->
+  <button class="menu-open-pill interactive" id="btn-show-panel">Menu Tonen</button>
+
+  <!-- Navigatiepaneel Rechtsboven (NASA Stijl) -->
+  <div class="nav-panel interactive" id="nav-panel">
+    <div class="panel-top-row">
+      <span class="panel-caption">LESOVERZICHT</span>
+      <button class="text-toggle-btn" id="btn-hide-panel">Menu verbergen</button>
+    </div>
+
+    <ul class="nav-list">
+      <li>
+        <button class="nav-item-btn active" data-phase="1" id="btn-phase-1">
+          <span class="step-num">01</span>
+          <span>Wereldbol & Luchtdruk</span>
+        </button>
+      </li>
+      <li>
+        <button class="nav-item-btn" data-phase="2" id="btn-phase-2">
+          <span class="step-num">02</span>
+          <span>Doorsnede Hadleycel</span>
+        </button>
+      </li>
+      <li>
+        <button class="nav-item-btn" data-phase="3" id="btn-phase-3">
+          <span class="step-num">03</span>
+          <span>ITCZ-verschuiving</span>
+        </button>
+      </li>
+      <li>
+        <button class="nav-item-btn" data-phase="4" id="btn-phase-4">
+          <span class="step-num">04</span>
+          <span>Moesson in India</span>
+        </button>
+      </li>
+    </ul>
+
+    <!-- Moesson Seizoensschakelaar (Alleen in fase 4) -->
+    <div class="season-box" id="season-box" style="display: none;">
+      <div class="season-label">Seizoensstand:</div>
+      <div class="season-switch-grid">
+        <button class="season-btn active-summer" id="btn-summer">Zomer (Juli)</button>
+        <button class="season-btn" id="btn-winter">Winter (Jan)</button>
+      </div>
+    </div>
+
+    <!-- Subtiele footerbediening: 4 knoppen op één strakke rij -->
+    <div class="panel-footer-actions">
+      <button class="footer-action-btn" id="btn-reset-cam" title="Camera resetten">Reset Cam</button>
+      <button class="footer-action-btn" id="btn-autorotate" title="Automatisch draaien aan/uit">Rotatie</button>
+      <button class="footer-action-btn" id="btn-fullscreen" title="Volledig scherm openen">Fullscreen</button>
+      <button class="footer-action-btn" id="btn-colofon" title="Over deze module &amp; Licentie">ⓘ</button>
+    </div>
+    <div class="panel-license-text">
+      Gemaakt door Rens van der Lubben &bull; MIT &bull; CC BY-SA 4.0
+    </div>
+  </div>
+
+  <!-- INFO & LICENTIE MODAL -->
+  <div id="itcz-info-modal" class="itcz-info-overlay" hidden onclick="if(event.target===this) toggleItczInfo()">
+    <div class="itcz-info-card">
+      <h3>
+        <span>Over deze 3D-module &amp; Licentie</span>
+        <button class="info-close" onclick="toggleItczInfo()" aria-label="Sluiten">&times;</button>
+      </h3>
+      <p><strong>Gemaakt door Rens van der Lubben</strong> voor het aardrijkskundeonderwijs.</p>
+      <div class="itcz-info-box">
+        <strong>Open leermateriaal voor collega-docenten:</strong><br>
+        Collega-docenten mogen deze 3D-animatie vrij gebruiken op het digibord, delen met leerlingen en aanpassen voor eigen lessen onder vermelding van de maker (CC BY-SA 4.0 / MIT).
+      </div>
+      <div class="itcz-info-code">
+        Gemaakt door Rens van der Lubben • Code: MIT-licentie • Lesmateriaal: CC BY-SA 4.0
+      </div>
+      <div style="display:flex; justify-content:flex-end; margin-top:4px;">
+        <button class="footer-action-btn" onclick="toggleItczInfo()" style="padding:6px 14px; font-weight:600;">Begrepen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- UI Overlay -->
+  <div class="ui-layer">
+
+    <!-- Header Linksboven -->
+    <div class="header-branding">
+      <div class="meta-tag">Aardrijkskunde • Klas 3</div>
+      <h1 class="app-title">ITCZ & Moesson in India</h1>
+      <p class="app-subtitle">Mondiale atmosferische circulatie, zonnestand en Zuid-Aziatisch reliëf.</p>
+    </div>
+
+    <!-- 3D HUD Callout Labels Container -->
+    <div id="hud-container"></div>
+
+    <!-- Uitlegbalk Onderin -->
+    <div class="bottom-bar">
+      <div class="explanation-strip interactive" id="explanation-strip">
+        <div class="exp-header-row" id="exp-header">
+          <div class="exp-title-group">
+            <span class="exp-dot"></span>
+            <span class="exp-title" id="exp-title">Fase 1: Mondiale Luchtdrukverdeling rond de Evenaar</span>
+          </div>
+          <button class="text-toggle-btn" id="exp-minimize-btn">Uitleg verbergen</button>
+        </div>
+
+        <div class="exp-body-text" id="exp-body">
+          Rond de <b>evenaar (0°)</b> staat de zon loodrecht. Warme lucht zet uit en <b>stijgt krachtig op</b>, waardoor een gordel van <b>lage luchtdruk (L)</b> ontstaat: de <b>ITCZ</b>.
+          Rond 30° NB en 30° ZB koelt de lucht af en daalt deze neer: hier ontstaan de <b>subtropische hogedrukgebieden (H)</b>.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /* ==========================================================================
+       AARDRIJKSKUNDE KLAS 3 - GEAVANCEERDE DIDACTISCHE 3D APPLICATIE
+       Volumetrische wolken, juiste regenlocaties in India (West-Ghats & Himalaya,
+       regenschaduw Dekan), vloeiende Hadleycel-lussen en 3D-reliëflandschap.
+       ========================================================================== */
+
+    let currentPhase = 1;
+    let currentSeason = 'summer';
+    let isMenuCollapsed = false;
+    let isExplanationMinimized = false;
+    let isAutoRotating = false;
+
+    // Three.js Kern
+    let scene, camera, renderer, controls;
+    let clock = new THREE.Clock();
+    let raycaster = new THREE.Raycaster();
+    let mouse = new THREE.Vector2();
+    let hemiLight = null;
+    let targetBgColor = new THREE.Color(0x07090e);
+
+    // Scene Graph Groups
+    let globeGroup = new THREE.Group();
+    let hadleyGroup = new THREE.Group();
+    let itczGroup = new THREE.Group();
+    let monsoonGroup = new THREE.Group();
+
+    // Dynamische elementen
+    let animatedFlows = [];
+    let hadleyRainParticles = null;
+    let monsoonRainParticles = null;
+    let winterRainParticles = null;
+    let earthMesh, atmosphereMesh;
+    let equatorLineMesh;
+    let indiaHotspotMesh;
+
+    // Regionaal India Reliëf Mesh & Materiaal
+    let southAsiaMesh = null;
+    let southAsiaMaterial = null;
+
+    // Camera Lerp Doelwit
+    let cameraTarget = {
+      pos: new THREE.Vector3(0, 0.4, 5.0),
+      look: new THREE.Vector3(0, -0.22, 0),
+      duration: 1.5,
+      startTime: 0,
+      startPos: new THREE.Vector3(),
+      startLook: new THREE.Vector3(),
+      isMoving: false
+    };
+
+    // --- SATTELLIETTEXTUUR BEHEER (NASA BLUE MARBLE & TOPOLOGY) ---
+    const SAT_URL = "https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg";
+    const BUMP_URL = "https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png";
+    const WATER_URL = "https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-water.png";
+
+    // Procedural Fallback voor offline gebruik
+    function generateFallbackEarthCanvas() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 2048;
+      canvas.height = 1024;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#0a2342';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      function toXY(lon, lat) {
+        return [((lon + 180) / 360) * canvas.width, ((90 - lat) / 180) * canvas.height];
+      }
+
+      function drawLand(points, color) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        for (let i = 0; i < points.length; i++) {
+          const [x, y] = toXY(points[i][0], points[i][1]);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      drawLand([[-17, 15], [-12, 5], [10, 4], [14, -18], [18, -34], [28, -34], [40, -10], [51, 12], [32, 31], [-17, 21]], '#2d5a27');
+      drawLand([[-15, 20], [35, 20], [33, 30], [-15, 20]], '#c29d5b');
+      drawLand([[34, 30], [55, 25], [60, 22], [45, 12], [34, 30]], '#c29d5b');
+      drawLand([[68, 24], [72, 21], [77, 8.5], [80, 13], [89, 22], [92, 26], [74, 32], [68, 28]], '#2e6f40');
+      drawLand([[72, 32], [85, 30], [98, 29], [98, 36], [75, 38]], '#ffffff');
+      drawLand([[98, 20], [108, 10], [102, 5], [115, -7], [120, -8], [100, 2]], '#1e4e2b');
+      drawLand([[114, -22], [142, -11], [150, -22], [148, -38], [115, -34]], '#9c5b23');
+      drawLand([[-75, 10], [-50, -2], [-38, -15], [-65, -55], [-80, -5], [-75, 10]], '#1b4d24');
+      drawLand([[-140, 70], [-80, 58], [-75, 35], [-105, 20], [-125, 48]], '#3a5f33');
+
+      return canvas;
+    }
+
+    // --- PROCEDURAL VOLUMETRISCHE WOLKEN-TEXTUREN (CANVAS SPRITES) ---
+    // Zachte witte wolkdeeltjes voor heldere wolktoppen
+    let cloudWhiteTex = null;
+    let cloudDarkTex = null;
+
+    function initCloudTextures() {
+      // 1. Zachte witte wolkentextuur
+      const canvasW = document.createElement('canvas');
+      canvasW.width = 128;
+      canvasW.height = 128;
+      const ctxW = canvasW.getContext('2d');
+      const gradW = ctxW.createRadialGradient(64, 64, 4, 64, 64, 62);
+      gradW.addColorStop(0.0, 'rgba(255, 255, 255, 0.85)');
+      gradW.addColorStop(0.25, 'rgba(245, 248, 255, 0.65)');
+      gradW.addColorStop(0.55, 'rgba(230, 238, 250, 0.32)');
+      gradW.addColorStop(0.85, 'rgba(215, 225, 240, 0.08)');
+      gradW.addColorStop(1.0, 'rgba(200, 215, 235, 0.0)');
+      ctxW.fillStyle = gradW;
+      ctxW.fillRect(0, 0, 128, 128);
+      cloudWhiteTex = new THREE.CanvasTexture(canvasW);
+
+      // 2. Donkere stormwolkentextuur voor de basis waar regen valt
+      const canvasD = document.createElement('canvas');
+      canvasD.width = 128;
+      canvasD.height = 128;
+      const ctxD = canvasD.getContext('2d');
+      const gradD = ctxD.createRadialGradient(64, 64, 4, 64, 64, 62);
+      gradD.addColorStop(0.0, 'rgba(75, 85, 100, 0.9)');
+      gradD.addColorStop(0.3, 'rgba(65, 75, 90, 0.7)');
+      gradD.addColorStop(0.65, 'rgba(55, 65, 80, 0.35)');
+      gradD.addColorStop(1.0, 'rgba(45, 55, 70, 0.0)');
+      ctxD.fillStyle = gradD;
+      ctxD.fillRect(0, 0, 128, 128);
+      cloudDarkTex = new THREE.CanvasTexture(canvasD);
+    }
+
+    // Helper: Bouw een zachte, volumetrische 3D-wolk uit tientallen overlappende sprites
+    function createVolumetricCloudCluster(params) {
+      const group = new THREE.Group();
+      const count = params.count || 24;
+      const isRainBase = params.isRainBase || false;
+      const tex = isRainBase ? cloudDarkTex : cloudWhiteTex;
+
+      const mat = new THREE.SpriteMaterial({
+        map: tex,
+        transparent: true,
+        opacity: params.opacity || 0.45,
+        depthWrite: false
+      });
+
+      for (let i = 0; i < count; i++) {
+        const sprite = new THREE.Sprite(mat);
+        const ox = (Math.random() - 0.5) * (params.spreadX || 0.5);
+        const oy = (Math.random() - 0.5) * (params.spreadY || 0.2);
+        const oz = (Math.random() - 0.5) * (params.spreadZ || 0.5);
+        sprite.position.set(ox, oy, oz);
+
+        const s = (params.scaleMin || 0.2) + Math.random() * ((params.scaleMax || 0.4) - (params.scaleMin || 0.2));
+        sprite.scale.set(s, s * (params.aspect || 0.8), 1);
+        group.add(sprite);
+      }
+      return group;
+    }
+
+    // --- SETUP SCENE, CAMERA & BELICHTING ---
+    function initThreeScene() {
+      const container = document.getElementById('webgl-container');
+      initCloudTextures();
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x07090e);
+      scene.fog = new THREE.FogExp2(0x07090e, 0.035);
+
+      camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(0, 0.4, 5.0);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.15;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.rotateSpeed = 0.6;
+      controls.enablePan = true;
+      controls.screenSpacePanning = true;
+      controls.target.set(0, -0.22, 0);
+      controls.minDistance = 1.2;
+      controls.maxDistance = 12.0;
+
+      // Belichting
+      hemiLight = new THREE.HemisphereLight(0xffffff, 0x111625, 0.95);
+      scene.add(hemiLight);
+
+      const sunLight = new THREE.DirectionalLight(0xfffaf0, 1.45);
+      sunLight.position.set(5, 4, 6);
+      sunLight.castShadow = true;
+      sunLight.shadow.mapSize.width = 1024;
+      sunLight.shadow.mapSize.height = 1024;
+      scene.add(sunLight);
+
+      const fillLight = new THREE.DirectionalLight(0x38bdf8, 0.35);
+      fillLight.position.set(-5, -2, -4);
+      scene.add(fillLight);
+
+      // Groepen
+      scene.add(globeGroup);
+      scene.add(hadleyGroup);
+      scene.add(itczGroup);
+      scene.add(monsoonGroup);
+
+      // Bouw onderdelen
+      buildRealisticEarthGlobe();
+      buildHadleyCellCrossSection();
+      buildITCZLines();
+      buildSouthAsiaSatelliteRelief();
+
+      // Listeners
+      window.addEventListener('resize', onWindowResize);
+      renderer.domElement.addEventListener('pointermove', onPointerMove);
+      renderer.domElement.addEventListener('click', onPointerClick);
+    }
+
+    // --- 1. GOOGLE EARTH SATELLIETBOL (BEHOUDEN) ---
+    function buildRealisticEarthGlobe() {
+      const radius = 1.5;
+      const textureLoader = new THREE.TextureLoader();
+      textureLoader.setCrossOrigin('anonymous');
+
+      const fallbackTex = new THREE.CanvasTexture(generateFallbackEarthCanvas());
+      const earthGeo = new THREE.SphereGeometry(radius, 80, 80);
+      
+      const earthMat = new THREE.MeshStandardMaterial({
+        map: fallbackTex,
+        roughness: 0.65,
+        metalness: 0.1
+      });
+
+      textureLoader.load(SAT_URL, (loadedTex) => {
+        loadedTex.wrapS = THREE.RepeatWrapping;
+        loadedTex.wrapT = THREE.ClampToEdgeWrapping;
+        earthMat.map = loadedTex;
+        earthMat.needsUpdate = true;
+        updateSouthAsiaTextures(loadedTex.image, null);
+      });
+
+      textureLoader.load(BUMP_URL, (bTex) => {
+        earthMat.bumpMap = bTex;
+        earthMat.bumpScale = 0.018;
+        earthMat.needsUpdate = true;
+        updateSouthAsiaTextures(null, bTex.image);
+      });
+
+      textureLoader.load(WATER_URL, (wTex) => {
+        earthMat.roughnessMap = wTex;
+        earthMat.metalness = 0.15;
+        earthMat.needsUpdate = true;
+      });
+
+      earthMesh = new THREE.Mesh(earthGeo, earthMat);
+      earthMesh.rotation.y = -Math.PI * 0.45;
+      globeGroup.add(earthMesh);
+
+      // Atmosfeergloed
+      const atmosGeo = new THREE.SphereGeometry(radius * 1.025, 64, 64);
+      const atmosMat = new THREE.ShaderMaterial({
+        vertexShader: `
+          varying vec3 vNormal;
+          void main() {
+            vNormal = normalize(normalMatrix * normal);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          varying vec3 vNormal;
+          void main() {
+            float intensity = pow(0.70 - dot(vNormal, vec3(0, 0, 1.0)), 2.4);
+            gl_FragColor = vec4(0.24, 0.76, 0.98, 1.0) * intensity * 1.5;
+          }
+        `,
+        blending: THREE.AdditiveBlending,
+        side: THREE.BackSide,
+        transparent: true
+      });
+      atmosphereMesh = new THREE.Mesh(atmosGeo, atmosMat);
+      globeGroup.add(atmosphereMesh);
+
+      // Klikbare Evenaar Hoepel
+      const equatorGeo = new THREE.TorusGeometry(radius * 1.008, 0.012, 24, 120);
+      equatorGeo.rotateX(Math.PI / 2);
+      const equatorMat = new THREE.MeshStandardMaterial({
+        color: 0xef4444,
+        emissive: 0xef4444,
+        emissiveIntensity: 0.65,
+        roughness: 0.3
+      });
+      equatorLineMesh = new THREE.Mesh(equatorGeo, equatorMat);
+      equatorLineMesh.name = "clickableEquator";
+      earthMesh.add(equatorLineMesh);
+
+      // Paardenbreedten 30° NB en 30° ZB ringen
+      const lat30Rad = 30 * (Math.PI / 180);
+      const y30 = radius * Math.sin(lat30Rad);
+      const r30 = radius * Math.cos(lat30Rad) * 1.008;
+
+      function createLatRing(yPos, radiusRing) {
+        const ringGeo = new THREE.TorusGeometry(radiusRing, 0.009, 16, 100);
+        ringGeo.rotateX(Math.PI / 2);
+        const ringMat = new THREE.MeshStandardMaterial({
+          color: 0x38bdf8,
+          emissive: 0x38bdf8,
+          emissiveIntensity: 0.45,
+          transparent: true,
+          opacity: 0.75
+        });
+        const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+        ringMesh.position.y = yPos;
+        return ringMesh;
+      }
+      earthMesh.add(createLatRing(y30, r30));
+      earthMesh.add(createLatRing(-y30, r30));
+
+      // India Hotspot Marker (21.5° NB, 78° OL)
+      const indiaCoords = latLonToLocalSpherePos(21.5, 78.0, radius * 1.015);
+      const hotspotGeo = new THREE.SphereGeometry(0.04, 16, 16);
+      const hotspotMat = new THREE.MeshStandardMaterial({
+        color: 0xf59e0b,
+        emissive: 0xf59e0b,
+        emissiveIntensity: 0.85
+      });
+      indiaHotspotMesh = new THREE.Mesh(hotspotGeo, hotspotMat);
+      indiaHotspotMesh.position.copy(indiaCoords);
+      indiaHotspotMesh.name = "clickableIndiaHotspot";
+      earthMesh.add(indiaHotspotMesh);
+
+      // Halo ring
+      const haloGeo = new THREE.RingGeometry(0.045, 0.08, 32);
+      const haloMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, side: THREE.DoubleSide, transparent: true, opacity: 0.75 });
+      const haloMesh = new THREE.Mesh(haloGeo, haloMat);
+      haloMesh.position.copy(indiaCoords);
+      haloMesh.lookAt(0, 0, 0);
+      haloMesh.name = "indiaHalo";
+      earthMesh.add(haloMesh);
+    }
+
+    function latLonToLocalSpherePos(lat, lon, r) {
+      const phi = (90 - lat) * (Math.PI / 180);
+      const theta = (lon + 180) * (Math.PI / 180);
+      const x = -r * Math.sin(phi) * Math.cos(theta);
+      const z = r * Math.sin(phi) * Math.sin(theta);
+      const y = r * Math.cos(phi);
+      return new THREE.Vector3(x, y, z);
+    }
+
+    // --- 2. DOORSNEDE HADLEYCEL (PROFESSIONEEL & REALISTISCH) ---
+    function buildHadleyCellCrossSection() {
+      hadleyGroup.visible = false;
+
+      // A. Realistisch 3D-landschap onder de cel met reliëf en vloeiende biomen
+      const terrainWidth = 5.6;
+      const terrainDepth = 1.4;
+      const terrainGeo = new THREE.PlaneGeometry(terrainWidth, terrainDepth, 140, 36);
+      terrainGeo.rotateX(-Math.PI / 2);
+
+      const posAttr = terrainGeo.attributes.position;
+      const vertexColors = [];
+
+      for (let i = 0; i < posAttr.count; i++) {
+        const x = posAttr.getX(i);
+        const z = posAttr.getZ(i);
+
+        // Hoogteprofiel:
+        // Evenaar (X rond 0): rivierdal (iets lager) met zachte heuvels
+        // 30° NB & ZB: glooiende zandduinkammen
+        let elev = -0.55;
+        const absX = Math.abs(x);
+
+        if (absX < 0.45) {
+          // Regenwoud vallei & rivierbedding
+          const riverDip = Math.exp(-Math.pow(x / 0.12, 2)) * 0.04;
+          const hillRise = Math.sin(x * 12.0) * 0.025;
+          elev += hillRise - riverDip;
+        } else if (absX >= 0.45 && absX < 1.3) {
+          // Savanne / steppe heuvels
+          elev += Math.sin(absX * 6.0) * 0.035;
+        } else {
+          // Woestijn duinkammen
+          const duneWave = Math.sin(absX * 9.0 + z * 3.0) * 0.05 + Math.cos(absX * 14.0) * 0.03;
+          elev += duneWave;
+        }
+        posAttr.setY(i, elev);
+
+        // Natuurlijke kleurgradiënt:
+        // Regenwoud (donkergroen) -> Savanne (olijf/taankleurig) -> Woestijn (warm okergeel zand)
+        const col = new THREE.Color();
+        if (absX < 0.45) {
+          col.setHex(0x134e2a); // Donkergroen tropisch woud
+        } else if (absX < 0.85) {
+          const t = (absX - 0.45) / 0.4;
+          col.lerpColors(new THREE.Color(0x134e2a), new THREE.Color(0x556b2f), t); // Overgang naar savanne
+        } else if (absX < 1.4) {
+          const t = (absX - 0.85) / 0.55;
+          col.lerpColors(new THREE.Color(0x556b2f), new THREE.Color(0xd97706), t); // Naar zandwoestijn
+        } else {
+          col.setHex(0xd97706); // Zandwoestijn duinen
+        }
+        vertexColors.push(col.r, col.g, col.b);
+      }
+
+      terrainGeo.setAttribute('color', new THREE.Float32BufferAttribute(vertexColors, 3));
+      terrainGeo.computeVertexNormals();
+
+      const terrainMesh = new THREE.Mesh(terrainGeo, new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 0.85,
+        metalness: 0.05
+      }));
+      terrainMesh.position.z = 0.0;
+      hadleyGroup.add(terrainMesh);
+
+      // Meanderende rivier door het regenwoud bij de evenaar
+      const riverMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.18, terrainDepth).rotateX(-Math.PI / 2),
+        new THREE.MeshStandardMaterial({ color: 0x0ea5e9, roughness: 0.1, metalness: 0.7, transparent: true, opacity: 0.8 })
+      );
+      riverMesh.position.set(0, -0.57, 0);
+      hadleyGroup.add(riverMesh);
+
+      // Dicht, gelaagd regenwoud bij 0° Evenaar (organische boomkronen)
+      const rainforestGroup = new THREE.Group();
+      const treePuffs = [
+        [-0.38, -0.47, 0.05, 0.07, 0x14532d], [-0.3, -0.46, -0.08, 0.08, 0x166534],
+        [-0.22, -0.47, 0.12, 0.065, 0x15803d], [-0.14, -0.48, -0.05, 0.075, 0x14532d],
+        [0.14, -0.48, 0.08, 0.075, 0x166534], [0.22, -0.47, -0.12, 0.08, 0x14532d],
+        [0.32, -0.46, 0.05, 0.085, 0x15803d], [0.4, -0.47, -0.05, 0.07, 0x166534]
+      ];
+      for (let [tx, ty, tz, tr, tc] of treePuffs) {
+        const crown = new THREE.Mesh(
+          new THREE.SphereGeometry(tr, 12, 12),
+          new THREE.MeshStandardMaterial({ color: tc, roughness: 0.9 })
+        );
+        crown.scale.set(1.1, 1.4, 1.1);
+        crown.position.set(tx, ty, tz);
+        rainforestGroup.add(crown);
+      }
+      hadleyGroup.add(rainforestGroup);
+
+      // B. Tropopauze grenslaag (bovenin)
+      const tropoCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-2.8, 1.35, 0), new THREE.Vector3(0, 1.65, 0), new THREE.Vector3(2.8, 1.35, 0)
+      ]);
+      hadleyGroup.add(new THREE.Mesh(new THREE.TubeGeometry(tropoCurve, 40, 0.008, 8, false), new THREE.MeshBasicMaterial({ color: 0x334155 })));
+
+      // C. Realistische, Volumetrische Cumulonimbus Aambeeldwolk bij 0°
+      const anvilCloudGroup = new THREE.Group();
+      anvilCloudGroup.position.set(0, 0, 0);
+
+      // 1. Donkere, zware regenbasis onderaan (y: 0.15 .. 0.45)
+      const cloudBase = createVolumetricCloudCluster({
+        count: 24,
+        isRainBase: true,
+        spreadX: 0.7,
+        spreadY: 0.2,
+        spreadZ: 0.4,
+        scaleMin: 0.28,
+        scaleMax: 0.42,
+        opacity: 0.75
+      });
+      cloudBase.position.set(0, 0.25, 0);
+      anvilCloudGroup.add(cloudBase);
+
+      // 2. Opstijgende, wolkige convectiekolom (y: 0.5 .. 1.1)
+      const cloudPillar = createVolumetricCloudCluster({
+        count: 32,
+        isRainBase: false,
+        spreadX: 0.45,
+        spreadY: 0.6,
+        spreadZ: 0.35,
+        scaleMin: 0.3,
+        scaleMax: 0.48,
+        opacity: 0.7
+      });
+      cloudPillar.position.set(0, 0.8, 0);
+      anvilCloudGroup.add(cloudPillar);
+
+      // 3. Breed uitwaaierend, zuiver wit aambeeld aan de tropopauze (y: 1.25 .. 1.55, breedte tot 2.8m!)
+      const cloudAnvil = createVolumetricCloudCluster({
+        count: 48,
+        isRainBase: false,
+        spreadX: 2.2, // Brede spreiding conform aambeeld
+        spreadY: 0.25,
+        spreadZ: 0.5,
+        scaleMin: 0.35,
+        scaleMax: 0.6,
+        opacity: 0.75
+      });
+      cloudAnvil.position.set(0, 1.4, 0);
+      anvilCloudGroup.add(cloudAnvil);
+
+      hadleyGroup.add(anvilCloudGroup);
+
+      // Regendruppels onder de evenaarswolk
+      const rPos = new Float32Array(220 * 3);
+      for (let i = 0; i < 220; i++) {
+        rPos[i * 3 + 0] = (Math.random() - 0.5) * 0.65;
+        rPos[i * 3 + 1] = -0.5 + Math.random() * 0.75;
+        rPos[i * 3 + 2] = (Math.random() - 0.5) * 0.15;
+      }
+      const rGeo = new THREE.BufferGeometry();
+      rGeo.setAttribute('position', new THREE.BufferAttribute(rPos, 3));
+      hadleyRainParticles = new THREE.Points(rGeo, new THREE.PointsMaterial({ color: 0x38bdf8, size: 0.026, transparent: true, opacity: 0.8 }));
+      hadleyGroup.add(hadleyRainParticles);
+
+      // D. Vloeiende, doorlopende afgeronde Hadley-luchtcirculatielussen (geen knikken of kogels)
+      // Noordelijke cel (Noorderbreedte 0° -> 30° NB -> 0°)
+      const northLoopPoints = [
+        new THREE.Vector3(0.2, -0.38, 0),   // Start grondstroom evenaar
+        new THREE.Vector3(0.2, 0.45, 0),    // Stijging door de wolk
+        new THREE.Vector3(0.28, 1.35, 0),   // Bocht bij tropopauze
+        new THREE.Vector3(1.0, 1.48, 0),    // Bovenlucht divergentie noordwaarts
+        new THREE.Vector3(2.0, 1.45, 0),    // Naderen 30° NB
+        new THREE.Vector3(2.4, 1.25, 0),    // Bovenste dalingsbocht
+        new THREE.Vector3(2.45, 0.45, 0),   // Dalende lucht Paardenbreedten
+        new THREE.Vector3(2.38, -0.38, 0),  // Onderste grondbocht
+        new THREE.Vector3(1.5, -0.42, 0),   // Passaatwind richting evenaar
+        new THREE.Vector3(0.8, -0.42, 0)    // Convergentie naar het centrum
+      ];
+      createSmoothHadleyLoop(northLoopPoints, hadleyGroup, "northLoop");
+
+      // Zuidelijke cel (Zuiderbreedte 0° -> 30° ZB -> 0°)
+      const southLoopPoints = [
+        new THREE.Vector3(-0.2, -0.38, 0),
+        new THREE.Vector3(-0.2, 0.45, 0),
+        new THREE.Vector3(-0.28, 1.35, 0),
+        new THREE.Vector3(-1.0, 1.48, 0),
+        new THREE.Vector3(-2.0, 1.45, 0),
+        new THREE.Vector3(-2.4, 1.25, 0),
+        new THREE.Vector3(-2.45, 0.45, 0),
+        new THREE.Vector3(-2.38, -0.38, 0),
+        new THREE.Vector3(-1.5, -0.42, 0),
+        new THREE.Vector3(-0.8, -0.42, 0)
+      ];
+      createSmoothHadleyLoop(southLoopPoints, hadleyGroup, "southLoop");
+    }
+
+    // Helper: Bouw een gesloten, aerodynamische luchtstroomlus met naadloze pijlpunten en vloeiende gradient
+    function createSmoothHadleyLoop(controlPoints, targetGroup, id) {
+      const curve = new THREE.CatmullRomCurve3(controlPoints, true, 'centripetal', 0.5);
+      const tubularSegments = 100;
+      const tubeRadius = 0.026;
+      const radialSegments = 12;
+      const tubeGeo = new THREE.TubeGeometry(curve, tubularSegments, tubeRadius, radialSegments, true);
+      const colors = [];
+
+      // Temperatuurgradiënt over de hele lus t:
+      // t: 0..0.22 (Stijgen bij evenaar): Rood -> Oranje -> Koelblauw bij top
+      // t: 0.22..0.52 (Bovenlucht): Koelblauw (droge koude lucht)
+      // t: 0.52..0.76 (Dalen bij 30°): Blauw warmt op door compressie -> Oranje/amber
+      // t: 0.76..1.0 (Aardoppervlak passaat): Oranje -> Dieprood bij evenaar
+      const cWarm = new THREE.Color(0xef4444);
+      const cAmber = new THREE.Color(0xf59e0b);
+      const cCold = new THREE.Color(0x38bdf8);
+      const cDeepCold = new THREE.Color(0x1d4ed8);
+
+      for (let i = 0; i <= tubularSegments; i++) {
+        const t = i / tubularSegments;
+        let c = new THREE.Color();
+
+        if (t < 0.25) {
+          // Stijgende lucht (rood -> oranje -> blauw)
+          if (t < 0.12) c.lerpColors(cWarm, cAmber, t / 0.12);
+          else c.lerpColors(cAmber, cCold, (t - 0.12) / 0.13);
+        } else if (t < 0.5) {
+          // Bovenlucht divergentie (blauw)
+          c.lerpColors(cCold, cDeepCold, (t - 0.25) / 0.25);
+        } else if (t < 0.75) {
+          // Dalende lucht (blauw -> oranje)
+          c.lerpColors(cDeepCold, cAmber, (t - 0.5) / 0.25);
+        } else {
+          // Passaatwind aan de grond (oranje -> rood)
+          c.lerpColors(cAmber, cWarm, (t - 0.75) / 0.25);
+        }
+
+        for (let j = 0; j <= radialSegments; j++) colors.push(c.r, c.g, c.b);
+      }
+
+      tubeGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+      const tubeMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.35, metalness: 0.1 });
+      targetGroup.add(new THREE.Mesh(tubeGeo, tubeMat));
+
+      // Naadloos aansluitende aerodynamische pijlpunten op 4 sleutelposities
+      const arrowTValues = [0.12, 0.38, 0.64, 0.88];
+      for (let tVal of arrowTValues) {
+        const pt = curve.getPointAt(tVal);
+        const tangent = curve.getTangentAt(tVal).normalize();
+
+        const coneGeo = new THREE.ConeGeometry(tubeRadius * 2.2, tubeRadius * 4.2, 16);
+        coneGeo.rotateX(Math.PI / 2);
+
+        // Bepaal kleur pijl op basis van tVal
+        let pColor = cCold;
+        if (tVal < 0.2) pColor = cAmber;
+        else if (tVal > 0.8) pColor = cWarm;
+        else if (tVal > 0.6) pColor = cAmber;
+
+        const coneMesh = new THREE.Mesh(coneGeo, new THREE.MeshStandardMaterial({ color: pColor, emissive: pColor, emissiveIntensity: 0.4 }));
+        coneMesh.position.copy(pt);
+        coneMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tangent);
+        targetGroup.add(coneMesh);
+      }
+
+      // Vloeiende pulserende lichtstraal (in plaats van losse kogels)
+      const pulseMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(tubeRadius * 1.35, 12, 12),
+        new THREE.MeshBasicMaterial({ color: 0xffffff })
+      );
+      targetGroup.add(pulseMesh);
+
+      animatedFlows.push({
+        curve: curve,
+        pulseMesh: pulseMesh,
+        category: "hadleyLoop",
+        speed: 0.14
+      });
+    }
+
+    // --- 3. WETENSCHAPPELIJK ACCURATE ITCZ-LIJNEN (JULI & JANUARI) ---
+    function buildITCZLines() {
+      itczGroup.visible = false;
+      const radius = 1.512;
+
+      // Coördinaten Juli (Zomer / Noordelijke stand van de ITCZ)
+      // Loopt over de Sahel (18°-20° NB), hoog over Arabië & Zuid-Iran (23°-26° NB),
+      // blijft hoog over Noord-India (27°-28° NB) en trekt zonder knik door
+      // over Myanmar & Zuid-China (21°-23° NB) naar de noordelijke Pacific (8°-12° NB).
+      const julyCoords = [
+        [-180, 8.0],
+        [-155, 8.5],
+        [-130, 9.0],
+        [-105, 11.0],
+        [-85, 13.5],
+        [-65, 11.0],
+        [-45, 8.5],
+        [-25, 9.5],
+        [-15, 16.5],
+        [-5, 19.0],
+        [12, 19.5],
+        [28, 19.0],
+        [42, 22.0],
+        [52, 24.5],
+        [62, 26.0],
+        [72, 27.5],
+        [82, 28.0],
+        [92, 26.5],
+        [102, 23.5],
+        [116, 21.5],
+        [135, 16.5],
+        [155, 12.0],
+        [170, 9.0]
+      ];
+
+      // Coördinaten Januari (Winter / Zuidelijke stand van de ITCZ)
+      // Loopt over Zuid-Amerika/Brazilië (12°-15° ZB), Zuidelijk Afrika (14°-18° ZB),
+      // duikt in de Indische Oceaan DUIDELIJK TEN ZUIDEN van de evenaar (8°-12° ZB, ver van India),
+      // buigt zuidwaarts over Indonesië & Noord-Australië (14°-18° ZB) en oceanen (0°-5° ZB).
+      const janCoords = [
+        [-180, -4.0],
+        [-150, -3.0],
+        [-120, -2.0],
+        [-95, -1.0],
+        [-80, -4.5],
+        [-65, -12.5],
+        [-50, -14.5],
+        [-36, -7.0],
+        [-20, -2.5],
+        [5, -3.0],
+        [18, -13.5],
+        [30, -18.0],
+        [44, -17.5],
+        [60, -12.0],
+        [75, -10.0],
+        [90, -11.5],
+        [106, -14.5],
+        [120, -16.5],
+        [135, -17.5],
+        [150, -14.5],
+        [165, -9.5],
+        [175, -5.5]
+      ];
+
+      // Bouw vloeiende sferische 3D-tubes die perfect de bolvorm volgen
+      itczGroup.add(createSphericalSplineTube(julyCoords, radius, 0xef4444));
+      itczGroup.add(createSphericalSplineTube(janCoords, radius, 0x38bdf8));
+
+      earthMesh.add(itczGroup);
+    }
+
+    function createSphericalSplineTube(coordArray, sphereRadius, colorHex) {
+      // 1. Converteer (lat, lon) controlepunten naar 3D
+      const ctrlPoints = coordArray.map(c => latLonToLocalSpherePos(c[1], c[0], sphereRadius));
+      const roughCurve = new THREE.CatmullRomCurve3(ctrlPoints, true, 'centripetal', 0.5);
+
+      // 2. Dicht bemonsteren en exact op sfeeroppervlak projecteren (voorkomt inzakken van de spline)
+      const numSamples = 280;
+      const smoothPoints = [];
+      for (let i = 0; i < numSamples; i++) {
+        const t = i / numSamples;
+        const pt = roughCurve.getPoint(t);
+        pt.normalize().multiplyScalar(sphereRadius);
+        smoothPoints.push(pt);
+      }
+
+      // 3. Vloeiende gesloten buis
+      const smoothCurve = new THREE.CatmullRomCurve3(smoothPoints, true, 'centripetal', 0.5);
+      const tubeGeo = new THREE.TubeGeometry(smoothCurve, 220, 0.014, 8, true);
+      const tubeMat = new THREE.MeshStandardMaterial({
+        color: colorHex,
+        emissive: colorHex,
+        emissiveIntensity: 0.85,
+        roughness: 0.35
+      });
+      return new THREE.Mesh(tubeGeo, tubeMat);
+    }
+
+    // --- 4. RELIËF VAN ZUID-AZIË & JUISTE LOCATIE VAN WOLKEN/REGEN IN INDIA ---
+    let summerFlowsGroup = new THREE.Group();
+    let winterFlowsGroup = new THREE.Group();
+    let summerCloudsGroup = new THREE.Group();
+    let winterCloudsGroup = new THREE.Group();
+
+    const RELIEF_SIZE = 5.6;
+    const RELIEF_SEGS = 256;
+    let reliefGeometry = null;
+
+    function buildSouthAsiaSatelliteRelief() {
+      monsoonGroup.visible = false;
+
+      reliefGeometry = new THREE.PlaneGeometry(RELIEF_SIZE, RELIEF_SIZE, RELIEF_SEGS, RELIEF_SEGS);
+      reliefGeometry.rotateX(-Math.PI / 2);
+
+      displaceSouthAsiaGeometryProcedural(reliefGeometry);
+
+      southAsiaMaterial = new THREE.MeshStandardMaterial({
+        roughness: 0.75,
+        metalness: 0.1
+      });
+
+      southAsiaMesh = new THREE.Mesh(reliefGeometry, southAsiaMaterial);
+      southAsiaMesh.receiveShadow = true;
+      monsoonGroup.add(southAsiaMesh);
+
+      // Wateroppervlakte
+      const waterMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(RELIEF_SIZE, RELIEF_SIZE).rotateX(-Math.PI / 2),
+        new THREE.MeshStandardMaterial({ color: 0x061e38, roughness: 0.1, metalness: 0.6, transparent: true, opacity: 0.5 })
+      );
+      waterMesh.position.y = 0.004;
+      monsoonGroup.add(waterMesh);
+
+      // --- ZOMER: AANLANDIGE ZW-MOESSON ---
+      const swVectors = [
+        [new THREE.Vector3(-1.9, 0.2, 1.8), new THREE.Vector3(-1.0, 0.32, 0.8), new THREE.Vector3(-0.4, 0.65, -0.9)],
+        [new THREE.Vector3(-1.3, 0.18, 2.0), new THREE.Vector3(-0.3, 0.28, 0.9), new THREE.Vector3(0.2, 0.7, -1.05)],
+        [new THREE.Vector3(-0.6, 0.16, 2.2), new THREE.Vector3(0.4, 0.26, 1.1), new THREE.Vector3(0.95, 0.68, -0.9)],
+        [new THREE.Vector3(0.1, 0.18, 2.1), new THREE.Vector3(1.1, 0.28, 0.7), new THREE.Vector3(1.5, 0.7, -0.85)]
+      ];
+      for (let pts of swVectors) {
+        createGradientAirflow(pts, [new THREE.Color(0xef4444), new THREE.Color(0xf59e0b)], 0.036, summerFlowsGroup, "summerWind");
+      }
+
+      // --- ZOMERWOLKEN: OP DE 2 JUISTE LOCATIES IN INDIA ---
+      // (Geen wolk meer boven het Hoogland van Dekan - regenschaduw!)
+
+      // 1. Langs de Zuidwestkust van India (Konkan- & Malabarkust vóór de West-Ghats)
+      const westCoastClouds = createVolumetricCloudCluster({
+        count: 36,
+        isRainBase: false,
+        spreadX: 0.35,  // Smalle strook vlak voor de kustlijn
+        spreadY: 0.2,
+        spreadZ: 1.4,  // Langgerekt van noord naar zuid langs de kust
+        scaleMin: 0.25,
+        scaleMax: 0.45,
+        opacity: 0.45
+      });
+      westCoastClouds.position.set(-0.95, 0.42, 0.7);
+      summerCloudsGroup.add(westCoastClouds);
+
+      // 2. Tegen de zuidflank van de Himalaya (Noord- & Noordoost-India)
+      const himalayaClouds = createVolumetricCloudCluster({
+        count: 54,
+        isRainBase: false,
+        spreadX: 2.6,  // Brede oost-west keten
+        spreadY: 0.25,
+        spreadZ: 0.5,
+        scaleMin: 0.35,
+        scaleMax: 0.6,
+        opacity: 0.48
+      });
+      himalayaClouds.position.set(0.3, 0.68, -1.05);
+      summerCloudsGroup.add(himalayaClouds);
+
+      // Regentitels in de zomer strikt langs de West-Ghats en tegen de Himalaya
+      const rainCount = 420;
+      const mRainPos = new Float32Array(rainCount * 3);
+      for (let i = 0; i < rainCount; i++) {
+        if (i < 200) {
+          // Westkust regenval
+          mRainPos[i * 3 + 0] = -1.1 + (Math.random() - 0.5) * 0.4;
+          mRainPos[i * 3 + 1] = 0.05 + Math.random() * 0.45;
+          mRainPos[i * 3 + 2] = 0.0 + Math.random() * 1.4;
+        } else {
+          // Himalaya stuwingsregen
+          mRainPos[i * 3 + 0] = -0.9 + Math.random() * 2.6;
+          mRainPos[i * 3 + 1] = 0.05 + Math.random() * 0.65;
+          mRainPos[i * 3 + 2] = -1.3 + Math.random() * 0.5;
+        }
+      }
+      const mRainGeo = new THREE.BufferGeometry();
+      mRainGeo.setAttribute('position', new THREE.BufferAttribute(mRainPos, 3));
+      monsoonRainParticles = new THREE.Points(mRainGeo, new THREE.PointsMaterial({ color: 0x38bdf8, size: 0.024, transparent: true, opacity: 0.75 }));
+      summerCloudsGroup.add(monsoonRainParticles);
+
+      // ITCZ Lijn Zomer over Noord-India (rond 26°-28° NB)
+      const itczSummerReliefCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-2.2, 0.45, -0.75), new THREE.Vector3(0.0, 0.52, -0.9), new THREE.Vector3(2.2, 0.48, -0.8)
+      ]);
+      summerFlowsGroup.add(new THREE.Mesh(
+        new THREE.TubeGeometry(itczSummerReliefCurve, 40, 0.02, 8, false),
+        new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xef4444, emissiveIntensity: 0.85 })
+      ));
+
+      // --- WINTER: AFLANDIGE NO-MOESSON (JANUARI) ---
+      // Lucht stroomt vanaf het koude continent (Siberië/Tibet) over India & Sri Lanka
+      // heen naar de zuidelijke ITCZ boven de Indische Oceaan.
+      const neVectors = [
+        [new THREE.Vector3(-0.2, 0.70, -1.2), new THREE.Vector3(-0.8, 0.38, 0.3), new THREE.Vector3(-1.6, 0.20, 1.6), new THREE.Vector3(-2.1, 0.18, 2.55)],
+        [new THREE.Vector3(0.4, 0.72, -1.15), new THREE.Vector3(-0.1, 0.36, 0.5), new THREE.Vector3(-0.8, 0.20, 1.8), new THREE.Vector3(-1.2, 0.18, 2.60)],
+        [new THREE.Vector3(1.1, 0.68, -1.0), new THREE.Vector3(0.6, 0.34, 0.6), new THREE.Vector3(0.1, 0.18, 1.9), new THREE.Vector3(-0.3, 0.18, 2.62)],
+        [new THREE.Vector3(1.8, 0.62, -0.9), new THREE.Vector3(1.3, 0.30, 0.8), new THREE.Vector3(0.9, 0.18, 2.0), new THREE.Vector3(0.6, 0.18, 2.65)]
+      ];
+      for (let pts of neVectors) {
+        createGradientAirflow(pts, [new THREE.Color(0x38bdf8), new THREE.Color(0x0284c7)], 0.034, winterFlowsGroup, "winterWind");
+      }
+
+      // ITCZ-lijn in de winter: Ligt ver naar het zuiden boven de Indische Oceaan (~8°-10° ZB, ruim ten zuiden van Sri Lanka!)
+      const itczWinterReliefCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-2.6, 0.22, 2.62),
+        new THREE.Vector3(-0.9, 0.24, 2.66),
+        new THREE.Vector3(0.8, 0.25, 2.70),
+        new THREE.Vector3(2.6, 0.23, 2.74)
+      ]);
+      winterFlowsGroup.add(new THREE.Mesh(
+        new THREE.TubeGeometry(itczWinterReliefCurve, 40, 0.02, 8, false),
+        new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x38bdf8, emissiveIntensity: 0.85 })
+      ));
+
+      // WINTERWOLKEN: Heel India & Sri Lanka zijn 100% helder en droog!
+      // Wolken uitsluitend helemaal aan de zuidelijke oceaanrand langs de blauwe ITCZ richting Indonesië
+      const winterOceanClouds = createVolumetricCloudCluster({
+        count: 42,
+        isRainBase: false,
+        spreadX: 3.6,
+        spreadY: 0.22,
+        spreadZ: 0.42,
+        scaleMin: 0.32,
+        scaleMax: 0.58,
+        opacity: 0.45
+      });
+      winterOceanClouds.position.set(0.4, 0.34, 2.68);
+      winterCloudsGroup.add(winterOceanClouds);
+
+      // Neerslag in de winter: uitsluitend in de zuidelijke oceanische convergentiezone
+      const wRainCount = 180;
+      const wRainPos = new Float32Array(wRainCount * 3);
+      for (let i = 0; i < wRainCount; i++) {
+        wRainPos[i * 3 + 0] = -1.4 + Math.random() * 3.8;
+        wRainPos[i * 3 + 1] = 0.05 + Math.random() * 0.35;
+        wRainPos[i * 3 + 2] = 2.5 + Math.random() * 0.36;
+      }
+      const wRainGeo = new THREE.BufferGeometry();
+      wRainGeo.setAttribute('position', new THREE.BufferAttribute(wRainPos, 3));
+      winterRainParticles = new THREE.Points(
+        wRainGeo,
+        new THREE.PointsMaterial({ color: 0x38bdf8, size: 0.022, transparent: true, opacity: 0.75 })
+      );
+      winterCloudsGroup.add(winterRainParticles);
+
+      monsoonGroup.add(summerFlowsGroup);
+      monsoonGroup.add(summerCloudsGroup);
+      monsoonGroup.add(winterFlowsGroup);
+      monsoonGroup.add(winterCloudsGroup);
+
+      winterFlowsGroup.visible = false;
+      winterCloudsGroup.visible = false;
+    }
+
+    // Helper voor stromingen in fase 4
+    function createGradientAirflow(points, colorStops, tubeRadius, targetGroup, category) {
+      const curve = new THREE.CatmullRomCurve3(points);
+      const tubularSegments = 40;
+      const radialSegments = 12;
+      const tubeGeo = new THREE.TubeGeometry(curve, tubularSegments, tubeRadius, radialSegments, false);
+      const colors = [];
+
+      for (let i = 0; i <= tubularSegments; i++) {
+        const t = i / tubularSegments;
+        let c = new THREE.Color();
+        if (colorStops.length === 2) {
+          c.lerpColors(colorStops[0], colorStops[1], t);
+        }
+        for (let j = 0; j <= radialSegments; j++) colors.push(c.r, c.g, c.b);
+      }
+
+      tubeGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+      targetGroup.add(new THREE.Mesh(tubeGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.35, metalness: 0.1 })));
+
+      const endPoint = points[points.length - 1];
+      const prevPoint = points[points.length - 2];
+      const dir = new THREE.Vector3().subVectors(endPoint, prevPoint).normalize();
+      const endColor = colorStops[colorStops.length - 1];
+
+      const coneGeo = new THREE.ConeGeometry(tubeRadius * 2.2, tubeRadius * 4.2, 16);
+      coneGeo.rotateX(Math.PI / 2);
+      const coneMesh = new THREE.Mesh(coneGeo, new THREE.MeshStandardMaterial({ color: endColor, emissive: endColor, emissiveIntensity: 0.5 }));
+      coneMesh.position.copy(endPoint);
+      coneMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
+      targetGroup.add(coneMesh);
+
+      // Lichtpuls
+      const pulseMesh = new THREE.Mesh(new THREE.SphereGeometry(tubeRadius * 1.35, 10, 10), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      targetGroup.add(pulseMesh);
+
+      animatedFlows.push({ curve, pulseMesh, colorStops, category, speed: 0.22 });
+    }
+
+    let cachedSatImage = null;
+    let cachedBumpImage = null;
+    let cachedSatPixels = null;
+
+    // NASA Satelliet & Topologie Uitsnijden (64°OL-98°OL en 38°NB tot 12°ZB)
+    function updateSouthAsiaTextures(satImage, bumpImage) {
+      if (satImage) {
+        cachedSatImage = satImage;
+        const satCanvas = document.createElement('canvas');
+        satCanvas.width = 1024;
+        satCanvas.height = 1024;
+        const ctx = satCanvas.getContext('2d');
+
+        const sx = ((64 + 180) / 360) * satImage.width;
+        const sy = ((90 - 38) / 180) * satImage.height;
+        const sw = (34 / 360) * satImage.width;
+        const sh = (50 / 180) * satImage.height;
+
+        ctx.drawImage(satImage, sx, sy, sw, sh, 0, 0, satCanvas.width, satCanvas.height);
+        cachedSatPixels = ctx.getImageData(0, 0, satCanvas.width, satCanvas.height).data;
+
+        const regionalTex = new THREE.CanvasTexture(satCanvas);
+        regionalTex.wrapS = THREE.ClampToEdgeWrapping;
+        regionalTex.wrapT = THREE.ClampToEdgeWrapping;
+
+        if (southAsiaMaterial) {
+          southAsiaMaterial.map = regionalTex;
+          southAsiaMaterial.needsUpdate = true;
+        }
+      }
+
+      if (bumpImage) cachedBumpImage = bumpImage;
+
+      if (cachedBumpImage && reliefGeometry) {
+        const bSize = 512;
+        const sx = ((64 + 180) / 360) * cachedBumpImage.width;
+        const sy = ((90 - 38) / 180) * cachedBumpImage.height;
+        const sw = (34 / 360) * cachedBumpImage.width;
+        const sh = (50 / 180) * cachedBumpImage.height;
+
+        // Helper met randmarge zodat blur aan de noordrand (Tibet/Himalaya) geen artefacten geeft
+        function sampleBumpData(blurPx) {
+          const pad = 12;
+          const full = bSize + pad * 2;
+          const c = document.createElement('canvas');
+          c.width = full;
+          c.height = full;
+          const cx = c.getContext('2d');
+          const padSrcX = (pad / bSize) * sw;
+          const padSrcY = (pad / bSize) * sh;
+          cx.save();
+          if (blurPx > 0) cx.filter = `blur(${blurPx}px)`;
+          cx.drawImage(
+            cachedBumpImage,
+            sx - padSrcX, sy - padSrcY, sw + padSrcX * 2, sh + padSrcY * 2,
+            0, 0, full, full
+          );
+          cx.restore();
+          return cx.getImageData(pad, pad, bSize, bSize).data;
+        }
+
+        // Brede blur (8px) geeft een geleidelijke, natuurlijke helling zonder steile verticale muur;
+        // lichte blur (1.5px) behoudt het echte reliëf van West-Ghats, Dekan en bergkammen.
+        const crispData = sampleBumpData(1.5);
+        const broadData = sampleBumpData(8.0);
+
+        // Vloeiend land/zee-masker (blur 2.2px) voorkomt blokkerige zaagtand-kustlijnen
+        let smoothMaskData = null;
+        if (cachedSatPixels) {
+          const rawMaskCanvas = document.createElement('canvas');
+          rawMaskCanvas.width = bSize;
+          rawMaskCanvas.height = bSize;
+          const rmCtx = rawMaskCanvas.getContext('2d');
+          const rmImg = rmCtx.createImageData(bSize, bSize);
+          const rmD = rmImg.data;
+
+          for (let my = 0; my < bSize; my++) {
+            const sy2 = Math.min(1023, my * 2);
+            for (let mx = 0; mx < bSize; mx++) {
+              const sx2 = Math.min(1023, mx * 2);
+              const spIdx = (sy2 * 1024 + sx2) * 4;
+              const r = cachedSatPixels[spIdx];
+              const g = cachedSatPixels[spIdx + 1];
+              const b = cachedSatPixels[spIdx + 2];
+              const isOcean = (b > r + 14 && b > g + 5 && r < 95);
+              const v = isOcean ? 0 : 255;
+              const mIdx = (my * bSize + mx) * 4;
+              rmD[mIdx] = v;
+              rmD[mIdx + 1] = v;
+              rmD[mIdx + 2] = v;
+              rmD[mIdx + 3] = 255;
+            }
+          }
+          rmCtx.putImageData(rmImg, 0, 0);
+
+          const blurMaskCanvas = document.createElement('canvas');
+          blurMaskCanvas.width = bSize;
+          blurMaskCanvas.height = bSize;
+          const bmCtx = blurMaskCanvas.getContext('2d');
+          bmCtx.filter = 'blur(2.2px)';
+          bmCtx.drawImage(rawMaskCanvas, 0, 0);
+          smoothMaskData = bmCtx.getImageData(0, 0, bSize, bSize).data;
+        }
+
+        const pos = reliefGeometry.attributes.position;
+        const segs = RELIEF_SEGS;
+        for (let i = 0; i <= segs; i++) {
+          for (let j = 0; j <= segs; j++) {
+            const idx = i * (segs + 1) + j;
+            const px = Math.min(bSize - 1, Math.floor((j / segs) * bSize));
+            const py = Math.min(bSize - 1, Math.floor((i / segs) * bSize));
+            const pIdx = (py * bSize + px) * 4;
+
+            const crispB = (crispData[pIdx] + crispData[pIdx + 1] + crispData[pIdx + 2]) / (3 * 255);
+            const broadB = (broadData[pIdx] + broadData[pIdx + 1] + broadData[pIdx + 2]) / (3 * 255);
+
+            // Detecteer de helling langs de echte Himalaya-boog (sterke stijging van zuid naar noord)
+            const pyNorth = Math.max(0, py - 10);
+            const pySouth = Math.min(bSize - 1, py + 10);
+            const nIdx = (pyNorth * bSize + px) * 4;
+            const sIdx = (pySouth * bSize + px) * 4;
+            const northB = (broadData[nIdx] + broadData[nIdx + 1] + broadData[nIdx + 2]) / (3 * 255);
+            const southB = (broadData[sIdx] + broadData[sIdx + 1] + broadData[sIdx + 2]) / (3 * 255);
+            const slope = Math.max(0.0, northB - southB);
+
+            // Vloeiende landfactor (0.0 = oceaan, 1.0 = land) voor vloeiende kustovergang zonder blokjes
+            let landFactor = 1.0;
+            if (smoothMaskData) {
+              landFactor = smoothMaskData[pIdx] / 255.0;
+            } else {
+              landFactor = Math.min(1.0, Math.max(0.0, (crispB - 0.008) / 0.015));
+            }
+
+            if (landFactor <= 0.01) {
+              pos.setY(idx, 0.0);
+            } else {
+              const wx = pos.getX(idx);
+              const wz = pos.getZ(idx);
+
+              // 1. Zachte, natuurlijke hoogvlaktebasis (Tibet & voorgebergtes zonder uitgerekte verticale wand)
+              const baseElev = Math.pow(broadB, 1.15) * 0.28 + Math.pow(crispB, 1.25) * 0.14;
+
+              // 2. Natuurlijke bergtoppen en dalen langs de Himalaya-kam die boven Tibet uitsteken
+              const ridgeNoise =
+                0.55 +
+                0.24 * Math.sin(wx * 10.5 + wz * 6.5) +
+                0.13 * Math.cos(wx * 19.0 - wz * 14.0) +
+                0.08 * Math.sin(wx * 31.0 + wz * 23.0);
+              const mountainPeaks = Math.pow(slope, 0.85) * 0.30 * Math.max(0.15, ridgeNoise);
+
+              const landElev = Math.max(0.014, baseElev + mountainPeaks);
+              pos.setY(idx, landElev * landFactor);
+            }
+          }
+        }
+        pos.needsUpdate = true;
+        reliefGeometry.computeVertexNormals();
+      }
+    }
+
+    function displaceSouthAsiaGeometryProcedural(geo) {
+      const pos = geo.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        const z = pos.getZ(i);
+        let elevation = 0.0;
+
+        const halfW = Math.max(0.15, (1.4 - z) * 0.95);
+        if (z < 1.4 && z > -1.8 && Math.abs(x) < halfW) {
+          elevation = 0.05;
+          const westEdge = -halfW * 0.88;
+          const distWG = Math.abs(x - westEdge);
+          if (distWG < 0.28 && z > -0.6 && z < 1.1) {
+            elevation += 0.22 * Math.cos((distWG / 0.28) * (Math.PI / 2));
+          }
+          if (distWG >= 0.28 && z > -0.7 && z < 0.8) {
+            elevation += 0.10;
+          }
+        }
+
+        if (z < -0.9 && z > -2.4 && Math.abs(x) < 2.5) {
+          const arcZ = -1.25 - 0.12 * (x * x * 0.18);
+          const distHimalaya = Math.abs(z - arcZ);
+          if (distHimalaya < 0.5) {
+            const hFactor = Math.cos((distHimalaya / 0.5) * (Math.PI / 2));
+            const rugged = Math.sin(x * 14.0) * 0.06 + Math.cos(z * 18.0) * 0.05;
+            elevation = Math.max(elevation, 0.74 * hFactor + rugged);
+          }
+          if (z < arcZ - 0.22) elevation = Math.max(elevation, 0.44);
+        }
+        pos.setY(i, elevation);
+      }
+      geo.computeVertexNormals();
+    }
+
+    // --- CAMERA TRANSITIES ---
+    function setCameraTarget(posX, posY, posZ, lookX, lookY, lookZ, duration = 1.4) {
+      cameraTarget.startPos.copy(camera.position);
+      cameraTarget.startLook.copy(controls.target);
+      cameraTarget.pos.set(posX, posY, posZ);
+      cameraTarget.look.set(lookX, lookY, lookZ);
+      cameraTarget.duration = duration;
+      cameraTarget.startTime = clock.getElapsedTime();
+      cameraTarget.isMoving = true;
+    }
+
+    // --- FASE WISSELING LOGICA ---
+    function switchPhase(phase) {
+      currentPhase = phase;
+
+      document.querySelectorAll('.nav-item-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.phase) === phase);
+      });
+
+      // Dynamische achtergrond per fase (Donker in Fase 1 & 3, Helder Daglicht in Fase 2 & 4)
+      const isLightPhase = (phase === 2 || phase === 4);
+      document.body.classList.toggle('theme-light', isLightPhase);
+      if (targetBgColor) {
+        targetBgColor.setHex(isLightPhase ? 0xdce6f0 : 0x07090e);
+      }
+
+      globeGroup.visible = (phase === 1 || phase === 3);
+      hadleyGroup.visible = (phase === 2);
+      itczGroup.visible = (phase === 3);
+      monsoonGroup.visible = (phase === 4);
+
+      document.getElementById('season-box').style.display = (phase === 4) ? 'block' : 'none';
+
+      const titleEl = document.getElementById('exp-title');
+      const bodyEl = document.getElementById('exp-body');
+
+      if (phase === 1) {
+        setCameraTarget(0, 0.4, 4.8, 0, -0.22, 0);
+        titleEl.textContent = "Fase 1: Mondiale Luchtdrukverdeling rond de Evenaar";
+        bodyEl.innerHTML = `
+          Rond de <b>evenaar (0°)</b> staat de zon loodrecht. Warme lucht zet uit en <b>stijgt krachtig op</b>, waardoor een gordel van <b>lage luchtdruk (L)</b> ontstaat: de <b>ITCZ</b>.
+          Rond 30° NB en 30° ZB koelt de lucht af en daalt deze neer: hier ontstaan de <b>subtropische hogedrukgebieden (H)</b>.
+        `;
+      } 
+      else if (phase === 2) {
+        setCameraTarget(0, 0.52, 4.4, 0, 0.20, 0);
+        titleEl.textContent = "Fase 2: Verticale Circulatie van de Hadleycel";
+        bodyEl.innerHTML = `
+          De gesloten circulatie: <b>warme lucht stijgt bij 0°</b> en koelt af tot een reusachtige <b>cumulonimbus wolk</b> (tropisch regenwoud).
+          In de bovenlucht divergeert koude droge lucht en daalt deze bij <b>30° NB en 30° ZB (H)</b>, waardoor de <b>subtropische woestijngordel</b> ontstaat.
+        `;
+      }
+      else if (phase === 3) {
+        setCameraTarget(1.2, 0.6, 4.4, 0, -0.2, 0);
+        titleEl.textContent = "Fase 3: Seizoensverschuiving van de ITCZ";
+        bodyEl.innerHTML = `
+          Omdat <b>land sneller opwarmt dan water</b>, buigt de <b>rode ITCZ-lijn (Juli)</b> boven Noord-Afrika en Azië extreem ver noordwaarts uit (tot boven Noord-India).
+          In januari schuift de <b>blauwe ITCZ-lijn</b> naar het zuidelijk halfrond richting Indonesië en Noord-Australië.
+        `;
+      }
+      else if (phase === 4) {
+        setCameraTarget(0, 3.1, 3.5, 0, -0.10, 0.2);
+        updateMonsoonSeasonView();
+      }
+
+      updateScreenHUD();
+      updateAudioAmbience();
+    }
+
+    function setMonsoonSeason(season) {
+      currentSeason = season;
+      const btnSummer = document.getElementById('btn-summer');
+      const btnWinter = document.getElementById('btn-winter');
+
+      if (season === 'summer') {
+        btnSummer.className = 'season-btn active-summer';
+        btnWinter.className = 'season-btn';
+        summerFlowsGroup.visible = true;
+        summerCloudsGroup.visible = true;
+        winterFlowsGroup.visible = false;
+        winterCloudsGroup.visible = false;
+      } else {
+        btnSummer.className = 'season-btn';
+        btnWinter.className = 'season-btn active-winter';
+        summerFlowsGroup.visible = false;
+        summerCloudsGroup.visible = false;
+        winterFlowsGroup.visible = true;
+        winterCloudsGroup.visible = true;
+      }
+
+      updateMonsoonSeasonView();
+      updateScreenHUD();
+      updateAudioAmbience();
+    }
+
+    function updateMonsoonSeasonView() {
+      const titleEl = document.getElementById('exp-title');
+      const bodyEl = document.getElementById('exp-body');
+
+      if (currentSeason === 'summer') {
+        titleEl.textContent = "Fase 4: Natte Zomermoesson in India (Juli)";
+        bodyEl.innerHTML = `
+          Vochtige zeelucht stroomt aanlandig als de <b>zuidwestmoesson</b>. 
+          Stuwingsregens vallen langs de <b>West-Ghats</b> en tegen de <b>Himalaya</b>. 
+          Het <b>Hoogland van Dekan</b> ligt in de regenschaduw en blijft aanzienlijk droger.
+        `;
+      } else {
+        titleEl.textContent = "Fase 4: Droge Wintermoesson in India (Januari)";
+        bodyEl.innerHTML = `
+          Boven het koude Aziatische binnenland ligt een krachtig <b>hogedrukgebied (H)</b>. 
+          De droge, aflandige <b>noordoostmoesson</b> zorgt boven heel India voor helder, zonnig en droog weer.
+        `;
+      }
+    }
+
+    // --- ZWEVENDE 3D LABELS (STRAK, UNIFORM, MET SUBTIEL 8PX KLEURBOLLETJE) ---
+    const hudContainer = document.getElementById('hud-container');
+
+    function updateScreenHUD() {
+      hudContainer.innerHTML = '';
+      if (isMenuCollapsed) return;
+
+      const labels = [];
+
+      if (currentPhase === 1) {
+        labels.push({ pos: new THREE.Vector3(0, 0.08, 1.55), text: "L • Evenaar (ITCZ)", type: "l-pressure" });
+        labels.push({ pos: new THREE.Vector3(0, 0.88, 1.35), text: "H • 30° NB", type: "h-pressure" });
+        labels.push({ pos: new THREE.Vector3(0, -0.88, 1.35), text: "H • 30° ZB", type: "h-pressure" });
+        labels.push({ pos: new THREE.Vector3(0, -0.22, 1.58), text: "Klik op evenaar voor doorsnede", type: "interactive-hint", clickAction: () => switchPhase(2) });
+      } 
+      else if (currentPhase === 2) {
+        labels.push({ pos: new THREE.Vector3(0, -0.68, 0), text: "L • Evenaar (0°)", type: "l-pressure" });
+        labels.push({ pos: new THREE.Vector3(2.35, -0.68, 0), text: "H • 30° NB", type: "h-pressure" });
+        labels.push({ pos: new THREE.Vector3(-2.35, -0.68, 0), text: "H • 30° ZB", type: "h-pressure" });
+
+        // Biomen op het reliëfprofiel
+        labels.push({ pos: new THREE.Vector3(0, -0.42, 0.3), text: "Tropisch Regenwoud (0°)", type: "geo-tag" });
+        labels.push({ pos: new THREE.Vector3(2.35, -0.44, 0.3), text: "Subtropische Woestijn (30° NB)", type: "geo-tag" });
+        labels.push({ pos: new THREE.Vector3(-2.35, -0.44, 0.3), text: "Subtropische Woestijn (30° ZB)", type: "geo-tag" });
+
+        // Circulatieprocessen
+        labels.push({ pos: new THREE.Vector3(0.55, 0.3, 0.2), text: "Stijgende warme lucht", type: "process-tag" });
+        labels.push({ pos: new THREE.Vector3(0.85, 1.0, 0.2), text: "Cumulonimbus & Neerslag", type: "process-tag" });
+        labels.push({ pos: new THREE.Vector3(1.2, 1.62, 0), text: "Divergentie (Koude bovenlucht)", type: "process-tag" });
+        labels.push({ pos: new THREE.Vector3(-1.2, 1.62, 0), text: "Divergentie (Koude bovenlucht)", type: "process-tag" });
+        labels.push({ pos: new THREE.Vector3(2.55, 0.45, 0), text: "Dalende lucht (Warmt op)", type: "process-tag" });
+        labels.push({ pos: new THREE.Vector3(-2.55, 0.45, 0), text: "Dalende lucht (Warmt op)", type: "process-tag" });
+
+        labels.push({ pos: new THREE.Vector3(0, -1.05, 0), text: "Terug naar Wereldbol", type: "back-btn-pill", clickAction: () => switchPhase(1) });
+      }
+      else if (currentPhase === 3) {
+        labels.push({ pos: new THREE.Vector3(0.5, 0.85, 1.35), text: "ITCZ Juli (Noordelijke stand)", type: "l-pressure" });
+        labels.push({ pos: new THREE.Vector3(0.3, -0.42, 1.55), text: "ITCZ Januari (Zuidelijke stand)", type: "h-pressure" });
+        labels.push({ pos: new THREE.Vector3(0.72, 0.38, 1.45), text: "Klik op India voor Moesson", type: "interactive-hint", clickAction: () => switchPhase(4) });
+      }
+      else if (currentPhase === 4) {
+        // Geografische labels
+        labels.push({ pos: new THREE.Vector3(0.17, 0.88, -1.70), text: "Himalaya", type: "geo-tag" });
+        labels.push({ pos: new THREE.Vector3(-1.78, 0.22, -0.85), text: "Thar-woestijn", type: "geo-tag" });
+        labels.push({ pos: new THREE.Vector3(-0.85, 0.28, 0.85), text: "Hoogland van Dekan", type: "geo-tag" });
+        labels.push({ pos: new THREE.Vector3(-0.85, 0.08, 2.54), text: "Indische Oceaan", type: "geo-tag" });
+
+        if (currentSeason === 'summer') {
+          labels.push({ pos: new THREE.Vector3(0.0, 0.85, -0.75), text: "L • Thermisch Laag (Noord-India)", type: "l-pressure" });
+          labels.push({ pos: new THREE.Vector3(0.0, 0.38, 1.8), text: "H • Indische Oceaan", type: "h-pressure" });
+          labels.push({ pos: new THREE.Vector3(-1.45, 0.45, 0.6), text: "Stuwingsregen (West-Ghats)", type: "process-tag" });
+          labels.push({ pos: new THREE.Vector3(0.65, 1.15, -1.25), text: "Stuwingsregen (Himalaya)", type: "process-tag" });
+          labels.push({ pos: new THREE.Vector3(-1.8, 0.45, 1.9), text: "Terug naar Wereldbol", type: "back-btn-pill", clickAction: () => switchPhase(1) });
+        } else {
+          labels.push({ pos: new THREE.Vector3(0.0, 1.15, -1.2), text: "H • Siberisch/Tibetaans Hoog", type: "h-pressure" });
+          labels.push({ pos: new THREE.Vector3(0.0, 0.42, 2.65), text: "L • Indische Oceaan (Zuidelijke ITCZ)", type: "l-pressure" });
+          labels.push({ pos: new THREE.Vector3(0.65, 0.48, 0.7), text: "Aflandige NO-moesson", type: "process-tag" });
+          labels.push({ pos: new THREE.Vector3(-0.35, 0.52, 0.1), text: "Heldere, droge lucht (India & Sri Lanka)", type: "process-tag" });
+          labels.push({ pos: new THREE.Vector3(-1.8, 0.45, 1.9), text: "Terug naar Wereldbol", type: "back-btn-pill", clickAction: () => switchPhase(1) });
+        }
+      }
+
+      for (let item of labels) {
+        const div = document.createElement('div');
+        div.className = `hud-label ${item.type}`;
+        
+        // Klein gekleurd bolletje (8px) links als enig strak kleuraccent
+        let dotColor = '#94a3b8'; // Standaard neutraal leisteengrijs
+        if (item.type === 'l-pressure') dotColor = '#ef4444'; // Rood voor lagedruk / warme ITCZ
+        else if (item.type === 'h-pressure') dotColor = '#38bdf8'; // Blauw voor hogedruk / koude lucht
+        else if (item.type === 'process-tag') dotColor = '#06b6d4'; // Cyaan voor luchtstroming / proces
+        else if (item.type === 'interactive-hint') dotColor = '#f59e0b'; // Amber voor interactie
+        else if (item.type === 'back-btn-pill') dotColor = '#38bdf8'; // Blauw voor terugknop
+        
+        div.innerHTML = `<span class="hud-dot" style="background-color: ${dotColor};"></span><span>${item.text}</span>`;
+        div.dataset.x = item.pos.x;
+        div.dataset.y = item.pos.y;
+        div.dataset.z = item.pos.z;
+        if (item.clickAction) div.addEventListener('click', item.clickAction);
+        hudContainer.appendChild(div);
+      }
+    }
+
+    function renderHUDPositions() {
+      const elements = hudContainer.children;
+      for (let el of elements) {
+        const pos = new THREE.Vector3(parseFloat(el.dataset.x), parseFloat(el.dataset.y), parseFloat(el.dataset.z));
+        pos.project(camera);
+        if (pos.z < 1.0) {
+          const x = (pos.x * 0.5 + 0.5) * window.innerWidth;
+          const y = (-(pos.y * 0.5) + 0.5) * window.innerHeight;
+          el.style.left = `${x}px`;
+          el.style.top = `${y}px`;
+          el.style.opacity = '1';
+        } else {
+          el.style.opacity = '0';
+        }
+      }
+    }
+
+    // --- INTERACTIE: RAYCASTING ---
+    const tooltip = document.getElementById('hover-tooltip');
+
+    function onPointerMove(event) {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+
+      if (currentPhase === 1) {
+        const intersects = raycaster.intersectObjects([equatorLineMesh], false);
+        if (intersects.length > 0) {
+          document.body.style.cursor = 'pointer';
+          tooltip.style.display = 'block';
+          tooltip.style.left = `${event.clientX}px`;
+          tooltip.style.top = `${event.clientY}px`;
+          tooltip.textContent = "Klik op de evenaar voor de doorsnede";
+          equatorLineMesh.material.emissiveIntensity = 1.0;
+        } else {
+          if (!isAKeyDown) document.body.style.cursor = 'default';
+          tooltip.style.display = 'none';
+          equatorLineMesh.material.emissiveIntensity = 0.65;
+        }
+      } 
+      else if (currentPhase === 3) {
+        const intersects = raycaster.intersectObjects([indiaHotspotMesh], false);
+        if (intersects.length > 0) {
+          document.body.style.cursor = 'pointer';
+          tooltip.style.display = 'block';
+          tooltip.style.left = `${event.clientX}px`;
+          tooltip.style.top = `${event.clientY}px`;
+          tooltip.textContent = "Klik op India voor de moesson";
+        } else {
+          if (!isAKeyDown) document.body.style.cursor = 'default';
+          tooltip.style.display = 'none';
+        }
+      } else {
+        if (!isAKeyDown) document.body.style.cursor = 'default';
+        tooltip.style.display = 'none';
+      }
+    }
+
+    function onPointerClick(event) {
+      raycaster.setFromCamera(mouse, camera);
+
+      if (currentPhase === 1) {
+        const intersects = raycaster.intersectObjects([equatorLineMesh], false);
+        if (intersects.length > 0) switchPhase(2);
+      } 
+      else if (currentPhase === 3) {
+        const intersects = raycaster.intersectObjects([indiaHotspotMesh], false);
+        if (intersects.length > 0) switchPhase(4);
+      }
+    }
+
+    // --- PROCEDURAL AUDIO SYNTHESIZER ---
+    let audioCtx = null;
+    let isSoundEnabled = false;
+    let windGain = null, rainGain = null;
+
+    function initAudio() {
+      if (audioCtx) return;
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+
+        const bufferSize = audioCtx.sampleRate * 3;
+        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        let b0 = 0, b1 = 0, b2 = 0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          b0 = 0.99 * b0 + white * 0.05;
+          b1 = 0.95 * b1 + white * 0.15;
+          b2 = 0.85 * b2 + white * 0.3;
+          output[i] = (b0 + b1 + b2) * 0.15;
+        }
+
+        const noiseSrc = audioCtx.createBufferSource();
+        noiseSrc.buffer = noiseBuffer;
+        noiseSrc.loop = true;
+
+        const windFilter = audioCtx.createBiquadFilter();
+        windFilter.type = 'lowpass';
+        windFilter.frequency.value = 400;
+
+        windGain = audioCtx.createGain();
+        windGain.gain.value = 0.0;
+        noiseSrc.connect(windFilter);
+        windFilter.connect(windGain);
+        windGain.connect(audioCtx.destination);
+
+        const rainFilter = audioCtx.createBiquadFilter();
+        rainFilter.type = 'bandpass';
+        rainFilter.frequency.value = 1600;
+        rainGain = audioCtx.createGain();
+        rainGain.gain.value = 0.0;
+        noiseSrc.connect(rainFilter);
+        rainFilter.connect(rainGain);
+        rainGain.connect(audioCtx.destination);
+
+        noiseSrc.start(0);
+      } catch (e) {
+        console.warn("Audio niet beschikbaar:", e);
+      }
+    }
+
+    function updateAudioAmbience() {
+      if (!audioCtx || !isSoundEnabled) return;
+      const now = audioCtx.currentTime;
+      if (currentPhase === 1 || currentPhase === 3) {
+        windGain.gain.setTargetAtTime(0.08, now, 0.4);
+        rainGain.gain.setTargetAtTime(0.0, now, 0.3);
+      } else if (currentPhase === 2) {
+        windGain.gain.setTargetAtTime(0.12, now, 0.4);
+        rainGain.gain.setTargetAtTime(0.15, now, 0.4);
+      } else if (currentPhase === 4) {
+        if (currentSeason === 'summer') {
+          windGain.gain.setTargetAtTime(0.22, now, 0.4);
+          rainGain.gain.setTargetAtTime(0.25, now, 0.4);
+        } else {
+          windGain.gain.setTargetAtTime(0.1, now, 0.4);
+          rainGain.gain.setTargetAtTime(0.0, now, 0.3);
+        }
+      }
+    }
+
+    // --- ANIMATIE LOOP ---
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = clock.getDelta();
+      const elapsedTime = clock.getElapsedTime();
+
+      // Camera Lerp
+      if (cameraTarget.isMoving) {
+        const progress = Math.min(1.0, (elapsedTime - cameraTarget.startTime) / cameraTarget.duration);
+        const ease = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+        camera.position.lerpVectors(cameraTarget.startPos, cameraTarget.pos, ease);
+        controls.target.lerpVectors(cameraTarget.startLook, cameraTarget.look, ease);
+        controls.update();
+
+        if (progress >= 1.0) cameraTarget.isMoving = false;
+      } else {
+        controls.update();
+      }
+
+      // Halo puls op India
+      const halo = earthMesh ? earthMesh.getObjectByName("indiaHalo") : null;
+      if (halo) {
+        const s = 1.0 + Math.sin(elapsedTime * 4.0) * 0.25;
+        halo.scale.set(s, s, 1);
+      }
+
+      // Hadley regen
+      if (hadleyRainParticles && hadleyGroup.visible) {
+        const posAttr = hadleyRainParticles.geometry.attributes.position;
+        for (let i = 0; i < posAttr.count; i++) {
+          let y = posAttr.getY(i) - 0.024;
+          if (y < -0.45) y = 0.35 + Math.random() * 0.15;
+          posAttr.setY(i, y);
+        }
+        posAttr.needsUpdate = true;
+      }
+
+      // Moesson regen in India (West-Ghats & Himalaya)
+      if (monsoonRainParticles && monsoonGroup.visible && currentSeason === 'summer') {
+        const posAttr = monsoonRainParticles.geometry.attributes.position;
+        for (let i = 0; i < posAttr.count; i++) {
+          let y = posAttr.getY(i) - 0.03;
+          let x = posAttr.getX(i);
+          let z = posAttr.getZ(i);
+
+          if (i < 200) {
+            // West-Ghats kuststrook
+            x += 0.005;
+            if (y < 0.05) {
+              y = 0.45 + Math.random() * 0.1;
+              x = -1.1 + (Math.random() - 0.5) * 0.4;
+              z = 0.0 + Math.random() * 1.4;
+            }
+          } else {
+            // Himalaya flank
+            x += 0.006;
+            z -= 0.006;
+            if (y < 0.05) {
+              y = 0.65 + Math.random() * 0.1;
+              x = -0.9 + Math.random() * 2.6;
+              z = -1.3 + Math.random() * 0.5;
+            }
+          }
+          posAttr.setY(i, y);
+          posAttr.setX(i, x);
+          posAttr.setZ(i, z);
+        }
+        posAttr.needsUpdate = true;
+      }
+
+      // Neerslag in de winter (uitsluitend ver zuidelijk langs de oceanische ITCZ)
+      if (winterRainParticles && monsoonGroup.visible && currentSeason === 'winter') {
+        const posAttr = winterRainParticles.geometry.attributes.position;
+        for (let i = 0; i < posAttr.count; i++) {
+          let y = posAttr.getY(i) - 0.024;
+          let x = posAttr.getX(i) - 0.003;
+          let z = posAttr.getZ(i) + 0.002;
+          if (y < 0.03) {
+            y = 0.34 + Math.random() * 0.1;
+            x = -1.4 + Math.random() * 3.8;
+            z = 2.5 + Math.random() * 0.36;
+          }
+          posAttr.setY(i, y);
+          posAttr.setX(i, x);
+          posAttr.setZ(i, z);
+        }
+        posAttr.needsUpdate = true;
+      }
+
+      // Geanimeerde pulsen langs lussen en stromen
+      for (let flow of animatedFlows) {
+        const isActive = 
+          (flow.category === "hadleyLoop" && hadleyGroup.visible) ||
+          (flow.category === "summerWind" && monsoonGroup.visible && currentSeason === 'summer') ||
+          (flow.category === "winterWind" && monsoonGroup.visible && currentSeason === 'winter');
+
+        if (!isActive) {
+          if (flow.pulseMesh) flow.pulseMesh.visible = false;
+          continue;
+        }
+
+        if (flow.pulseMesh) {
+          flow.pulseMesh.visible = true;
+          const t = (elapsedTime * flow.speed) % 1.0;
+          flow.pulseMesh.position.copy(flow.curve.getPointAt(t));
+        }
+      }
+
+      // Vloeiende achtergrond- & mistkleur overgang (Donker in Fase 1 & 3, Helder Daglicht in Fase 2 & 4)
+      if (scene && scene.background && targetBgColor) {
+        scene.background.lerp(targetBgColor, Math.min(1.0, delta * 3.5));
+        if (scene.fog) {
+          scene.fog.color.copy(scene.background);
+        }
+      }
+      if (hemiLight) {
+        const isLight = (currentPhase === 2 || currentPhase === 4);
+        const targetGround = isLight ? new THREE.Color(0x8fa3b8) : new THREE.Color(0x111625);
+        hemiLight.groundColor.lerp(targetGround, Math.min(1.0, delta * 3.5));
+        hemiLight.intensity = isLight ? 1.05 : 0.95;
+      }
+
+      renderHUDPositions();
+      renderer.render(scene, camera);
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // --- EVENT LISTENERS & PANNING MET TOETS A ---
+    let isAKeyDown = false;
+
+    function initUIEvents() {
+      // Fasenavigatie
+      document.getElementById('btn-phase-1').addEventListener('click', () => switchPhase(1));
+      document.getElementById('btn-phase-2').addEventListener('click', () => switchPhase(2));
+      document.getElementById('btn-phase-3').addEventListener('click', () => switchPhase(3));
+      document.getElementById('btn-phase-4').addEventListener('click', () => switchPhase(4));
+
+      // Moesson seizoenen
+      document.getElementById('btn-summer').addEventListener('click', () => setMonsoonSeason('summer'));
+      document.getElementById('btn-winter').addEventListener('click', () => setMonsoonSeason('winter'));
+
+      // 'A'-TOETS PANNING
+      const panIndicator = document.getElementById('pan-indicator');
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'a' || e.key === 'A') {
+          if (!isAKeyDown) {
+            isAKeyDown = true;
+            controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
+            renderer.domElement.style.cursor = 'grab';
+            panIndicator.style.display = 'block';
+          }
+        }
+      });
+
+      window.addEventListener('keyup', (e) => {
+        if (e.key === 'a' || e.key === 'A') {
+          isAKeyDown = false;
+          controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
+          renderer.domElement.style.cursor = 'default';
+          panIndicator.style.display = 'none';
+        }
+      });
+
+      renderer.domElement.addEventListener('mousedown', () => {
+        if (isAKeyDown) renderer.domElement.style.cursor = 'grabbing';
+      });
+
+      renderer.domElement.addEventListener('mouseup', () => {
+        if (isAKeyDown) renderer.domElement.style.cursor = 'grab';
+      });
+
+      // Auto-rotatie toggle
+      const autoRotateBtn = document.getElementById('btn-autorotate');
+      autoRotateBtn.addEventListener('click', () => {
+        isAutoRotating = !isAutoRotating;
+        controls.autoRotate = isAutoRotating;
+        controls.autoRotateSpeed = 1.0;
+        autoRotateBtn.textContent = isAutoRotating ? 'Rotatie: Aan' : 'Rotatie';
+        autoRotateBtn.classList.toggle('active', isAutoRotating);
+      });
+
+      // Navigatiepaneel Inklappen / Tonen
+      const navPanel = document.getElementById('nav-panel');
+      const btnHidePanel = document.getElementById('btn-hide-panel');
+      const btnShowPanel = document.getElementById('btn-show-panel');
+
+      btnHidePanel.addEventListener('click', () => {
+        isMenuCollapsed = true;
+        navPanel.classList.add('collapsed');
+        btnShowPanel.style.display = 'block';
+        updateScreenHUD();
+      });
+
+      btnShowPanel.addEventListener('click', () => {
+        isMenuCollapsed = false;
+        navPanel.classList.remove('collapsed');
+        btnShowPanel.style.display = 'none';
+        updateScreenHUD();
+      });
+
+      // Camera Reset
+      document.getElementById('btn-reset-cam').addEventListener('click', () => {
+        switchPhase(currentPhase);
+      });
+
+      // Fullscreen
+      document.getElementById('btn-fullscreen').addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(err => alert(err.message));
+        } else {
+          document.exitFullscreen();
+        }
+      });
+
+      // Info & Colofon Modal
+      function toggleItczInfo() {
+        const m = document.getElementById('itcz-info-modal');
+        if (m) m.hidden = !m.hidden;
+      }
+      window.toggleItczInfo = toggleItczInfo;
+      const btnColofon = document.getElementById('btn-colofon');
+      if (btnColofon) btnColofon.addEventListener('click', toggleItczInfo);
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const m = document.getElementById('itcz-info-modal');
+          if (m && !m.hidden) {
+            m.hidden = true;
+          }
+        }
+      });
+
+      // Uitlegbalk Inklappen
+      const expStrip = document.getElementById('explanation-strip');
+      const expMinBtn = document.getElementById('exp-minimize-btn');
+      const expHeader = document.getElementById('exp-header');
+
+      function toggleExplanation() {
+        isExplanationMinimized = !isExplanationMinimized;
+        expStrip.classList.toggle('minimized', isExplanationMinimized);
+        expMinBtn.textContent = isExplanationMinimized ? 'Uitleg tonen' : 'Uitleg verbergen';
+      }
+
+      expMinBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleExplanation();
+      });
+      expHeader.addEventListener('click', toggleExplanation);
+    }
+
+    // --- START ---
+    window.addEventListener('DOMContentLoaded', () => {
+      initThreeScene();
+      initUIEvents();
+      switchPhase(1);
+      animate();
+    });
+  </script>
+</body>
+</html>

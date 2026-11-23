@@ -1,0 +1,3249 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Waterkringloop &amp; Stroomgebied 3D — Systeem Aarde (§ 3.6 Hydrosfeer)</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%231d6fa5'/%3E%3Cstop offset='100%25' stop-color='%230d3b66'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='29' fill='url(%23g)' stroke='%23e2edf5' stroke-width='3'/%3E%3Cpath d='M12 34c6-5 12-4 18 0s12 5 22-2' fill='none' stroke='%2389d2f5' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M14 43c7-4 13-3 19 0s11 3 17-2' fill='none' stroke='%2363b8e8' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M18 29l9-13 8 9 7-8 6 12z' fill='%234d7c4f' stroke='%23dce8dc' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M27 16l3.2 4.5-2.2 1.2-2.2-1.4-2.1 1.4z' fill='%23f4f9fc'/%3E%3Ccircle cx='32' cy='32' r='29' fill='none' stroke='%230a2540' stroke-width='1.2' opacity='0.35'/%3E%3C/svg%3E" />
+  <style>
+    :root {
+      --bg-panel: rgba(15, 23, 34, 0.80);
+      --bg-panel-solid: #111a26;
+      --bg-card: rgba(255, 255, 255, 0.055);
+      --border: rgba(203, 224, 245, 0.16);
+      --border-strong: rgba(125, 196, 245, 0.38);
+      --text: #edf4fb;
+      --text-muted: #9fb3c8;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.18);
+      --emerald: #34d399;
+      --amber: #fbbf24;
+      --rose: #fb7185;
+      --radius: 12px;
+      --shadow: 0 12px 32px rgba(4, 10, 18, 0.45);
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0d1722;
+      color: var(--text);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    #canvas-container {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* 3D projected labels */
+    #labels-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 5;
+      overflow: hidden;
+      transition: opacity 0.25s ease;
+    }
+
+    #labels-layer.hidden {
+      opacity: 0;
+    }
+
+    .label-3d {
+      position: absolute;
+      transform: translate(-50%, -100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      will-change: transform, opacity;
+      transition: opacity 0.2s ease;
+    }
+
+    .label-pill {
+      background: rgba(12, 21, 33, 0.84);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(186, 224, 250, 0.34);
+      color: #f1f7fc;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.015em;
+      white-space: nowrap;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .label-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .label-stem {
+      width: 1.5px;
+      height: 20px;
+      background: linear-gradient(to bottom, rgba(210, 234, 252, 0.8), rgba(210, 234, 252, 0.15));
+    }
+
+    .label-anchor {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 0 0 2px rgba(15, 23, 34, 0.65);
+    }
+
+    /* Shared UI chrome */
+    .ui-shell {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .ui-shell > * {
+      pointer-events: auto;
+    }
+
+    body.digibord .ui-hide-in-digibord {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: translateY(-6px);
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    /* Top bar */
+    .top-bar {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .top-bar > * { pointer-events: auto; }
+
+    .brand-card {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 9px 14px;
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #1d6fa5, #0e3a5d);
+      border: 1px solid rgba(147, 212, 250, 0.35);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--bg-panel);
+      backdrop-filter: blur(12px);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.16s ease, border-color 0.16s ease, transform 0.12s ease;
+    }
+
+    .btn:hover {
+      background: rgba(30, 46, 66, 0.92);
+      border-color: var(--border-strong);
+    }
+
+    .btn:active { transform: translateY(1px); }
+
+    .btn.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: #dff4ff;
+    }
+
+    .btn-sm {
+      padding: 5px 9px;
+      font-size: 11px;
+      border-radius: 7px;
+    }
+
+    /* Left Panel: Environment & Camera */
+    .left-panel {
+      position: fixed;
+      top: 76px;
+      left: 14px;
+      width: 286px;
+      max-height: calc(100vh - 205px);
+      overflow-y: auto;
+      padding: 13px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .section-title {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .slider-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .slider-val {
+      font-size: 11px;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+    }
+
+    .slider-hint {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(186, 214, 240, 0.2);
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: #e8f6ff;
+      border: 2px solid var(--accent);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+      transition: transform 0.12s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.14);
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+    }
+
+    .cam-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .cam-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 8px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      line-height: 1.25;
+      transition: all 0.16s ease;
+    }
+
+    .cam-btn:hover {
+      background: rgba(56, 189, 248, 0.14);
+      border-color: var(--border-strong);
+    }
+
+    .cam-btn.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: #e6f7ff;
+    }
+
+    /* Right side: Live Debietmeter HUD + Collapsible RTI Drawer */
+    .hud-meter {
+      position: fixed;
+      top: 76px;
+      right: 14px;
+      width: 264px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .hud-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .year-badge {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      color: #ffffff;
+    }
+
+    .river-type-pill {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.18);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #bae6fd;
+    }
+
+    .river-type-pill.rain {
+      background: rgba(251, 191, 36, 0.18);
+      border-color: rgba(251, 191, 36, 0.45);
+      color: #fde68a;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+
+    .metric-box {
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 8px;
+      padding: 7px 9px;
+    }
+
+    .metric-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .metric-value {
+      font-size: 15px;
+      font-weight: 700;
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric-unit {
+      font-size: 10.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .bar-track {
+      height: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.25s ease, background 0.25s ease;
+    }
+
+    .phase-note {
+      font-size: 11px;
+      line-height: 1.38;
+      color: #cbd9e8;
+      background: rgba(56, 189, 248, 0.08);
+      border-left: 2.5px solid var(--accent);
+      padding: 6px 8px;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .flood-alert {
+      display: none;
+      align-items: center;
+      gap: 7px;
+      font-size: 11.2px;
+      font-weight: 700;
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid rgba(251, 113, 133, 0.55);
+      background: rgba(225, 29, 72, 0.22);
+      color: #fecdd3;
+      animation: floodPulse 1.5s ease-in-out infinite;
+    }
+
+    .flood-alert.visible { display: flex; }
+
+    .flood-alert.buffered {
+      border-color: rgba(52, 211, 153, 0.5);
+      background: rgba(16, 185, 129, 0.18);
+      color: #a7f3d0;
+      animation: none;
+    }
+
+    @keyframes floodPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(251, 113, 133, 0.35); }
+      50% { box-shadow: 0 0 0 5px rgba(251, 113, 133, 0); }
+    }
+
+    .segmented-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.045);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 3px;
+    }
+
+    .seg-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .seg-btn:hover { color: var(--text); }
+
+    .seg-btn.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: #e6f7ff;
+    }
+
+    /* Collapsible RTI Panel */
+    .rti-drawer {
+      position: fixed;
+      top: 332px;
+      right: 14px;
+      width: 312px;
+      max-height: calc(100vh - 460px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+    }
+
+    .rti-drawer.collapsed {
+      transform: translateX(calc(100% + 24px));
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .rti-header {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .rti-body {
+      padding: 11px 13px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .rti-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 9px 10px;
+    }
+
+    .rti-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      padding: 2px 7px;
+      border-radius: 5px;
+      margin-bottom: 5px;
+    }
+
+    .rti-tag.r { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; }
+    .rti-tag.t { background: rgba(52, 211, 153, 0.2); color: #6ee7b7; }
+    .rti-tag.i { background: rgba(251, 191, 36, 0.2); color: #fcd34d; }
+
+    .rti-q {
+      font-size: 11.8px;
+      line-height: 1.42;
+      color: var(--text);
+      margin-bottom: 7px;
+    }
+
+    .rti-toggle {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .rti-toggle:hover { text-decoration: underline; }
+
+    .rti-answer {
+      margin-top: 7px;
+      padding-top: 7px;
+      border-top: 1px dashed var(--border);
+      font-size: 11.3px;
+      line-height: 1.45;
+      color: #c5d6e8;
+      display: none;
+    }
+
+    .rti-answer.open { display: block; }
+
+    /* Bottom Timeline Dock */
+    .timeline-dock {
+      position: fixed;
+      left: 50%;
+      bottom: 34px;
+      transform: translateX(-50%);
+      width: min(860px, calc(100vw - 28px));
+      padding: 11px 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    body.digibord .timeline-dock {
+      transform: translate(-50%, 16px);
+    }
+
+    .timeline-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .play-controls {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .btn-play {
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
+      border-color: rgba(125, 211, 252, 0.6);
+      color: #ffffff;
+      padding: 6px 13px;
+    }
+
+    .btn-play:hover {
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+    }
+
+    .speed-group {
+      display: inline-flex;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2px;
+    }
+
+    .speed-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .speed-btn.active {
+      background: rgba(56, 189, 248, 0.25);
+      color: #e0f2fe;
+    }
+
+    .presets-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .preset-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: #d6e4f2;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 9px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .preset-btn:hover {
+      border-color: var(--border-strong);
+      background: rgba(56, 189, 248, 0.14);
+    }
+
+    .preset-btn.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+
+    .timeline-slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .timeline-year-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+      min-width: 34px;
+    }
+
+    .timeline-slider-inner {
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .timeline-ticks {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9.5px;
+      color: rgba(159, 179, 200, 0.72);
+      padding: 0 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Footer */
+    .footer-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 26px;
+      background: rgba(10, 16, 24, 0.78);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 0 14px;
+      z-index: 12;
+      transition: opacity 0.25s ease;
+    }
+
+    .footer-link {
+      background: none;
+      border: none;
+      color: #7dd3fc;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .footer-link:hover { text-decoration: underline; }
+
+    /* Digibord floating exit button */
+    #digibord-restore {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 25;
+      display: none;
+    }
+
+    body.digibord #digibord-restore {
+      display: inline-flex;
+    }
+
+    /* Colofon Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 10, 18, 0.62);
+      backdrop-filter: blur(6px);
+      z-index: 40;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(470px, 100%);
+      background: #101b28;
+      border: 1px solid var(--border-strong);
+      border-radius: 14px;
+      padding: 20px 22px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 15px;
+      display: grid;
+      place-items: center;
+    }
+
+    .modal-body {
+      font-size: 12.8px;
+      line-height: 1.58;
+      color: #c9d8e8;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .license-box {
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 9px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #e6f4ff;
+      font-weight: 600;
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(159, 179, 200, 0.25); border-radius: 999px; }
+
+    /* Responsive adjustments */
+    @media (max-width: 980px) {
+      .left-panel { width: 244px; }
+      .hud-meter { width: 232px; }
+      .rti-drawer { width: 274px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="labels-layer"></div>
+
+  <!-- Digibord Exit Button -->
+  <button id="digibord-restore" class="btn" title="Digibord-modus afsluiten">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>
+    Panelen tonen
+  </button>
+
+  <div class="ui-shell">
+    <!-- Top Header Bar -->
+    <header class="top-bar ui-hide-in-digibord">
+      <div class="panel brand-card">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d8f1ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 16c3-2.5 6-2.5 9 0s6 2.5 11-1"/>
+            <path d="M2 20c3-2 6-2 9 0s6 2 11-1"/>
+            <path d="M4 12l5-7 4.5 5 3.5-4 4 6"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">Waterkringloop &amp; Stroomgebied 3D</div>
+          <div class="brand-sub">Aardrijkskunde VO · H3 Systeem aarde · § 3.6 Hydrosfeer (B89–B96)</div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button id="btn-labels" class="btn active" title="3D-labels aan of uit zetten">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          3D-labels
+        </button>
+        <button id="btn-clouds" class="btn active" title="Wolken wisselen: Aan / Transparant (30%) / Uit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+          <span id="clouds-label">Wolken: Aan</span>
+        </button>
+        <button id="btn-cycle-arrows" class="btn active" title="3D-kringlooppijlen aan of uit zetten">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Kringloop-pijlen
+        </button>
+        <button id="btn-rti" class="btn" title="Didactische RTI-opdrachten tonen of verbergen">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          RTI-vragen
+        </button>
+        <button id="btn-digibord" class="btn" title="Alle panelen inklappen voor op het digibord">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+          Digibord-modus
+        </button>
+        <button id="btn-colofon-top" class="btn" title="Over deze module &amp; licentie">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Over deze module
+        </button>
+      </div>
+    </header>
+
+    <!-- Left Control Panel: Environment Sliders & Camera Presets -->
+    <aside class="panel left-panel ui-hide-in-digibord">
+      <div>
+        <div class="section-title">
+          <span>Omgevingsfactoren</span>
+          <span style="font-size:10px;color:#7dd3fc;">Live simulatie</span>
+        </div>
+        <div class="slider-group">
+          <div class="slider-item">
+            <div class="slider-header">
+              <label for="slider-precip">Neerslagintensiteit</label>
+              <span class="slider-val" id="val-precip">50% · Matig</span>
+            </div>
+            <input id="slider-precip" type="range" min="0" max="100" value="50" />
+            <div class="slider-hint">Van droge zomer tot zware stuwings- en stortbuien.</div>
+          </div>
+
+          <div class="slider-item">
+            <div class="slider-header">
+              <label for="slider-urban">Verstedelijking / Verharding</label>
+              <span class="slider-val" id="val-urban">48%</span>
+            </div>
+            <input id="slider-urban" type="range" min="0" max="100" value="48" />
+            <div class="slider-hint">Meer asfalt &amp; bebouwing → minder infiltratie, hogere piekafvoer.</div>
+          </div>
+
+          <div class="slider-item">
+            <div class="slider-header">
+              <label for="slider-temp">Temperatuur / Smeltwater</label>
+              <span class="slider-val" id="val-temp">+1.2 °C</span>
+            </div>
+            <input id="slider-temp" type="range" min="-20" max="45" value="12" />
+            <div class="slider-hint">Beïnvloedt gletsjersmelt, sneeuwgrens en verdamping.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div>
+        <div class="section-title">
+          <span>Monding (Benedenloop)</span>
+          <span id="mouth-mode-hint" style="font-size:10px;color:#7dd3fc;">Vloeiende overgang</span>
+        </div>
+        <div class="segmented-toggle" role="group" aria-label="Mondingstype">
+          <button class="seg-btn active" id="btn-mouth-delta" data-mouth="delta">Delta (sediment)</button>
+          <button class="seg-btn" id="btn-mouth-estuary" data-mouth="estuary">Estuarium (zeearm)</button>
+        </div>
+        <button id="btn-rfr" class="btn btn-sm" style="width:100%;justify-content:space-between;margin-top:7px;" title="Schakel nevengeul (Ruimte voor de Rivier) in of uit">
+          <span>Ruimte voor de Rivier (nevengeul)</span>
+          <span id="rfr-state" style="color:#9fb3c8;">Uit</span>
+        </button>
+      </div>
+
+      <div class="divider"></div>
+
+      <div>
+        <div class="section-title">
+          <span>Camerastandpunten</span>
+          <span style="font-size:10px;color:var(--text-muted);">A + sleep = verplaatsen</span>
+        </div>
+        <div class="cam-grid">
+          <button class="cam-btn active" data-cam="overview">Totaaloverzicht stroomgebied</button>
+          <button class="cam-btn" data-cam="upper">Bovenloop &amp; Gletsjer</button>
+          <button class="cam-btn" data-cam="lower">Benedenloop &amp; Delta</button>
+          <button class="cam-btn" data-cam="groundwater">Grondwater-doorsnede</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right HUD: Live Discharge & Basin Telemetry -->
+    <section class="panel hud-meter ui-hide-in-digibord" aria-label="Live debietmeter">
+      <div class="hud-top-row">
+        <div class="year-badge" id="hud-time" style="font-size:17px;">Tijd: 35%</div>
+        <div class="river-type-pill" id="hud-rivertype">Gemengde rivier</div>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <div class="metric-label">Actueel debiet</div>
+          <div class="metric-value"><span id="hud-discharge">2.340</span> <span class="metric-unit">m³/s</span></div>
+          <div class="bar-track"><div class="bar-fill" id="bar-discharge" style="width:45%;background:#38bdf8;"></div></div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Grondwaterstand</div>
+          <div class="metric-value"><span id="hud-gw">-1,4</span> <span class="metric-unit">m mv</span></div>
+          <div class="bar-track"><div class="bar-fill" id="bar-gw" style="width:62%;background:#34d399;"></div></div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Gletsjerbedekking</div>
+          <div class="metric-value"><span id="hud-glacier">68</span><span class="metric-unit">%</span></div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Zeespiegelstijging</div>
+          <div class="metric-value"><span id="hud-sealevel">+12</span> <span class="metric-unit">cm</span></div>
+        </div>
+      </div>
+
+      <div class="flood-alert" id="hud-flood-alert" role="status" aria-live="polite">
+        <span id="hud-flood-text">⚠ Hoogwater / Overstroming!</span>
+      </div>
+
+      <div class="phase-note" id="hud-phase-note">
+        <strong>Landschapsontwikkeling</strong> — Gebruik de sliders links en spoel de tijd voor- of achteruit om het effect op meanders, delta, gletsjer en afvoer te zien.
+      </div>
+    </section>
+
+    <!-- Collapsible RTI Didactic Panel -->
+    <aside class="panel rti-drawer collapsed ui-hide-in-digibord" id="rti-drawer" aria-label="Didactische RTI-opdrachten">
+      <div class="rti-header">
+        <span>Didactische RTI-opdrachten (§ 3.6)</span>
+        <button class="btn btn-sm" id="btn-rti-close" style="padding:3px 7px;">✕</button>
+      </div>
+      <div class="rti-body">
+        <div class="rti-card">
+          <span class="rti-tag r">R · Reproductie</span>
+          <p class="rti-q">1. Volg de waterkringloop in het 3D-model van zee naar gebergte. Waarom valt er juist tegen de berghelling in de bovenloop veel neerslag, en welke twee routes kan dit water daarna richting zee nemen?</p>
+          <button class="rti-toggle" data-ans="ans-1">▸ Toon antwoordmodel</button>
+          <div class="rti-answer" id="ans-1">
+            Vochtige lucht verdampt boven zee, drijft landinwaarts en botst tegen het hooggebergte. Door opstijging koelt de lucht af, condenseert de waterdamp tot wolken en valt er <strong>stuwingsneerslag</strong> (regen of sneeuw). Het water stroomt vervolgens via <strong>oppervlakkige afvoer</strong> (de rivier) of via <strong>infiltratie en grondwaterstroming</strong> langzaam terug naar zee.
+          </div>
+        </div>
+
+        <div class="rti-card">
+          <span class="rti-tag t">T · Toepassing</span>
+          <p class="rti-q">2. Schuif de slider <em>Verstedelijking / Verharding</em> omhoog bij stevige neerslag en bekijk de grondwater-doorsnede. Wat gebeurt er met het grondwaterpeil en het piekdebiet, en hoe helpt de schakelaar <em>Ruimte voor de Rivier</em>?</p>
+          <button class="rti-toggle" data-ans="ans-2">▸ Toon antwoordmodel</button>
+          <div class="rti-answer" id="ans-2">
+            Door asfalt, daken en bestrating kan regenwater nauwelijks infiltreren in de bodem. Het <strong>grondwaterpeil daalt</strong>, terwijl regenwater via riolen razendsnel de rivier bereikt (korte vertragingstijd → <strong>hogere piekafvoer</strong> en overstromingskans). Met <em>Ruimte voor de Rivier</em> (nevengeul en dijkverlegging) krijgt de rivier een breder stroombed, waardoor de waterstand bij piekafvoer daalt.
+          </div>
+        </div>
+
+        <div class="rti-card">
+          <span class="rti-tag i">I · Inzicht</span>
+          <p class="rti-q">3. Zet de temperatuur hoger en spoel de tijd vooruit naar <strong>100%</strong>. Leg uit waarom de rivier verandert van een <em>gemengde rivier</em> in een <em>regenrivier</em> en welke dubbele uitdaging dit geeft voor de monding.</p>
+          <button class="rti-toggle" data-ans="ans-3">▸ Toon antwoordmodel</button>
+          <div class="rti-answer" id="ans-3">
+            Door temperatuurstijging verdwijnen de gletsjers in de bovenloop grotendeels. De buffer van smeltwater in de zomer valt weg, waardoor de rivier afhankelijk wordt van directe neerslag (<strong>regenrivier</strong>): lagere afvoer en droogte in de zomer, maar extremere piekafvoeren in natte perioden. Bij de monding komt daar een <strong>stijgende zeespiegel</strong> bij, waardoor een delta kan verdrinken tot een estuarium en de kans op overstromingen en verzilting toeneemt.
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Bottom Timeline Dock -->
+    <section class="panel timeline-dock ui-hide-in-digibord" aria-label="Vrije tijdlijn">
+      <div class="timeline-top">
+        <div class="play-controls">
+          <button id="btn-rewind" class="btn" title="Tijd terugspoelen">
+            <span id="rewind-icon">◀◀</span>
+            <span id="rewind-label">Terugspoelen</span>
+          </button>
+          <button id="btn-play" class="btn btn-play" title="Tijd vooruitspoelen">
+            <span id="play-icon">▶</span>
+            <span id="play-label">Vooruitspoelen</span>
+          </button>
+          <div class="speed-group" role="group" aria-label="Afspeelsnelheid">
+            <button class="speed-btn active" data-speed="1">1x</button>
+            <button class="speed-btn" data-speed="5">5x</button>
+            <button class="speed-btn" data-speed="10">10x</button>
+          </div>
+        </div>
+
+        <div style="font-size:11.5px;color:var(--text-muted);font-weight:600;">
+          Ontwikkeling door de tijd: <span id="time-pct-readout" style="color:#7dd3fc;font-variant-numeric:tabular-nums;">35%</span>
+        </div>
+      </div>
+
+      <div class="timeline-slider-wrap">
+        <span class="timeline-year-label" style="min-width:86px;">Beginsituatie</span>
+        <div class="timeline-slider-inner">
+          <input id="slider-time" type="range" min="0" max="100" step="0.5" value="35" />
+          <div class="timeline-ticks">
+            <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+          </div>
+        </div>
+        <span class="timeline-year-label" style="min-width:118px;text-align:right;">Na verloop van tijd</span>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer-bar ui-hide-in-digibord">
+      <span>Gemaakt door Rens van der Lubben • Code: MIT-licentie • Lesmateriaal: CC BY-SA 4.0</span>
+      <button class="footer-link" id="btn-colofon-footer">ⓘ Over deze module</button>
+    </footer>
+  </div>
+
+  <!-- Colofon Modal -->
+  <div class="modal-backdrop" id="colofon-modal" role="dialog" aria-modal="true" aria-labelledby="colofon-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title" id="colofon-title">Over deze 3D-module &amp; Licentie</div>
+        <button class="modal-close" id="btn-colofon-close" aria-label="Sluiten">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>
+          Deze interactieve 3D-webapplicatie is ontwikkeld voor het vak <strong>Aardrijkskunde VO</strong> (Hoofdstuk 3: <em>Systeem aarde</em>, § 3.6 <em>Hydrosfeer: water</em>, basisboeknummers B89–B96). De simulatie brengt de waterkringloop, het stroomgebied van een rivier (boven-, midden- en benedenloop), grondwaterstroming, meander- en deltavorming en de invloed van klimaat en inrichting door de tijd heen in beeld.
+        </p>
+        <p>
+          <strong>Vrij hergebruik voor collega-docenten:</strong> Collega-docenten en onderwijsinstellingen mogen deze webapplicatie vrij gebruiken in de les, delen en aanpassen voor eigen onderwijsdoeleinden, onder naamsvermelding van de maker.
+        </p>
+        <div class="license-box">
+          Gemaakt door Rens van der Lubben • Code: MIT-licentie • Lesmateriaal: CC BY-SA 4.0
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // =========================================================================
+    // 1. DETERMINISTIC NOISE & GEOGRAPHY MODEL
+    // =========================================================================
+    function hash2(x, y) {
+      const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
+      return s - Math.floor(s);
+    }
+
+    function valueNoise(x, y) {
+      const xi = Math.floor(x), yi = Math.floor(y);
+      const xf = x - xi, yf = y - yi;
+      const u = xf * xf * (3 - 2 * xf);
+      const v = yf * yf * (3 - 2 * yf);
+      const a = hash2(xi, yi);
+      const b = hash2(xi + 1, yi);
+      const c = hash2(xi, yi + 1);
+      const d = hash2(xi + 1, yi + 1);
+      return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+    }
+
+    function fbm(x, y, octaves = 5) {
+      let val = 0, amp = 0.5, freq = 1;
+      for (let i = 0; i < octaves; i++) {
+        val += amp * valueNoise(x * freq, y * freq);
+        freq *= 2.03;
+        amp *= 0.5;
+      }
+      return val;
+    }
+
+    function ridgedFbm(x, y, octaves = 4) {
+      let val = 0, amp = 0.55, freq = 1;
+      for (let i = 0; i < octaves; i++) {
+        const n = 1 - Math.abs(valueNoise(x * freq, y * freq) * 2 - 1);
+        val += amp * n * n;
+        freq *= 2.1;
+        amp *= 0.48;
+      }
+      return val;
+    }
+
+    function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+    function smoothstep(e0, e1, x) {
+      const t = clamp((x - e0) / (e1 - e0), 0, 1);
+      return t * t * (3 - 2 * t);
+    }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    // World dimensions
+    const WORLD_W = 112; // X: -56 (high mountains) to +56 (sea)
+    const WORLD_D = 72;  // Z: -36 (back) to +36 (front geological cross-section)
+    const BASE_Y = -13.5;
+
+    // Simulation state (fully free, no hardcoded years or slider overrides)
+    const state = {
+      timeNorm: 0.35,      // 0.0 (Beginsituatie) .. 1.0 (Na verloop van tijd)
+      playDir: 0,          // -1 = terugspoelen, 0 = pauze, +1 = vooruitspoelen
+      precip: 50,          // 0..100
+      urban: 35,           // 0..100
+      tempOffset: 0.8,     // -2.0 .. +4.5 °C
+      speed: 1,
+      showLabels: true,
+      showCycleArrows: true,
+      cloudMode: 'on',     // 'on' | 'transparent' | 'off'
+      roomForRiverEnabled: false,
+      // Smooth animated Delta (0) <-> Estuarium (1) transition (~1.5s)
+      mouthTarget: 0.0,
+      mouthFactor: 0.0,
+      // Derived live metrics
+      glacierFactor: 0.72,
+      canalization: 0.35,
+      roomForRiver: 0.0,
+      meanderNaturalness: 0.65, // Linear 1.0 (0% urban) -> 0.0 (100% urban)
+      meanderPhase: 0.0,        // Advances smoothly with timeNorm when natural
+      deltaGrowth: 0.35,        // Advances smoothly with timeNorm in Delta mode
+      seaLevelOffset: 0.10,     // world units
+      discharge: 2100,
+      floodDepth: 0.0,          // > 0 when river rises above banks onto floodplains & city
+      floodBuffered: false,     // true when Ruimte voor de Rivier nevengeul absorbs peak
+      groundwaterNorm: 0.65,
+      riverType: 'Gemengde rivier'
+    };
+
+    // River centerline Z(x) — linear, threshold-free meanders driven by Urbanization & Time
+    function getRiverCenterZ(x, canal = state.canalization, naturalness = state.meanderNaturalness, mPhase = state.meanderPhase) {
+      const upperCurve = Math.sin(x * 0.085 + 0.6) * 4.8 * smoothstep(-52, -18, x);
+      const midEnv = smoothstep(-28, -8, x) * (1 - smoothstep(18, 34, x));
+      // Pure linear transition: 0% urban (naturalness=1) = wide sweeping meanders (12.6), 100% urban (0) = straight canalized (2.4)
+      const timeGrow = lerp(0.82, 1.18, clamp(mPhase / 2.6, 0, 1));
+      const meanderAmp = lerp(2.4, 12.6 * timeGrow, naturalness);
+      const middleMeander = Math.sin((x + 6) * 0.155 + mPhase * 0.72) * meanderAmp * midEnv;
+      const lowerDrift = Math.sin(x * 0.09 - 1.2 + mPhase * 0.25) * lerp(1.4, 3.8, naturalness) * smoothstep(12, 38, x);
+      return upperCurve + middleMeander + lowerDrift - 1.2;
+    }
+
+    // Southern delta distributary branch Z(x) for x > 26
+    function getDeltaBranchZ(x, deltaGrowth = state.deltaGrowth) {
+      const tipX = lerp(42.5, 51.5, deltaGrowth);
+      const t = smoothstep(26, tipX, x);
+      const apexZ = getRiverCenterZ(26, state.canalization, state.meanderNaturalness, state.meanderPhase);
+      return apexZ + t * 13.8 + Math.sin(x * 0.26) * 1.4 * t;
+    }
+
+    // Northern delta distributary branch Z(x) for x > 27
+    function getDeltaBranchNorthZ(x, deltaGrowth = state.deltaGrowth) {
+      const tipX = lerp(42.5, 51.5, deltaGrowth);
+      const t = smoothstep(27, tipX, x);
+      const apexZ = getRiverCenterZ(27, state.canalization, state.meanderNaturalness, state.meanderPhase);
+      return apexZ - t * 12.6 - Math.cos(x * 0.24) * 1.3 * t;
+    }
+
+    // Nevengeul (Ruimte voor de Rivier side channel) in lower-middle basin x: 10..28
+    function getNevengeulCenterZ(x) {
+      const mainZ = getRiverCenterZ(x, state.canalization, state.meanderNaturalness, state.meanderPhase);
+      const arch = Math.sin(clamp((x - 10) / 18, 0, 1) * Math.PI);
+      return mainZ - arch * 6.8;
+    }
+
+    function getRiverHalfWidth(x, canal = state.canalization, mouth = state.mouthFactor) {
+      const base = lerp(1.1, 3.6, smoothstep(-48, 32, x));
+      const squeeze = lerp(1.0, 0.76, canal * smoothstep(4, 28, x));
+      const deltaNarrow = lerp(1.0, 0.72, smoothstep(32, 46, x) * (1 - mouth));
+      // Estuary creates a dramatic wide tidal funnel cutting deep into the lowland (x: 17..48)
+      const estuaryFunnel = Math.pow(smoothstep(17, 47, x), 1.38) * 13.8 * mouth;
+      return base * squeeze * deltaNarrow + estuaryFunnel;
+    }
+
+    // Coastline X as a function of Z, mouth type & time-driven delta growth
+    function getCoastX(z, mouth = state.mouthFactor, deltaGrowth = state.deltaGrowth) {
+      const baseCoast = 37.2 + Math.sin(z * 0.13) * 2.5 + Math.cos(z * 0.07 + 0.8) * 1.6;
+      // Triangular fan-shaped delta protruding far into the sea, growing with timeNorm
+      const distMouth = Math.abs(z - 0.0);
+      const fanWidth = lerp(13.5, 19.5, deltaGrowth);
+      const triFan = Math.max(0, 1 - distMouth / fanWidth);
+      const deltaFanProtrusion = Math.pow(triFan, 0.85) * lerp(6.8, 13.8, deltaGrowth) * (1 - mouth);
+      // Estuary recedes inland under sea level rise & tides
+      const estuaryCut = Math.exp(-(distMouth * distMouth) / 140) * 6.4 * mouth;
+      return baseCoast + deltaFanProtrusion - estuaryCut;
+    }
+
+    // Continuous terrain elevation model (supports optional pre-cached noise for <0.6ms 60fps updates)
+    function getTerrainHeight(
+      x, z,
+      canal = state.canalization,
+      rfr = state.roomForRiver,
+      naturalness = state.meanderNaturalness,
+      mPhase = state.meanderPhase,
+      mouth = state.mouthFactor,
+      deltaGrowth = state.deltaGrowth,
+      preRidge = null, preDetail = null, preFine = null
+    ) {
+      const coastX = getCoastX(z, mouth, deltaGrowth);
+
+      // 1. Macro profile: Alpine peaks -> foothills -> lowland -> sea shelf
+      const mountainMask = Math.pow(1 - smoothstep(-56, -10, x), 1.65);
+      const foothillMask = smoothstep(-32, -16, x) * (1 - smoothstep(-2, 18, x));
+      const lowlandMask = smoothstep(4, 20, x) * (1 - smoothstep(coastX - 3, coastX + 3.5, x));
+      const seaMask = smoothstep(coastX - 2.2, coastX + 6.5, x);
+
+      const ridge  = preRidge  !== null ? preRidge  : ridgedFbm(x * 0.048 + 3.1, z * 0.048 + 1.7, 5);
+      const detail = preDetail !== null ? preDetail : fbm(x * 0.11 + 8.2, z * 0.11 + 4.4, 4);
+      const fine   = preFine   !== null ? preFine   : fbm(x * 0.28, z * 0.28, 3);
+
+      // Amphitheater ridges along north/south edges in upper basin
+      const valleyWalls = Math.pow(Math.abs(z) / 36, 1.8) * 11.0 * (1 - smoothstep(-42, 10, x));
+
+      let h = 0;
+      h += mountainMask * (9.5 + ridge * 23.5 + detail * 4.5) + valleyWalls;
+      h += foothillMask * (2.6 + detail * 6.2 + ridge * 2.4);
+      h += lowlandMask * (1.18 + detail * 0.85 + fine * 0.24);
+
+      const rz = getRiverCenterZ(x, canal, naturalness, mPhase);
+      const distMain = Math.abs(z - rz);
+
+      // Prominent triangular Delta sediment islands (schorren/kwelders) protruding into the sea
+      const deltaWeight = 1 - mouth;
+      const tipX = lerp(42.5, 51.5, deltaGrowth);
+      if (deltaWeight > 0.02 && x > 30 && x < tipX + 2.5) {
+        const fanProgress = clamp((x - 28) / Math.max(1, tipX - 28), 0, 1);
+        const halfFanZ = lerp(6.5, 17.5, fanProgress);
+        const inFanZ = 1 - smoothstep(halfFanZ * 0.68, halfFanZ, Math.abs(z - 0.0));
+        const inFanX = smoothstep(30, 35, x) * (1 - smoothstep(tipX - 3.2, tipX + 1.5, x));
+        const islandH = (0.72 + fine * 0.62 + detail * 0.25) * inFanZ * inFanX;
+        if (islandH > 0.02) {
+          h = Math.max(h, lerp(-2.2, islandH + 0.35, deltaWeight));
+        }
+      }
+
+      // Gentle coastal sand dunes along shoreline away from river mouth
+      const distCoast = Math.abs(x - (coastX - 1.2));
+      if (distCoast < 4.0 && Math.abs(z) > 15.0) {
+        h += Math.exp(-distCoast * distCoast * 0.28) * (0.8 + fine * 0.9);
+      }
+
+      // Sea floor slope
+      h = lerp(h, -3.4 - smoothstep(coastX + 4.5, 56, x) * 2.8 + detail * 0.4, seaMask);
+
+      // 2. Carve main river valley & channel
+      const rw = getRiverHalfWidth(x, canal, mouth);
+      const valleyWidth = lerp(11.5, 9.0, smoothstep(-45, 22, x));
+      const valleyFactor = Math.exp(-(distMain * distMain) / (valleyWidth * valleyWidth));
+      const riverBedElev = lerp(11.2, 0.28, Math.pow(smoothstep(-52, 34, x), 0.72));
+
+      if (x < tipX + 3) {
+        const carveStrength = (1 - seaMask * (1 - mouth * 0.85)) * smoothstep(-54, -44, x);
+        h = lerp(h, Math.min(h, riverBedElev + 1.18 + detail * 0.45), valleyFactor * 0.78 * carveStrength);
+
+        // Actual incised river channel (or deep estuary funnel when mouth -> 1)
+        const channelFactor = 1 - smoothstep(rw * 0.72, rw * 1.42, distMain);
+        const channelDepth = lerp(1.15, 1.55 + mouth * 1.65, smoothstep(-35, 34, x));
+        h = lerp(h, riverBedElev - channelDepth, channelFactor * carveStrength);
+
+        // Floodplain dikes (taller/narrower at higher urbanization; absent in estuary funnel & delta fan)
+        const lowerReach = smoothstep(5, 16, x) * (1 - smoothstep(28 - mouth * 8, 34 - mouth * 8, x));
+        if (lowerReach > 0.01) {
+          const dikeDist = rw * lerp(2.25, 1.65, canal) + rfr * 1.35;
+          const dDike = Math.abs(distMain - dikeDist);
+          const dikeHeight = (0.25 + canal * 0.58) * lowerReach;
+          if (dDike < 1.5) {
+            h += Math.exp(-dDike * dDike * 1.35) * dikeHeight;
+          }
+        }
+      }
+
+      // 3. Three-branch Delta distributaries (South & North arms carved through the delta fan)
+      if (deltaWeight > 0.04 && x > 25 && x < tipX + 2.5) {
+        const bzS = getDeltaBranchZ(x, deltaGrowth);
+        const distBS = Math.abs(z - bzS);
+        const maskS = smoothstep(25.5, 29, x) * (1 - smoothstep(tipX - 1.5, tipX + 2.0, x)) * deltaWeight;
+        const fS = 1 - smoothstep(1.15, 2.5, distBS);
+        h = lerp(h, -0.85, fS * maskS * 0.96);
+
+        const bzN = getDeltaBranchNorthZ(x, deltaGrowth);
+        const distBN = Math.abs(z - bzN);
+        const maskN = smoothstep(26.5, 30, x) * (1 - smoothstep(tipX - 1.5, tipX + 2.0, x)) * deltaWeight;
+        const fN = 1 - smoothstep(1.1, 2.4, distBN);
+        h = lerp(h, -0.85, fN * maskN * 0.96);
+      }
+
+      // 4. Nevengeul (Ruimte voor de Rivier, controlled by toggle)
+      if (rfr > 0.05 && x > 9.5 && x < 28.5) {
+        const nz = getNevengeulCenterZ(x);
+        const distN = Math.abs(z - nz);
+        const endFade = smoothstep(9.5, 12.5, x) * (1 - smoothstep(25.5, 28.5, x));
+        const nFactor = (1 - smoothstep(1.0, 2.2, distN)) * endFade * rfr;
+        h = lerp(h, riverBedElev - 0.85, nFactor);
+      }
+
+      return h;
+    }
+
+    // River water surface elevation at X (rises smoothly over floodplains & low city when floodDepth > 0!)
+    function getRiverWaterY(x) {
+      const baseElev = lerp(11.0, 0.22, Math.pow(smoothstep(-52, 34, x), 0.72));
+      const seaY = 0.0 + state.seaLevelOffset;
+      const dischargeRise = ((state.discharge - 1600) / 4200) * 0.62 * smoothstep(-30, 18, x) * (1 - smoothstep(34, 44, x));
+      const floodBoost = state.floodDepth * 1.15 * smoothstep(-4, 10, x) * (1 - smoothstep(34, 44, x));
+      return Math.max(seaY, baseElev + dischargeRise + floodBoost);
+    }
+
+    // =========================================================================
+    // 2. THREE.JS SCENE, RENDERER & LIGHTING
+    // =========================================================================
+    const container = document.getElementById('canvas-container');
+    const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.06;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0xc7dcf0, 0.0032);
+
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.5, 520);
+    camera.position.set(16, 48, 86);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.screenSpacePanning = true;
+    controls.panSpeed = 1.1;
+    controls.maxPolarAngle = Math.PI * 0.485;
+    controls.minPolarAngle = 0.14;
+    controls.minDistance = 24;
+    controls.maxDistance = 175;
+    controls.target.set(0, 3.5, 0);
+
+    // Hold 'A' key + left-mouse drag to pan (move) the 3D scene across the screen
+    let isPanKeyDown = false;
+    function setPanMode(active) {
+      if (isPanKeyDown === active) return;
+      isPanKeyDown = active;
+      controls.mouseButtons.LEFT = active ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
+      renderer.domElement.style.cursor = active ? 'grab' : '';
+    }
+    window.addEventListener('keydown', e => {
+      if (e.key.toLowerCase() === 'a' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const tag = e.target && e.target.tagName;
+        if (tag === 'TEXTAREA' || (tag === 'INPUT' && e.target.type !== 'range')) return;
+        setPanMode(true);
+      }
+    });
+    window.addEventListener('keyup', e => {
+      if (e.key.toLowerCase() === 'a') setPanMode(false);
+    });
+    window.addEventListener('blur', () => setPanMode(false));
+    renderer.domElement.addEventListener('pointerdown', () => {
+      if (isPanKeyDown) renderer.domElement.style.cursor = 'grabbing';
+    });
+    window.addEventListener('pointerup', () => {
+      if (isPanKeyDown) renderer.domElement.style.cursor = 'grab';
+    });
+
+    // Sky Dome Shader (natural daylight, adapts subtly to precipitation cloud cover)
+    const skyUniforms = {
+      topColor: { value: new THREE.Color(0x3a7bc2) },
+      horizonColor: { value: new THREE.Color(0xcce2f5) },
+      bottomColor: { value: new THREE.Color(0x132234) },
+      overcast: { value: 0.25 }
+    };
+    const skyGeo = new THREE.SphereGeometry(280, 32, 20);
+    const skyMat = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      depthWrite: false,
+      uniforms: skyUniforms,
+      vertexShader: `
+        varying vec3 vPos;
+        void main() {
+          vPos = position;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 topColor;
+        uniform vec3 horizonColor;
+        uniform vec3 bottomColor;
+        uniform float overcast;
+        varying vec3 vPos;
+        void main() {
+          float h = normalize(vPos).y;
+          vec3 sky = mix(horizonColor, topColor, pow(max(h, 0.0), 0.58));
+          vec3 overcastSky = mix(vec3(0.72, 0.77, 0.82), vec3(0.45, 0.53, 0.62), pow(max(h, 0.0), 0.6));
+          sky = mix(sky, overcastSky, overcast * 0.62);
+          vec3 col = h >= 0.0 ? sky : mix(horizonColor * 0.72, bottomColor, pow(min(-h * 2.8, 1.0), 0.6));
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `
+    });
+    scene.add(new THREE.Mesh(skyGeo, skyMat));
+
+    // Natural Sunlight & Fill
+    const hemiLight = new THREE.HemisphereLight(0xdff0ff, 0x3b483a, 0.75);
+    scene.add(hemiLight);
+
+    const sunLight = new THREE.DirectionalLight(0xfff5e4, 2.15);
+    sunLight.position.set(58, 76, 46);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.set(2048, 2048);
+    sunLight.shadow.camera.left = -72;
+    sunLight.shadow.camera.right = 72;
+    sunLight.shadow.camera.top = 56;
+    sunLight.shadow.camera.bottom = -56;
+    sunLight.shadow.camera.near = 10;
+    sunLight.shadow.camera.far = 220;
+    sunLight.shadow.bias = -0.0005;
+    scene.add(sunLight);
+
+    const rimLight = new THREE.DirectionalLight(0x9ec5e8, 0.42);
+    rimLight.position.set(-60, 28, -50);
+    scene.add(rimLight);
+
+    // =========================================================================
+    // 3. PHOTOREALISTIC SATELLITE TERRAIN MESH & PROCEDURAL TEXTURE
+    // =========================================================================
+    const SEG_X = 128;
+    const SEG_Z = 82;
+    const terrainGeo = new THREE.PlaneGeometry(WORLD_W, WORLD_D, SEG_X, SEG_Z);
+    terrainGeo.rotateX(-Math.PI / 2);
+
+    // Generate procedural satellite texture once at startup (640x412)
+    const TEX_W = 640;
+    const TEX_H = 412;
+    const satCanvas = document.createElement('canvas');
+    satCanvas.width = TEX_W;
+    satCanvas.height = TEX_H;
+    const satCtx = satCanvas.getContext('2d');
+    const satTexture = new THREE.CanvasTexture(satCanvas);
+    satTexture.colorSpace = THREE.SRGBColorSpace;
+    satTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+    function paintSatelliteTexture() {
+      const img = satCtx.createImageData(TEX_W, TEX_H);
+      const data = img.data;
+      const baseCanal = 0.4;
+      const baseRfr = 0.0;
+      const baseNat = 0.6;
+      const basePhase = 0.2;
+      const baseMouth = 0.0;
+      const baseDeltaG = 1.0; // Paint full delta fan so growing islands emerge with crisp marsh/sand colors
+
+      for (let py = 0; py < TEX_H; py++) {
+        const vz = py / (TEX_H - 1);
+        const z = (vz - 0.5) * WORLD_D;
+
+        for (let px = 0; px < TEX_W; px++) {
+          const vx = px / (TEX_W - 1);
+          const x = (vx - 0.5) * WORLD_W;
+
+          const h = getTerrainHeight(x, z, baseCanal, baseRfr, baseNat, basePhase, baseMouth, baseDeltaG);
+          const hdx = getTerrainHeight(x + 0.55, z, baseCanal, baseRfr, baseNat, basePhase, baseMouth, baseDeltaG) - h;
+          const hdz = getTerrainHeight(x, z + 0.55, baseCanal, baseRfr, baseNat, basePhase, baseMouth, baseDeltaG) - h;
+          const slope = Math.sqrt(hdx * hdx + hdz * hdz);
+
+          const n1 = fbm(x * 0.14 + 2.3, z * 0.14 + 7.1, 3);
+          const n2 = valueNoise(x * 0.65, z * 0.65);
+
+          let r = 82, g = 106, b = 68;
+
+          const coastX = getCoastX(z, baseMouth, baseDeltaG);
+          const rz = getRiverCenterZ(x, baseCanal, baseNat, basePhase);
+          const rw = getRiverHalfWidth(x, baseCanal, baseMouth);
+          const distRiver = Math.abs(z - rz);
+
+          // Underwater seabed / coastal sand (only offshore/coastal zone, no inland ghost riverbeds)
+          if (h < -0.15 && x > coastX - 4.5) {
+            const depthT = clamp(-h / 5.5, 0, 1);
+            r = lerp(146, 48, depthT);
+            g = lerp(141, 68, depthT);
+            b = lerp(118, 78, depthT);
+          } else {
+            // 1. Lowland & Agricultural patchwork (x > -8)
+            const agMask = smoothstep(-10, 8, x) * (1 - smoothstep(33, 39, x));
+            const rx = x * 0.24 + z * 0.08;
+            const rzField = -x * 0.08 + z * 0.24;
+            const parcel = hash2(Math.floor(rx), Math.floor(rzField));
+            const borderX = Math.abs(rx - Math.round(rx));
+            const borderZ = Math.abs(rzField - Math.round(rzField));
+            const hedge = (borderX < 0.055 || borderZ < 0.055) ? 0.78 : 1.0;
+
+            let agR, agG, agB;
+            if (parcel < 0.28) { agR = 92; agG = 114; agB = 64; }       // pasture
+            else if (parcel < 0.52) { agR = 118; agG = 122; agB = 74; } // wheat/barley
+            else if (parcel < 0.74) { agR = 78; agG = 102; agB = 58; }  // lush grass
+            else if (parcel < 0.90) { agR = 104; agG = 93; agB = 72; }  // ploughed earth
+            else { agR = 64; agG = 86; agB = 52; }                      // woodlot
+
+            agR *= hedge; agG *= hedge; agB *= hedge;
+
+            // 2. Deciduous / Conifer Forest in hills & lower alpine slopes
+            const forestR = lerp(42, 58, n1);
+            const forestG = lerp(66, 86, n1);
+            const forestB = lerp(42, 48, n1);
+
+            r = lerp(forestR, agR, agMask * (1 - smoothstep(0.28, 0.55, slope)));
+            g = lerp(forestG, agG, agMask * (1 - smoothstep(0.28, 0.55, slope)));
+            b = lerp(forestB, agB, agMask * (1 - smoothstep(0.28, 0.55, slope)));
+
+            // 3. Delta islands (schorren & kwelders: lush olive-green marsh with sandy/silty rims)
+            if (x > 31 && Math.abs(z) < 20) {
+              const deltaTint = smoothstep(31, 36, x);
+              const marshR = lerp(152, 86, smoothstep(0.15, 0.78, h)) + n2 * 14;
+              const marshG = lerp(146, 118, smoothstep(0.15, 0.78, h)) + n2 * 14;
+              const marshB = lerp(112, 66, smoothstep(0.15, 0.78, h)) + n2 * 8;
+              r = lerp(r, marshR, deltaTint * 0.88);
+              g = lerp(g, marshG, deltaTint * 0.88);
+              b = lerp(b, marshB, deltaTint * 0.88);
+            }
+
+            // 4. Alpine meadow & bare granite rock on steep or high slopes
+            const rockMask = clamp(smoothstep(7.2, 13.5, h) * 0.78 + smoothstep(0.32, 0.68, slope) * 0.92, 0, 1);
+            const rockR = lerp(84, 128, n1) + (n2 - 0.5) * 18;
+            const rockG = lerp(87, 130, n1) + (n2 - 0.5) * 16;
+            const rockB = lerp(90, 134, n1) + (n2 - 0.5) * 16;
+            r = lerp(r, rockR, rockMask);
+            g = lerp(g, rockG, rockMask);
+            b = lerp(b, rockB, rockMask);
+
+            // Coastal beach/dunes
+            if (x > coastX - 3.5 && x < coastX + 1.2 && h > 0) {
+              const beachM = smoothstep(coastX - 3.5, coastX - 0.2, x);
+              r = lerp(r, 174, beachM * 0.65);
+              g = lerp(g, 164, beachM * 0.65);
+              b = lerp(b, 136, beachM * 0.65);
+            }
+
+            // 6. Subtle historic urban core base (3D building expansion shows urban growth)
+            const cityDist1 = Math.hypot((x - 21) * 0.85, (z - (getRiverCenterZ(21, baseCanal, baseNat, basePhase) + 7.5)) * 1.0);
+            const cityDist2 = Math.hypot((x - 25) * 0.9, (z - (getRiverCenterZ(25, baseCanal, baseNat, basePhase) - 8.2)) * 1.0);
+            const cityDist3 = Math.hypot((x - 4) * 1.0, (z - (getRiverCenterZ(4, baseCanal, baseNat, basePhase) - 7.0)) * 1.1);
+            let urbanMask = Math.max(
+              1 - smoothstep(2.4, 5.8, cityDist1),
+              1 - smoothstep(1.6, 4.2, cityDist2),
+              1 - smoothstep(1.2, 3.2, cityDist3)
+            );
+            urbanMask *= smoothstep(rw * 1.35, rw * 2.1, distRiver) * (1 - smoothstep(32, 36, x));
+
+            if (urbanMask > 0.02) {
+              const streetGrid = ((Math.abs((x * 1.6) % 1) < 0.14) || (Math.abs((z * 1.6) % 1) < 0.14)) ? 0.78 : 1.0;
+              const uR = (108 + n2 * 22) * streetGrid;
+              const uG = (110 + n2 * 20) * streetGrid;
+              const uB = (114 + n2 * 20) * streetGrid;
+              r = lerp(r, uR, urbanMask * 0.72);
+              g = lerp(g, uG, urbanMask * 0.72);
+              b = lerp(b, uB, urbanMask * 0.72);
+            }
+          }
+
+          // Subtle micro-texture grain
+          const grain = (n2 - 0.5) * 11;
+          const idx = (py * TEX_W + px) * 4;
+          data[idx]     = clamp(r + grain, 0, 255);
+          data[idx + 1] = clamp(g + grain, 0, 255);
+          data[idx + 2] = clamp(b + grain, 0, 255);
+          data[idx + 3] = 255;
+        }
+      }
+      satCtx.putImageData(img, 0, 0);
+      satTexture.needsUpdate = true;
+    }
+
+    const terrainMat = new THREE.MeshStandardMaterial({
+      map: satTexture,
+      roughness: 0.88,
+      metalness: 0.03
+    });
+    const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
+    terrainMesh.receiveShadow = true;
+    terrainMesh.castShadow = true;
+    scene.add(terrainMesh);
+
+    // Pre-cache static noise values [ridge, detail, fine] per terrain vertex for <0.6ms 60fps updates
+    const terrainNoiseCache = (() => {
+      const pos = terrainGeo.attributes.position;
+      const cache = new Float32Array(pos.count * 3);
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        const z = pos.getZ(i);
+        cache[i * 3 + 0] = ridgedFbm(x * 0.048 + 3.1, z * 0.048 + 1.7, 5);
+        cache[i * 3 + 1] = fbm(x * 0.11 + 8.2, z * 0.11 + 4.4, 4);
+        cache[i * 3 + 2] = fbm(x * 0.28, z * 0.28, 3);
+      }
+      return cache;
+    })();
+
+    function updateTerrainGeometry() {
+      const pos = terrainGeo.attributes.position;
+      const c = state.canalization, rfr = state.roomForRiver, nat = state.meanderNaturalness,
+            ph = state.meanderPhase, mo = state.mouthFactor, dg = state.deltaGrowth;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        const z = pos.getZ(i);
+        const nIdx = i * 3;
+        pos.setY(i, getTerrainHeight(
+          x, z, c, rfr, nat, ph, mo, dg,
+          terrainNoiseCache[nIdx], terrainNoiseCache[nIdx + 1], terrainNoiseCache[nIdx + 2]
+        ));
+      }
+      pos.needsUpdate = true;
+      terrainGeo.computeVertexNormals();
+    }
+
+    // =========================================================================
+    // 4. GEOLOGICAL CROSS-SECTION WALLS & DYNAMIC GROUNDWATER TABLE
+    // =========================================================================
+    const strataCanvas = document.createElement('canvas');
+    strataCanvas.width = 1024;
+    strataCanvas.height = 256;
+    const sCtx = strataCanvas.getContext('2d');
+
+    function paintGeologicalStrata() {
+      // Topsoil -> Holocene clay/peat -> Pleistocene sand/gravel aquifer -> Impermeable bedrock
+      const grd = sCtx.createLinearGradient(0, 0, 0, 256);
+      grd.addColorStop(0.00, '#5a4a38');
+      grd.addColorStop(0.08, '#4e4234');
+      grd.addColorStop(0.24, '#7c6a52');
+      grd.addColorStop(0.48, '#a69375');
+      grd.addColorStop(0.72, '#8b7b63');
+      grd.addColorStop(0.76, '#4c5158');
+      grd.addColorStop(1.00, '#333840');
+      sCtx.fillStyle = grd;
+      sCtx.fillRect(0, 0, 1024, 256);
+
+      // Subtle wavy sedimentary bedding lines
+      for (let i = 0; i < 28; i++) {
+        const y0 = 12 + i * 8.5;
+        sCtx.beginPath();
+        sCtx.strokeStyle = i > 20 ? 'rgba(20,24,30,0.32)' : 'rgba(65,50,35,0.22)';
+        sCtx.lineWidth = 1.2 + (i % 3) * 0.6;
+        for (let x = 0; x <= 1024; x += 16) {
+          const dy = Math.sin(x * 0.015 + i * 0.7) * 3.5 + Math.cos(x * 0.04 - i) * 1.4;
+          if (x === 0) sCtx.moveTo(x, y0 + dy);
+          else sCtx.lineTo(x, y0 + dy);
+        }
+        sCtx.stroke();
+      }
+      // Subtle gravel/sand speckles in aquifer band
+      for (let i = 0; i < 1800; i++) {
+        const px = Math.random() * 1024;
+        const py = 55 + Math.random() * 130;
+        sCtx.fillStyle = Math.random() > 0.5 ? 'rgba(235,220,195,0.18)' : 'rgba(55,44,32,0.20)';
+        sCtx.fillRect(px, py, 2, 1.5);
+      }
+    }
+    paintGeologicalStrata();
+    const strataTex = new THREE.CanvasTexture(strataCanvas);
+    strataTex.colorSpace = THREE.SRGBColorSpace;
+    strataTex.wrapS = THREE.RepeatWrapping;
+
+    const wallMat = new THREE.MeshStandardMaterial({
+      map: strataTex,
+      roughness: 0.94,
+      metalness: 0.02,
+      side: THREE.DoubleSide
+    });
+
+    function buildSkirtWall(isXAxis, fixedCoord, segments) {
+      const geo = new THREE.BufferGeometry();
+      const positions = new Float32Array((segments + 1) * 2 * 3);
+      const uvs = new Float32Array((segments + 1) * 2 * 2);
+      const indices = [];
+      for (let i = 0; i <= segments; i++) {
+        const t = i / segments;
+        uvs[i * 4 + 0] = t; uvs[i * 4 + 1] = 1;
+        uvs[i * 4 + 2] = t; uvs[i * 4 + 3] = 0;
+        if (i < segments) {
+          const a = i * 2, b = i * 2 + 1, c = (i + 1) * 2, d = (i + 1) * 2 + 1;
+          indices.push(a, b, c, c, b, d);
+        }
+      }
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+      geo.setIndex(indices);
+      const mesh = new THREE.Mesh(geo, wallMat);
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+      return { geo, isXAxis, fixedCoord, segments };
+    }
+
+    const frontWall = buildSkirtWall(true, WORLD_D * 0.5, SEG_X);
+    const backWall  = buildSkirtWall(true, -WORLD_D * 0.5, SEG_X);
+    const leftWall  = buildSkirtWall(false, -WORLD_W * 0.5, SEG_Z);
+    const rightWall = buildSkirtWall(false, WORLD_W * 0.5, SEG_Z);
+
+    // Bottom cap
+    const bottomCap = new THREE.Mesh(
+      new THREE.PlaneGeometry(WORLD_W, WORLD_D),
+      new THREE.MeshStandardMaterial({ color: 0x242930, roughness: 0.95 })
+    );
+    bottomCap.rotation.x = Math.PI / 2;
+    bottomCap.position.y = BASE_Y;
+    scene.add(bottomCap);
+
+    function updateSkirtWalls() {
+      const walls = [frontWall, backWall, leftWall, rightWall];
+      for (const w of walls) {
+        const pos = w.geo.attributes.position;
+        for (let i = 0; i <= w.segments; i++) {
+          const t = i / w.segments;
+          const x = w.isXAxis ? lerp(-WORLD_W * 0.5, WORLD_W * 0.5, t) : w.fixedCoord;
+          const z = w.isXAxis ? w.fixedCoord : lerp(-WORLD_D * 0.5, WORLD_D * 0.5, t);
+          const topY = getTerrainHeight(x, z, state.canalization, state.roomForRiver);
+          pos.setXYZ(i * 2, x, topY, z);
+          pos.setXYZ(i * 2 + 1, x, BASE_Y, z);
+        }
+        pos.needsUpdate = true;
+        w.geo.computeVertexNormals();
+      }
+    }
+
+    // Dynamic Groundwater Saturated Zone overlay along Front Wall (z = +WORLD_D/2 + 0.08)
+    const GW_SEGS = 120;
+    const gwGeo = new THREE.BufferGeometry();
+    const gwPositions = new Float32Array((GW_SEGS + 1) * 2 * 3);
+    const gwIndices = [];
+    for (let i = 0; i < GW_SEGS; i++) {
+      const a = i * 2, b = i * 2 + 1, c = (i + 1) * 2, d = (i + 1) * 2 + 1;
+      gwIndices.push(a, b, c, c, b, d);
+    }
+    gwGeo.setAttribute('position', new THREE.BufferAttribute(gwPositions, 3));
+    gwGeo.setIndex(gwIndices);
+
+    const gwMat = new THREE.MeshBasicMaterial({
+      color: 0x1d78b8,
+      transparent: true,
+      opacity: 0.44,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const gwMesh = new THREE.Mesh(gwGeo, gwMat);
+    scene.add(gwMesh);
+
+    // Crisp bright groundwater table line on front cutaway
+    const gwLinePts = new Float32Array((GW_SEGS + 1) * 3);
+    const gwLineGeo = new THREE.BufferGeometry();
+    gwLineGeo.setAttribute('position', new THREE.BufferAttribute(gwLinePts, 3));
+    const gwLine = new THREE.Line(
+      gwLineGeo,
+      new THREE.LineBasicMaterial({ color: 0x7dd3fc, transparent: true, opacity: 0.95 })
+    );
+    scene.add(gwLine);
+
+    function getGroundwaterYAtFront(x) {
+      const zFront = WORLD_D * 0.5;
+      const surfaceY = getTerrainHeight(x, zFront, state.canalization, state.roomForRiver);
+      const seaY = state.seaLevelOffset;
+      const coastX = getCoastX(zFront);
+      if (x > coastX) return Math.min(surfaceY - 0.1, seaY);
+      // Water table follows subdued topography and shifts vertically with groundwaterNorm (0..1)
+      const baseDepth = lerp(5.8, 1.35, state.groundwaterNorm);
+      const slopeFollow = Math.max(seaY, surfaceY * 0.52 - baseDepth * 0.55 + 0.8);
+      return clamp(Math.min(surfaceY - 0.45, slopeFollow), BASE_Y + 3.2, surfaceY - 0.35);
+    }
+
+    function updateGroundwaterCrossSection() {
+      const zFront = WORLD_D * 0.5 + 0.09;
+      const impermeableY = BASE_Y + 3.1;
+      const pos = gwGeo.attributes.position;
+      const linePos = gwLineGeo.attributes.position;
+
+      for (let i = 0; i <= GW_SEGS; i++) {
+        const t = i / GW_SEGS;
+        const x = lerp(-WORLD_W * 0.5, WORLD_W * 0.5, t);
+        const topGw = getGroundwaterYAtFront(x);
+        pos.setXYZ(i * 2, x, topGw, zFront);
+        pos.setXYZ(i * 2 + 1, x, impermeableY, zFront);
+        linePos.setXYZ(i, x, topGw, zFront + 0.04);
+      }
+      pos.needsUpdate = true;
+      linePos.needsUpdate = true;
+    }
+
+    // =========================================================================
+    // 5. DYNAMIC GLACIER & SNOWLINE MESH (RETREATS WITH TEMP & YEARS 1950 -> 2100)
+    // =========================================================================
+    const GLAC_SX = 56, GLAC_SZ = 52;
+    const glacGeo = new THREE.PlaneGeometry(38, 66, GLAC_SX, GLAC_SZ);
+    glacGeo.rotateX(-Math.PI / 2);
+
+    const glacMat = new THREE.MeshStandardMaterial({
+      color: 0xecf5fc,
+      roughness: 0.38,
+      metalness: 0.05,
+      transparent: true,
+      opacity: 0.94
+    });
+    const glacierMesh = new THREE.Mesh(glacGeo, glacMat);
+    glacierMesh.position.set(-37, 0, 0);
+    glacierMesh.receiveShadow = true;
+    glacierMesh.castShadow = true;
+    scene.add(glacierMesh);
+
+    // Pre-cache static alpine terrain height & valley distance for every glacier vertex
+    const glacBaseCache = (() => {
+      const pos = glacGeo.attributes.position;
+      const cache = new Float32Array(pos.count * 3); // [wx, baseTerrainH, distValley]
+      for (let i = 0; i < pos.count; i++) {
+        const wx = pos.getX(i) - 37;
+        const wz = pos.getZ(i);
+        const th = getTerrainHeight(wx, wz, 0.5, 0.0);
+        const rz = getRiverCenterZ(wx, 0.5);
+        cache[i * 3 + 0] = wx;
+        cache[i * 3 + 1] = th;
+        cache[i * 3 + 2] = Math.abs(wz - rz);
+      }
+      return cache;
+    })();
+
+    function updateGlacierMesh() {
+      const pos = glacGeo.attributes.position;
+      const gFactor = state.glacierFactor; // 0.03 .. 1.0
+      // Glacier tongue terminus retreats upslope from x=-22 (1950) to x=-51 (2100)
+      const terminusX = lerp(-51.5, -22.0, Math.pow(gFactor, 0.85));
+      // Dynamic mountain snowline responds to glacierFactor & temperature offset
+      const snowLine = lerp(24.5, 11.8, gFactor) + (state.tempOffset - 1.0) * 0.95;
+
+      let hasAnyIce = false;
+      for (let i = 0; i < pos.count; i++) {
+        const wx = glacBaseCache[i * 3 + 0];
+        const th = glacBaseCache[i * 3 + 1];
+        const distValley = glacBaseCache[i * 3 + 2];
+
+        const valleyTongue = (1 - smoothstep(2.0, 9.5, distValley)) * (1 - smoothstep(terminusX - 5, terminusX + 2, wx));
+        const highSnowCap = smoothstep(snowLine - 1.2, snowLine + 4.2, th) * (1 - smoothstep(-25, -17, wx));
+        const icePresence = Math.max(valleyTongue * gFactor * 1.15, highSnowCap * gFactor * 1.1);
+
+        if (gFactor > 0.05 && icePresence > 0.05) {
+          const thickness = clamp(icePresence * (1.4 + gFactor * 1.15), 0.12, 2.35);
+          pos.setY(i, th + thickness * 0.56);
+          hasAnyIce = true;
+        } else {
+          // Tuck deep below terrain & carved riverbeds so no white patch ever pokes through
+          pos.setY(i, th - 6.5);
+        }
+      }
+      pos.needsUpdate = true;
+      glacGeo.computeVertexNormals();
+      glacierMesh.visible = hasAnyIce;
+    }
+
+    // =========================================================================
+    // 6. REALISTIC ANIMATED RIVER WATER, NEVENGEUL & SEA
+    // =========================================================================
+    const waterUniforms = {
+      uTime: { value: 0 },
+      uFlowSpeed: { value: 1.0 },
+      uSunDir: { value: new THREE.Vector3(58, 76, 46).normalize() },
+      uDeepColor: { value: new THREE.Color(0x133e5e) },
+      uShallowColor: { value: new THREE.Color(0x2c6e8f) },
+      uSkyColor: { value: new THREE.Color(0xb8dcf5) }
+    };
+
+    const waterShaderMat = new THREE.ShaderMaterial({
+      transparent: true,
+      uniforms: waterUniforms,
+      vertexShader: `
+        varying vec3 vWorldPos;
+        varying vec2 vUv;
+        uniform float uTime;
+        uniform float uFlowSpeed;
+        void main() {
+          vUv = uv;
+          vec3 p = position;
+          float wave = sin(p.x * 0.45 - uTime * 2.2 * uFlowSpeed + p.z * 0.35) * 0.035
+                     + cos(p.x * 0.9 - uTime * 3.1 * uFlowSpeed - p.z * 0.7) * 0.02;
+          p.y += wave;
+          vec4 wp = modelMatrix * vec4(p, 1.0);
+          vWorldPos = wp.xyz;
+          gl_Position = projectionMatrix * viewMatrix * wp;
+        }
+      `,
+      fragmentShader: `
+        varying vec3 vWorldPos;
+        varying vec2 vUv;
+        uniform float uTime;
+        uniform float uFlowSpeed;
+        uniform vec3 uSunDir;
+        uniform vec3 uDeepColor;
+        uniform vec3 uShallowColor;
+        uniform vec3 uSkyColor;
+
+        float hash(vec2 p) {
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+        }
+        float noise(vec2 p) {
+          vec2 i = floor(p), f = fract(p);
+          f = f * f * (3.0 - 2.0 * f);
+          return mix(
+            mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+            mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
+            f.y
+          );
+        }
+
+        void main() {
+          // Animated directional current ripples
+          vec2 flowUv = vec2(vWorldPos.x * 0.38 - uTime * 1.45 * uFlowSpeed, vWorldPos.z * 0.55);
+          float r1 = noise(flowUv * 2.1);
+          float r2 = noise(flowUv * 4.5 + vec2(-uTime * 0.9, 1.7));
+          float ripple = (r1 * 0.6 + r2 * 0.4);
+
+          vec3 N = normalize(vec3((r1 - 0.5) * 0.22, 1.0, (r2 - 0.5) * 0.22));
+          vec3 V = normalize(cameraPosition - vWorldPos);
+          float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.4);
+
+          // River shifts from crisp glacial blue-teal upstream to deeper river/sea blue downstream
+          float seaBlend = smoothstep(30.0, 44.0, vWorldPos.x);
+          float upperBlend = 1.0 - smoothstep(-46.0, -14.0, vWorldPos.x);
+          vec3 glacialCol = vec3(0.24, 0.56, 0.68);
+          vec3 baseCol = mix(uShallowColor, uDeepColor, seaBlend * 0.85);
+          baseCol = mix(baseCol, glacialCol, upperBlend * 0.65);
+
+          // Specular sun glint
+          vec3 H = normalize(uSunDir + V);
+          float spec = pow(max(dot(N, H), 0.0), 96.0) * 0.85;
+
+          // Subtle current foam streaks in upper/middle river
+          float foam = smoothstep(0.68, 0.88, ripple) * (1.0 - seaBlend * 0.72) * (0.14 + upperBlend * 0.22);
+
+          vec3 col = mix(baseCol, uSkyColor, clamp(fresnel * 0.58 + 0.06, 0.0, 0.75));
+          col += vec3(1.0, 0.97, 0.90) * spec + vec3(0.85, 0.93, 0.98) * foam;
+
+          float alpha = mix(0.84, 0.91, seaBlend);
+          gl_FragColor = vec4(col, alpha);
+        }
+      `
+    });
+
+    // Main river ribbon mesh (widens organically over uiterwaarden & low city streets when flooding)
+    const RIV_SEGS = 140;
+    const RIV_W_SEGS = 6;
+    const riverGeo = new THREE.PlaneGeometry(1, 1, RIV_SEGS, RIV_W_SEGS);
+    const riverMesh = new THREE.Mesh(riverGeo, waterShaderMat);
+    scene.add(riverMesh);
+
+    // Southern Delta branch water ribbon
+    const branchGeo = new THREE.PlaneGeometry(1, 1, 32, 2);
+    const branchMesh = new THREE.Mesh(branchGeo, waterShaderMat);
+    scene.add(branchMesh);
+
+    // Northern Delta branch water ribbon
+    const branchNorthGeo = new THREE.PlaneGeometry(1, 1, 28, 2);
+    const branchNorthMesh = new THREE.Mesh(branchNorthGeo, waterShaderMat);
+    scene.add(branchNorthMesh);
+
+    // Nevengeul water ribbon (Ruimte voor de Rivier)
+    const nevGeo = new THREE.PlaneGeometry(1, 1, 32, 2);
+    const nevMesh = new THREE.Mesh(nevGeo, waterShaderMat);
+    scene.add(nevMesh);
+
+    // Open Sea Plane
+    const seaGeo = new THREE.PlaneGeometry(38, WORLD_D - 0.1, 48, 48);
+    seaGeo.rotateX(-Math.PI / 2);
+    const seaMesh = new THREE.Mesh(seaGeo, waterShaderMat);
+    seaMesh.position.set(WORLD_W * 0.5 - 19, 0.0, 0);
+    scene.add(seaMesh);
+
+    function updateWaterMeshes() {
+      const tipX = lerp(42.5, 51.5, state.deltaGrowth);
+      // Main river ribbon from x = -49 to tipX (expands smoothly overbank into 3D terrain slopes when flooding)
+      const pos = riverGeo.attributes.position;
+      const dischargeWiden = clamp((state.discharge - 1600) / 4800, 0, 1) * 0.34;
+      for (let j = 0; j <= RIV_W_SEGS; j++) {
+        const v = j / RIV_W_SEGS - 0.5;
+        for (let i = 0; i <= RIV_SEGS; i++) {
+          const u = i / RIV_SEGS;
+          const x = lerp(-49, Math.max(47, tipX + 1.5), u);
+          const cz = getRiverCenterZ(x, state.canalization, state.meanderNaturalness, state.meanderPhase);
+          const lowerFloodEnv = smoothstep(-2, 12, x) * (1 - smoothstep(32, 42, x));
+          const overbankExpand = state.floodDepth * 14.5 * lowerFloodEnv;
+          const hw = getRiverHalfWidth(x, state.canalization, state.mouthFactor) * (1.25 + dischargeWiden) + overbankExpand;
+          const wy = getRiverWaterY(x);
+          const idx = j * (RIV_SEGS + 1) + i;
+          // Keep water cleanly inside world Z bounds so it never pokes outside the cutaway block
+          const wz = clamp(cz + v * hw * 2.0, -WORLD_D * 0.495, WORLD_D * 0.495);
+          pos.setXYZ(idx, x, wy, wz);
+        }
+      }
+      pos.needsUpdate = true;
+      riverGeo.computeVertexNormals();
+
+      // Delta branches (visible in Delta mode, fade out smoothly during Estuarium transition)
+      const showDeltaBranches = state.mouthFactor < 0.82;
+      branchMesh.visible = showDeltaBranches;
+      branchNorthMesh.visible = showDeltaBranches;
+      if (showDeltaBranches) {
+        const bScale = 1 - smoothstep(0.2, 0.82, state.mouthFactor);
+        const bPos = branchGeo.attributes.position;
+        for (let j = 0; j <= 2; j++) {
+          const v = j / 2 - 0.5;
+          for (let i = 0; i <= 32; i++) {
+            const u = i / 32;
+            const x = lerp(26, tipX + 1.2, u);
+            const cz = getDeltaBranchZ(x, state.deltaGrowth);
+            const hw = lerp(1.35, 2.85, u) * bScale;
+            const wy = getRiverWaterY(x) - 0.02;
+            const idx = j * 33 + i;
+            bPos.setXYZ(idx, x, wy, cz + v * hw * 2.0);
+          }
+        }
+        bPos.needsUpdate = true;
+
+        const bnPos = branchNorthGeo.attributes.position;
+        for (let j = 0; j <= 2; j++) {
+          const v = j / 2 - 0.5;
+          for (let i = 0; i <= 28; i++) {
+            const u = i / 28;
+            const x = lerp(27, tipX + 1.2, u);
+            const cz = getDeltaBranchNorthZ(x, state.deltaGrowth);
+            const hw = lerp(1.25, 2.65, u) * bScale;
+            const wy = getRiverWaterY(x) - 0.02;
+            const idx = j * 29 + i;
+            bnPos.setXYZ(idx, x, wy, cz + v * hw * 2.0);
+          }
+        }
+        bnPos.needsUpdate = true;
+      }
+
+      // Nevengeul (visible when Ruimte voor de Rivier is enabled)
+      nevMesh.visible = state.roomForRiver > 0.08;
+      if (nevMesh.visible) {
+        const nPos = nevGeo.attributes.position;
+        const nevFill = clamp((state.discharge - 1400) / 3000, 0.25, 1.25);
+        for (let j = 0; j <= 2; j++) {
+          const v = j / 2 - 0.5;
+          for (let i = 0; i <= 32; i++) {
+            const u = i / 32;
+            const x = lerp(10.2, 28.2, u);
+            const cz = getNevengeulCenterZ(x);
+            const hw = (1.55 * Math.sin(u * Math.PI) * state.roomForRiver + 0.55) * (0.85 + nevFill * 0.35);
+            const wy = getRiverWaterY(x) - 0.04;
+            const idx = j * 33 + i;
+            nPos.setXYZ(idx, x, wy, cz + v * hw * 2.0);
+          }
+        }
+        nPos.needsUpdate = true;
+      }
+
+      // Sea level height
+      seaMesh.position.y = state.seaLevelOffset;
+    }
+
+    // =========================================================================
+    // 7. INSTANCED VEGETATION (FORESTS) & URBAN BUILDINGS (GROW WITH TIME)
+    // =========================================================================
+    const dummy = new THREE.Object3D();
+
+    // Conifer trees (upper/mid hills)
+    const CONIFER_MAX = 560;
+    const coniferGeo = new THREE.ConeGeometry(0.48, 1.85, 6);
+    coniferGeo.translate(0, 0.92, 0);
+    const coniferMat = new THREE.MeshStandardMaterial({ color: 0x264129, roughness: 0.9 });
+    const coniferMesh = new THREE.InstancedMesh(coniferGeo, coniferMat, CONIFER_MAX);
+    coniferMesh.castShadow = true;
+    coniferMesh.receiveShadow = true;
+    scene.add(coniferMesh);
+
+    // Deciduous trees (hills & valley floor)
+    const DECID_MAX = 460;
+    const decidGeo = new THREE.IcosahedronGeometry(0.62, 1);
+    decidGeo.scale(1.0, 0.85, 1.0);
+    decidGeo.translate(0, 0.82, 0);
+    const decidMat = new THREE.MeshStandardMaterial({ color: 0x3b5b33, roughness: 0.88 });
+    const decidMesh = new THREE.InstancedMesh(decidGeo, decidMat, DECID_MAX);
+    decidMesh.castShadow = true;
+    decidMesh.receiveShadow = true;
+    scene.add(decidMesh);
+
+    // Pre-generate candidate tree locations (with cached static noise for ultra-fast live filtering)
+    const coniferCandidates = [];
+    const decidCandidates = [];
+    for (let i = 0; i < 2400; i++) {
+      const rx = hash2(i * 1.13, 4.7) * WORLD_W - WORLD_W * 0.5;
+      const rz = hash2(9.2, i * 1.37) * (WORLD_D - 4) - (WORLD_D - 4) * 0.5;
+      const preRidge  = ridgedFbm(rx * 0.048 + 3.1, rz * 0.048 + 1.7, 5);
+      const preDetail = fbm(rx * 0.11 + 8.2, rz * 0.11 + 4.4, 4);
+      const preFine   = fbm(rx * 0.28, rz * 0.28, 3);
+      const h = getTerrainHeight(rx, rz, 0.5, 0.0, 0.5, 0.0, 0.0, 0.35, preRidge, preDetail, preFine);
+      const hdx = getTerrainHeight(rx + 0.6, rz, 0.5, 0.0, 0.5, 0.0, 0.0, 0.35) - h;
+      const hdz = getTerrainHeight(rx, rz + 0.6, 0.5, 0.0, 0.5, 0.0, 0.0, 0.35) - h;
+      const slope = Math.sqrt(hdx * hdx + hdz * hdz);
+      if (rx > getCoastX(rz, 0.0, 0.35) - 3.5) continue;
+      if (slope > 0.45) continue;
+
+      const s = 0.72 + hash2(i, 99.1) * 0.65;
+      if (h > 4.2 && h < 12.6 && rx < 4 && coniferCandidates.length < CONIFER_MAX) {
+        coniferCandidates.push({ x: rx, z: rz, scale: s, rot: hash2(i, 3.3) * Math.PI * 2, r: preRidge, d: preDetail, f: preFine });
+      } else if (h > 1.2 && h < 6.4 && rx > -22 && rx < 32 && decidCandidates.length < DECID_MAX) {
+        if (fbm(rx * 0.16, rz * 0.16, 2) > 0.46) {
+          decidCandidates.push({ x: rx, z: rz, scale: s, rot: hash2(i, 5.1) * Math.PI * 2, r: preRidge, d: preDetail, f: preFine });
+        }
+      }
+    }
+
+    // Urban Buildings (InstancedMesh, visibility threshold driven by state.urban)
+    const BLDG_MAX = 420;
+    const bldgGeo = new THREE.BoxGeometry(1, 1, 1);
+    bldgGeo.translate(0, 0.5, 0);
+    const bldgMat = new THREE.MeshStandardMaterial({ color: 0xcbd2d9, roughness: 0.76, metalness: 0.08 });
+    const bldgMesh = new THREE.InstancedMesh(bldgGeo, bldgMat, BLDG_MAX);
+    bldgMesh.castShadow = true;
+    bldgMesh.receiveShadow = true;
+    scene.add(bldgMesh);
+
+    const buildingData = [];
+    const bldgColor = new THREE.Color();
+    const cityCenters = [
+      { x: 21, zOff: 7.4, spread: 9.2 },
+      { x: 25, zOff: -8.0, spread: 7.0 },
+      { x: 4,  zOff: -6.8, spread: 5.0 }
+    ];
+
+    for (let i = 0; i < BLDG_MAX; i++) {
+      const c = cityCenters[i % cityCenters.length];
+      const ang = hash2(i * 2.1, 1.3) * Math.PI * 2;
+      const rad = Math.pow(hash2(3.7, i * 1.9), 0.75) * c.spread;
+      const bx = c.x + Math.cos(ang) * rad;
+      const bz = getRiverCenterZ(c.x, 0.5) + c.zOff + Math.sin(ang) * rad * 0.85;
+      const threshold = clamp(rad / c.spread, 0.02, 0.98); // Inner core appears at low urban%, suburbs at high urban%
+      const w = 0.55 + hash2(i, 11.2) * 0.75;
+      const d = 0.55 + hash2(i, 22.4) * 0.75;
+      const tall = (1 - threshold) * 1.65 + 0.55 + hash2(i, 33.1) * 0.9;
+      buildingData.push({ x: bx, z: bz, w, d, h: tall, threshold, rot: hash2(i, 44.5) * 0.4 });
+
+      // Realistic muted architectural palette (brick, slate, concrete, terracotta roof tint)
+      const pal = hash2(i, 71.3);
+      if (pal < 0.35) bldgColor.setHex(0xb8aea3);
+      else if (pal < 0.65) bldgColor.setHex(0x9ca5ad);
+      else if (pal < 0.85) bldgColor.setHex(0xa87d6d);
+      else bldgColor.setHex(0xd0d6dc);
+      bldgMesh.setColorAt(i, bldgColor);
+    }
+    bldgMesh.instanceColor.needsUpdate = true;
+
+    function updateVegetationAndBuildings() {
+      const urbanNorm = state.urban / 100;
+      const c = state.canalization, rfr = state.roomForRiver, nat = state.meanderNaturalness,
+            ph = state.meanderPhase, mo = state.mouthFactor, dg = state.deltaGrowth;
+
+      // Update conifers — hide any tree inside river channel (< rw * 1.6) or below water level
+      let ci = 0;
+      for (const t of coniferCandidates) {
+        const rz = getRiverCenterZ(t.x, c, nat, ph);
+        const rw = getRiverHalfWidth(t.x, c, mo);
+        if (Math.abs(t.z - rz) < rw * 1.6) continue;
+
+        const y = getTerrainHeight(t.x, t.z, c, rfr, nat, ph, mo, dg, t.r, t.d, t.f);
+        const waterY = Math.max(getRiverWaterY(t.x), state.seaLevelOffset);
+        if (y <= waterY + 0.15) continue;
+
+        dummy.position.set(t.x, y - 0.1, t.z);
+        dummy.rotation.set(0, t.rot, 0);
+        dummy.scale.setScalar(t.scale);
+        dummy.updateMatrix();
+        coniferMesh.setMatrixAt(ci++, dummy.matrix);
+      }
+      coniferMesh.count = ci;
+      coniferMesh.instanceMatrix.needsUpdate = true;
+
+      // Update deciduous — hide trees inside river (< rw * 1.6), below water level, in city, or in nevengeul
+      let di = 0;
+      const city1Z = getRiverCenterZ(21, c, nat, ph) + 7.4;
+      const city2Z = getRiverCenterZ(25, c, nat, ph) - 8.0;
+      for (const t of decidCandidates) {
+        const rz = getRiverCenterZ(t.x, c, nat, ph);
+        const rw = getRiverHalfWidth(t.x, c, mo);
+        if (Math.abs(t.z - rz) < rw * 1.6) continue;
+
+        const nearCity1 = Math.hypot(t.x - 21, t.z - city1Z) < (2.5 + urbanNorm * 8.5);
+        const nearCity2 = Math.hypot(t.x - 25, t.z - city2Z) < (1.5 + urbanNorm * 6.5);
+        const nearNev = rfr > 0.15 && t.x > 9.5 && t.x < 29.5 && Math.abs(t.z - getNevengeulCenterZ(t.x)) < 2.6;
+        if (nearCity1 || nearCity2 || nearNev) continue;
+
+        const y = getTerrainHeight(t.x, t.z, c, rfr, nat, ph, mo, dg, t.r, t.d, t.f);
+        const waterY = Math.max(getRiverWaterY(t.x), state.seaLevelOffset);
+        if (y <= waterY + 0.15) continue;
+
+        dummy.position.set(t.x, y - 0.08, t.z);
+        dummy.rotation.set(0, t.rot, 0);
+        dummy.scale.setScalar(t.scale);
+        dummy.updateMatrix();
+        decidMesh.setMatrixAt(di++, dummy.matrix);
+      }
+      decidMesh.count = di;
+      decidMesh.instanceMatrix.needsUpdate = true;
+
+      // Update buildings
+      let bi = 0;
+      for (let i = 0; i < buildingData.length; i++) {
+        const b = buildingData[i];
+        const visible = urbanNorm >= b.threshold * 0.92;
+        const rz = getRiverCenterZ(b.x, state.canalization);
+        const rw = getRiverHalfWidth(b.x, state.canalization);
+        const nearNev = state.roomForRiver > 0.2 && b.x > 10 && b.x < 29 && Math.abs(b.z - getNevengeulCenterZ(b.x)) < 2.8;
+        const y = getTerrainHeight(b.x, b.z, state.canalization, state.roomForRiver);
+
+        if (visible && y > 0.65 && Math.abs(b.z - rz) > rw * 1.75 && !nearNev && b.x < getCoastX(b.z) - 2.5) {
+          const grow = clamp((urbanNorm - b.threshold * 0.8) * 3.5, 0.35, 1.0);
+          dummy.position.set(b.x, y - 0.05, b.z);
+          dummy.rotation.set(0, b.rot, 0);
+          dummy.scale.set(b.w, b.h * grow, b.d);
+        } else {
+          dummy.position.set(0, -100, 0);
+          dummy.scale.setScalar(0.001);
+        }
+        dummy.updateMatrix();
+        bldgMesh.setMatrixAt(i, dummy.matrix);
+        bi++;
+      }
+      bldgMesh.instanceMatrix.needsUpdate = true;
+    }
+
+    // =========================================================================
+    // 8. DYNAMIC WATER CYCLE: CLOUDS, EVAPORATION, RAIN, SNOW & INFILTRATION
+    // =========================================================================
+
+    // Soft radial sprite texture for clouds & mist
+    function makeSoftCircleTexture(innerAlpha = 0.9, tint = '255,255,255') {
+      const c = document.createElement('canvas');
+      c.width = 64; c.height = 64;
+      const ctx = c.getContext('2d');
+      const g = ctx.createRadialGradient(32, 32, 2, 32, 32, 30);
+      g.addColorStop(0, `rgba(${tint},${innerAlpha})`);
+      g.addColorStop(0.55, `rgba(${tint},${innerAlpha * 0.42})`);
+      g.addColorStop(1, `rgba(${tint},0)`);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 64, 64);
+      const tex = new THREE.CanvasTexture(c);
+      return tex;
+    }
+    const mistTex = makeSoftCircleTexture(0.85, '220,245,255');
+    const snowTex = makeSoftCircleTexture(0.95, '255,255,255');
+
+    // Crisp upward arrow-chevron sprite for visible rising evaporation streams
+    function makeUpArrowTexture() {
+      const c = document.createElement('canvas');
+      c.width = 64; c.height = 64;
+      const ctx = c.getContext('2d');
+      ctx.strokeStyle = 'rgba(186, 238, 255, 0.95)';
+      ctx.lineWidth = 6;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(16, 34); ctx.lineTo(32, 14); ctx.lineTo(48, 34);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(125, 211, 252, 0.65)';
+      ctx.lineWidth = 4.5;
+      ctx.beginPath();
+      ctx.moveTo(22, 48); ctx.lineTo(32, 34); ctx.lineTo(42, 48);
+      ctx.stroke();
+      return new THREE.CanvasTexture(c);
+    }
+    const evapArrowTex = makeUpArrowTexture();
+
+    // Realistic 3D Cloud Clusters drifting inland from Sea (+X) -> Mountains (-X)
+    const cloudGroup = new THREE.Group();
+    scene.add(cloudGroup);
+    const cloudClusters = [];
+    const puffGeo = new THREE.IcosahedronGeometry(1, 2);
+
+    for (let i = 0; i < 11; i++) {
+      const cluster = new THREE.Group();
+      const cloudMat = new THREE.MeshStandardMaterial({
+        color: 0xf4f8fc,
+        roughness: 0.95,
+        metalness: 0.0,
+        transparent: true,
+        opacity: 0.86
+      });
+      const puffCount = 5 + (i % 4);
+      for (let p = 0; p < puffCount; p++) {
+        const m = new THREE.Mesh(puffGeo, cloudMat);
+        const angle = (p / puffCount) * Math.PI * 2;
+        const rad = p === 0 ? 0 : 1.6 + hash2(i, p) * 2.2;
+        m.position.set(Math.cos(angle) * rad * 1.4, (hash2(p, i) - 0.35) * 1.2, Math.sin(angle) * rad);
+        const sx = 2.4 + hash2(i + 5, p) * 2.4;
+        const sy = 1.15 + hash2(p + 3, i) * 0.9;
+        const sz = 2.0 + hash2(i, p + 9) * 1.8;
+        m.scale.set(sx, sy, sz);
+        cluster.add(m);
+      }
+      const startX = lerp(-46, 50, i / 11);
+      const startZ = (hash2(i * 3.1, 8.8) - 0.5) * 52;
+      cluster.position.set(startX, 24.5 + hash2(i, 2.2) * 4.5, startZ);
+      cloudGroup.add(cluster);
+      cloudClusters.push({
+        group: cluster,
+        mat: cloudMat,
+        speed: 1.5 + hash2(i, 6.4) * 1.3,
+        baseY: 23.5 + hash2(i, 2.2) * 4.0
+      });
+    }
+
+    // Bright Rising Evaporation Plumes (sea, delta & river)
+    const EVAP_COUNT = 240;
+    const evapPositions = new Float32Array(EVAP_COUNT * 3);
+    const evapSpeeds = new Float32Array(EVAP_COUNT);
+    for (let i = 0; i < EVAP_COUNT; i++) {
+      const overSea = i < 165;
+      evapPositions[i * 3 + 0] = overSea ? lerp(35, 54, Math.random()) : lerp(-10, 35, Math.random());
+      evapPositions[i * 3 + 1] = 0.7 + Math.random() * 22;
+      evapPositions[i * 3 + 2] = overSea
+        ? (Math.random() - 0.5) * 58
+        : getRiverCenterZ(evapPositions[i * 3 + 0], 0.5) + (Math.random() - 0.5) * 14;
+      evapSpeeds[i] = 2.0 + Math.random() * 1.8;
+    }
+    const evapGeo = new THREE.BufferGeometry();
+    evapGeo.setAttribute('position', new THREE.BufferAttribute(evapPositions, 3));
+    const evapMat = new THREE.PointsMaterial({
+      map: mistTex,
+      size: 2.9,
+      transparent: true,
+      opacity: 0.65,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+    const evapPoints = new THREE.Points(evapGeo, evapMat);
+    scene.add(evapPoints);
+
+    // Rising Evaporation Arrow Chevrons (clearly visible rising streams from sea & river)
+    const EVAP_ARROW_COUNT = 54;
+    const evapArrowPos = new Float32Array(EVAP_ARROW_COUNT * 3);
+    const evapArrowSpeed = new Float32Array(EVAP_ARROW_COUNT);
+    for (let i = 0; i < EVAP_ARROW_COUNT; i++) {
+      const overSea = i < 38;
+      evapArrowPos[i * 3 + 0] = overSea ? lerp(38, 53, Math.random()) : lerp(-6, 36, Math.random());
+      evapArrowPos[i * 3 + 1] = 1.2 + Math.random() * 21;
+      evapArrowPos[i * 3 + 2] = overSea
+        ? (Math.random() - 0.5) * 48
+        : getRiverCenterZ(evapArrowPos[i * 3 + 0], 0.5) + (Math.random() - 0.5) * 10;
+      evapArrowSpeed[i] = 2.6 + Math.random() * 1.5;
+    }
+    const evapArrowGeo = new THREE.BufferGeometry();
+    evapArrowGeo.setAttribute('position', new THREE.BufferAttribute(evapArrowPos, 3));
+    const evapArrowMat = new THREE.PointsMaterial({
+      map: evapArrowTex,
+      size: 2.2,
+      transparent: true,
+      opacity: 0.82,
+      depthWrite: false
+    });
+    const evapArrowPoints = new THREE.Points(evapArrowGeo, evapArrowMat);
+    scene.add(evapArrowPoints);
+
+    // 3D Water-Cycle Arc Arrows (Kringloop-pijlen — toggleable in top bar)
+    const cycleArrowsGroup = new THREE.Group();
+    scene.add(cycleArrowsGroup);
+
+    const cyclePathDefs = [
+      {
+        name: 'Verdamping',
+        color: 0x7dd3fc,
+        count: 4,
+        speed: 0.24,
+        pts: [
+          new THREE.Vector3(47, 1.4, 8),
+          new THREE.Vector3(47.5, 9.5, 5),
+          new THREE.Vector3(45, 18.5, 1),
+          new THREE.Vector3(39, 25.0, -3)
+        ]
+      },
+      {
+        name: 'Transport & Stuwingsneerslag',
+        color: 0xe0f2fe,
+        count: 5,
+        speed: 0.20,
+        pts: [
+          new THREE.Vector3(38, 25.4, -3),
+          new THREE.Vector3(14, 27.6, -6),
+          new THREE.Vector3(-12, 29.2, -5),
+          new THREE.Vector3(-34, 29.0, -3),
+          new THREE.Vector3(-39, 17.5, -2)
+        ]
+      },
+      {
+        name: 'Oppervlakkige afvoer',
+        color: 0x38bdf8,
+        count: 5,
+        speed: 0.23,
+        pts: [
+          new THREE.Vector3(-36, 13.0, -1),
+          new THREE.Vector3(-16, 7.6, 2),
+          new THREE.Vector3(4, 5.2, -2),
+          new THREE.Vector3(24, 3.8, 1),
+          new THREE.Vector3(42, 2.2, 1)
+        ]
+      },
+      {
+        name: 'Infiltratie & Grondwater',
+        color: 0x22d3ee,
+        count: 4,
+        speed: 0.16,
+        pts: [
+          new THREE.Vector3(-10, 4.8, WORLD_D * 0.5 + 0.65),
+          new THREE.Vector3(-6, -4.5, WORLD_D * 0.5 + 0.65),
+          new THREE.Vector3(14, -5.2, WORLD_D * 0.5 + 0.65),
+          new THREE.Vector3(39, -3.2, WORLD_D * 0.5 + 0.65)
+        ]
+      }
+    ];
+
+    const arrowConeGeo = new THREE.ConeGeometry(0.75, 2.1, 10);
+    arrowConeGeo.rotateX(Math.PI / 2); // Point cone along +Z so lookAt() aligns tip forward
+
+    const cycleAnimators = [];
+    for (const def of cyclePathDefs) {
+      const curve = new THREE.CatmullRomCurve3(def.pts);
+      const tubeGeo = new THREE.TubeGeometry(curve, 44, 0.14, 6, false);
+      const tubeMat = new THREE.MeshBasicMaterial({
+        color: def.color,
+        transparent: true,
+        opacity: 0.42
+      });
+      cycleArrowsGroup.add(new THREE.Mesh(tubeGeo, tubeMat));
+
+      const arrowMat = new THREE.MeshBasicMaterial({
+        color: def.color,
+        transparent: true,
+        opacity: 0.94
+      });
+      const arrows = [];
+      for (let k = 0; k < def.count; k++) {
+        const cone = new THREE.Mesh(arrowConeGeo, arrowMat);
+        cycleArrowsGroup.add(cone);
+        arrows.push({ mesh: cone, phase: k / def.count });
+      }
+      cycleAnimators.push({ curve, speed: def.speed, arrows });
+    }
+    const _arcPos = new THREE.Vector3();
+    const _arcLook = new THREE.Vector3();
+
+    // Rain Streaks (LineSegments for crisp realistic rainfall)
+    const RAIN_COUNT = 520;
+    const rainPos = new Float32Array(RAIN_COUNT * 2 * 3);
+    const rainVel = new Float32Array(RAIN_COUNT);
+    for (let i = 0; i < RAIN_COUNT; i++) {
+      const rx = lerp(-32, 38, Math.random());
+      const ry = 2 + Math.random() * 24;
+      const rz = (Math.random() - 0.5) * 62;
+      rainPos[i * 6 + 0] = rx; rainPos[i * 6 + 1] = ry; rainPos[i * 6 + 2] = rz;
+      rainPos[i * 6 + 3] = rx - 0.25; rainPos[i * 6 + 4] = ry - 1.15; rainPos[i * 6 + 5] = rz;
+      rainVel[i] = 18 + Math.random() * 10;
+    }
+    const rainGeo = new THREE.BufferGeometry();
+    rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
+    const rainMat = new THREE.LineBasicMaterial({
+      color: 0xcbe8ff,
+      transparent: true,
+      opacity: 0.45
+    });
+    const rainLines = new THREE.LineSegments(rainGeo, rainMat);
+    scene.add(rainLines);
+
+    // Snowflakes (High mountain zone, turns to rain if very warm)
+    const SNOW_COUNT = 260;
+    const snowPos = new Float32Array(SNOW_COUNT * 3);
+    const snowSpeeds = new Float32Array(SNOW_COUNT);
+    for (let i = 0; i < SNOW_COUNT; i++) {
+      snowPos[i * 3 + 0] = lerp(-54, -20, Math.random());
+      snowPos[i * 3 + 1] = 12 + Math.random() * 16;
+      snowPos[i * 3 + 2] = (Math.random() - 0.5) * 58;
+      snowSpeeds[i] = 2.4 + Math.random() * 2.2;
+    }
+    const snowGeo = new THREE.BufferGeometry();
+    snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3));
+    const snowMat = new THREE.PointsMaterial({
+      map: snowTex,
+      size: 0.72,
+      transparent: true,
+      opacity: 0.82,
+      depthWrite: false
+    });
+    const snowPoints = new THREE.Points(snowGeo, snowMat);
+    scene.add(snowPoints);
+
+    // Subsurface Infiltration Droplets along Front Cross-Section
+    const INFIL_COUNT = 75;
+    const infilPos = new Float32Array(INFIL_COUNT * 3);
+    const infilSpeed = new Float32Array(INFIL_COUNT);
+    for (let i = 0; i < INFIL_COUNT; i++) {
+      const ix = lerp(-34, 34, Math.random());
+      const topY = getTerrainHeight(ix, WORLD_D * 0.5, 0.5, 0.5);
+      infilPos[i * 3 + 0] = ix;
+      infilPos[i * 3 + 1] = topY - Math.random() * 5;
+      infilPos[i * 3 + 2] = WORLD_D * 0.5 + 0.16;
+      infilSpeed[i] = 1.4 + Math.random() * 1.4;
+    }
+    const infilGeo = new THREE.BufferGeometry();
+    infilGeo.setAttribute('position', new THREE.BufferAttribute(infilPos, 3));
+    const infilMat = new THREE.PointsMaterial({
+      map: mistTex,
+      color: 0x67d3ff,
+      size: 0.95,
+      transparent: true,
+      opacity: 0.85,
+      depthWrite: false
+    });
+    const infilPoints = new THREE.Points(infilGeo, infilMat);
+    scene.add(infilPoints);
+
+    // =========================================================================
+    // 9. 3D INTERACTIVE LABELS
+    // =========================================================================
+    const labelDefs = [
+      { id: 'lbl-upper',  text: 'Bovenloop & Gletsjer',     color: '#e2f1fc', pos: new THREE.Vector3(-40, 21.5, -3) },
+      { id: 'lbl-mid',    text: 'Middenloop (Meanders)',    color: '#6ee7b7', pos: new THREE.Vector3(-4,  6.0,  2) },
+      { id: 'lbl-lower',  text: 'Benedenloop & Delta',      color: '#38bdf8', pos: new THREE.Vector3(31,  3.2, -2) },
+      { id: 'lbl-evap',   text: 'Verdamping',               color: '#bae6fd', pos: new THREE.Vector3(46,  9.5,  8) },
+      { id: 'lbl-cond',   text: 'Condensatie & Neerslag',   color: '#f8fafc', pos: new THREE.Vector3(-22, 26.8, -10) },
+      { id: 'lbl-runoff', text: 'Rivier',                   color: '#60a5fa', pos: new THREE.Vector3(14,  3.6,  6) },
+      { id: 'lbl-gw',     text: 'Grondwater',               color: '#22d3ee', pos: new THREE.Vector3(4,  -4.8, WORLD_D * 0.5 + 0.3) }
+    ];
+
+    const labelsLayer = document.getElementById('labels-layer');
+    const labelEls = labelDefs.map(def => {
+      const el = document.createElement('div');
+      el.className = 'label-3d';
+      el.innerHTML = `
+        <div class="label-pill"><span class="label-dot" style="background:${def.color}"></span>${def.text}</div>
+        <div class="label-stem"></div>
+        <div class="label-anchor"></div>
+      `;
+      labelsLayer.appendChild(el);
+      return { def, el };
+    });
+
+    const projVec = new THREE.Vector3();
+    function update3DLabels() {
+      if (!state.showLabels) return;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      for (const item of labelEls) {
+        projVec.copy(item.def.pos);
+        // Keep groundwater label synced to actual water table depth
+        if (item.def.id === 'lbl-gw') {
+          projVec.y = getGroundwaterYAtFront(4) - 1.2;
+        }
+        projVec.project(camera);
+        if (projVec.z > 1) {
+          item.el.style.opacity = '0';
+          continue;
+        }
+        const sx = (projVec.x * 0.5 + 0.5) * w;
+        const sy = (-projVec.y * 0.5 + 0.5) * h;
+        item.el.style.opacity = '1';
+        item.el.style.transform = `translate(${sx.toFixed(1)}px, ${sy.toFixed(1)}px) translate(-50%, -100%)`;
+      }
+    }
+
+    // =========================================================================
+    // 10. HYDROLOGICAL & FREE TIME-EVOLUTION MODEL (NO YEAR BIAS)
+    // =========================================================================
+    let terrainDirty = true;
+    let vegDebounceTimer = null;
+
+    function scheduleVegetationUpdate(immediate = false) {
+      if (vegDebounceTimer) {
+        clearTimeout(vegDebounceTimer);
+        vegDebounceTimer = null;
+      }
+      if (immediate) {
+        updateVegetationAndBuildings();
+      } else {
+        vegDebounceTimer = setTimeout(() => {
+          vegDebounceTimer = null;
+          updateVegetationAndBuildings();
+        }, 120);
+      }
+    }
+
+    function recomputeHydrology(vegMode = 'none', markTerrainDirty = false) {
+      const tNorm = state.timeNorm; // 0.0 (Beginsituatie) .. 1.0 (Na verloop van tijd)
+      const pNorm = state.precip / 100;
+      const uNorm = state.urban / 100;
+
+      // Linear, threshold-free coupling to Urbanization & Time
+      state.canalization = uNorm;
+      state.meanderNaturalness = 1.0 - uNorm;
+      // Under low urbanization, meanders progressively erode, widen & migrate as time advances
+      state.meanderPhase = tNorm * 2.4 * state.meanderNaturalness;
+      // Delta sediment fan visibly progrades into the sea as time advances
+      state.deltaGrowth = tNorm;
+      // Ruimte voor de Rivier nevengeul controlled explicitly by toggle
+      state.roomForRiver = state.roomForRiverEnabled ? 1.0 : 0.0;
+
+      // Glacier coverage responds to Temperature * Time (warmer -> shrinks over time; cold -> holds/grows)
+      const meltRate = clamp((state.tempOffset + 0.4) / 3.8, -0.15, 1.15);
+      state.glacierFactor = clamp(0.88 - tNorm * meltRate * 0.84 - Math.max(0, state.tempOffset - 1.5) * 0.06, 0.04, 1.0);
+
+      // Sea level responds purely to Temperature * Time & Estuary marine influence
+      const seaCm = Math.round(
+        Math.max(0, state.tempOffset + 0.5) * tNorm * 16 + state.mouthFactor * 22
+      );
+      state.seaLevelOffset = (seaCm / 100) * 1.15;
+
+      // River type transition based on glacier coverage
+      if (state.glacierFactor > 0.42) state.riverType = 'Gemengde rivier';
+      else if (state.glacierFactor > 0.20) state.riverType = 'Overgangstype';
+      else state.riverType = 'Regenrivier';
+
+      // Groundwater level (rises with rain, drops with urban paving & heat)
+      const infiltrationRate = pNorm * (1 - uNorm * 0.78);
+      state.groundwaterNorm = clamp(0.32 + infiltrationRate * 0.72 - Math.max(0, state.tempOffset) * 0.045, 0.12, 0.95);
+
+      // Discharge (Debiet in m³/s)
+      const meltBoost = state.glacierFactor * clamp((state.tempOffset + 2.0) / 5.0, 0.1, 1.0) * 1200;
+      const rainRunoff = pNorm * (2500 + uNorm * 2900);
+      const rfrDamping = 1 - state.roomForRiver * 0.10;
+      state.discharge = Math.round((620 + meltBoost + rainRunoff) * rfrDamping);
+
+      // Natural overbank flooding (Ruimte voor de Rivier nevengeul adds +1150 m³/s safe capacity)
+      const baseBankfull = 3250;
+      const safeCapacity = baseBankfull + state.roomForRiver * 1150;
+      if (state.discharge > safeCapacity) {
+        state.floodDepth = clamp((state.discharge - safeCapacity) / 1350, 0.18, 1.38);
+        state.floodBuffered = false;
+      } else if (state.discharge > baseBankfull && state.roomForRiver > 0.25) {
+        state.floodDepth = 0.0;
+        state.floodBuffered = true;
+      } else {
+        state.floodDepth = 0.0;
+        state.floodBuffered = false;
+      }
+
+      // Update Water Shader speed & sky overcast
+      waterUniforms.uFlowSpeed.value = clamp(state.discharge / 2200, 0.45, 2.6);
+      skyUniforms.overcast.value = clamp(pNorm * 0.85, 0.05, 0.88);
+      sunLight.intensity = lerp(2.35, 1.45, pNorm * 0.75);
+
+      if (markTerrainDirty) {
+        terrainDirty = true;
+      }
+
+      if (vegMode === 'immediate') {
+        scheduleVegetationUpdate(true);
+      } else if (vegMode === 'debounced') {
+        scheduleVegetationUpdate(false);
+      }
+
+      updateGlacierMesh();
+      updateWaterMeshes();
+      updateGroundwaterCrossSection();
+      updateHUD(seaCm);
+    }
+
+    function updateHUD(seaCm) {
+      const pct = Math.round(state.timeNorm * 100);
+      document.getElementById('hud-time').textContent = `Tijd: ${pct}%`;
+      document.getElementById('time-pct-readout').textContent = `${pct}%`;
+      document.getElementById('slider-time').value = (state.timeNorm * 100).toFixed(1);
+
+      const rtEl = document.getElementById('hud-rivertype');
+      rtEl.textContent = state.riverType;
+      rtEl.classList.toggle('rain', state.riverType === 'Regenrivier');
+
+      document.getElementById('hud-discharge').textContent = state.discharge.toLocaleString('nl-NL');
+      const disPct = clamp((state.discharge / 6200) * 100, 8, 100);
+      const barDis = document.getElementById('bar-discharge');
+      barDis.style.width = `${disPct}%`;
+      barDis.style.background = state.floodDepth > 0.02 ? '#fb7185' : state.discharge > 3000 ? '#fbbf24' : '#38bdf8';
+
+      // Hoogwater / Overstroming alert indicator
+      const floodAlertEl = document.getElementById('hud-flood-alert');
+      const floodTextEl = document.getElementById('hud-flood-text');
+      if (state.floodDepth > 0.02) {
+        floodAlertEl.classList.add('visible');
+        floodAlertEl.classList.remove('buffered');
+        floodTextEl.textContent = '⚠ Hoogwater / Overstroming! Rivier treedt buiten oevers.';
+      } else if (state.floodBuffered) {
+        floodAlertEl.classList.add('visible', 'buffered');
+        floodTextEl.textContent = '✓ Nevengeul vangt piekwater op — stad blijft droog.';
+      } else {
+        floodAlertEl.classList.remove('visible', 'buffered');
+      }
+
+      const gwDepthM = lerp(-3.4, -0.35, state.groundwaterNorm);
+      document.getElementById('hud-gw').textContent = gwDepthM.toFixed(1).replace('.', ',');
+      const barGw = document.getElementById('bar-gw');
+      barGw.style.width = `${Math.round(state.groundwaterNorm * 100)}%`;
+      barGw.style.background = state.groundwaterNorm < 0.35 ? '#fbbf24' : '#34d399';
+
+      document.getElementById('hud-glacier').textContent = Math.round(state.glacierFactor * 100);
+      document.getElementById('hud-sealevel').textContent = `+${seaCm}`;
+
+      // Mouth toggle UI state & 3D label sync
+      const isEstuaryTarget = state.mouthTarget >= 0.5;
+      document.getElementById('btn-mouth-delta').classList.toggle('active', !isEstuaryTarget);
+      document.getElementById('btn-mouth-estuary').classList.toggle('active', isEstuaryTarget);
+
+      const isEstuaryVisual = state.mouthFactor >= 0.5;
+      const lowerLbl = labelEls.find(l => l.def.id === 'lbl-lower');
+      if (lowerLbl) {
+        const pill = lowerLbl.el.querySelector('.label-pill');
+        pill.innerHTML = `<span class="label-dot" style="background:#38bdf8"></span>${isEstuaryVisual ? 'Benedenloop & Estuarium' : 'Benedenloop & Delta'}`;
+      }
+
+      // Slider readouts
+      const pLabel = state.precip < 20 ? 'Droog' : state.precip < 45 ? 'Licht' : state.precip < 75 ? 'Matig' : 'Stortbui';
+      document.getElementById('val-precip').textContent = `${state.precip}% · ${pLabel}`;
+      document.getElementById('val-urban').textContent = `${state.urban}%`;
+      const sign = state.tempOffset >= 0 ? '+' : '';
+      document.getElementById('val-temp').textContent = `${sign}${state.tempOffset.toFixed(1)} °C`;
+
+      // Neutral live physical summary
+      const noteEl = document.getElementById('hud-phase-note');
+      if (state.meanderNaturalness > 0.6) {
+        noteEl.innerHTML = '<strong>Natuurlijke rivierloop</strong> — Brede meanders slijten uit en verplaatsen door de tijd, met hoefijzermeren langs de middenloop.';
+      } else if (state.urban >= 65) {
+        noteEl.innerHTML = '<strong>Sterk verhard &amp; gekanaliseerd</strong> — De rivier is vastgelegd, regenwater infiltreert minder en piekafvoeren stijgen snel.';
+      } else {
+        noteEl.innerHTML = isEstuaryVisual
+          ? '<strong>Estuarium-monding</strong> — Een brede, trechtervormige zeearm snijdt diep het laagland in waar zoet en zout water mengen.'
+          : '<strong>Aangroeiende rivierdelta</strong> — Sediment vormt nieuwe delta-eilanden (schorren) tussen drie vertakkende rivierarmen.';
+      }
+    }
+
+    // =========================================================================
+    // 11. CAMERA PRESETS & SMOOTH TRANSITIONS
+    // =========================================================================
+    const cameraPresets = {
+      overview:    { pos: new THREE.Vector3(14, 48, 86),   target: new THREE.Vector3(0, 3.5, 0) },
+      upper:       { pos: new THREE.Vector3(-24, 34, 34),  target: new THREE.Vector3(-40, 14, -2) },
+      lower:       { pos: new THREE.Vector3(56, 23, 36),   target: new THREE.Vector3(28, 1.5, 1) },
+      groundwater: { pos: new THREE.Vector3(6, 7.5, 62),   target: new THREE.Vector3(4, -2.5, 34) }
+    };
+
+    let camAnim = null;
+    function flyToCamera(key) {
+      const p = cameraPresets[key];
+      if (!p) return;
+      camAnim = {
+        startPos: camera.position.clone(),
+        endPos: p.pos.clone(),
+        startTarget: controls.target.clone(),
+        endTarget: p.target.clone(),
+        t: 0
+      };
+      document.querySelectorAll('.cam-btn').forEach(b => b.classList.toggle('active', b.dataset.cam === key));
+    }
+
+    controls.addEventListener('start', () => { camAnim = null; });
+
+    // =========================================================================
+    // 12. UI EVENT LISTENERS
+    // =========================================================================
+    document.getElementById('slider-precip').addEventListener('input', e => {
+      state.precip = Number(e.target.value);
+      recomputeHydrology('none', false);
+    });
+
+    document.getElementById('slider-urban').addEventListener('input', e => {
+      state.urban = Number(e.target.value);
+      // Smooth continuous meander & terrain update every frame, debounced building instancing
+      recomputeHydrology('debounced', true);
+    });
+
+    document.getElementById('slider-temp').addEventListener('input', e => {
+      state.tempOffset = Number(e.target.value) / 10;
+      recomputeHydrology('none', false);
+    });
+
+    document.getElementById('slider-time').addEventListener('input', e => {
+      state.timeNorm = clamp(Number(e.target.value) / 100, 0, 1);
+      recomputeHydrology('debounced', true);
+    });
+
+    // Rewind / Forward Timeline Playback
+    const btnPlay = document.getElementById('btn-play');
+    const playIcon = document.getElementById('play-icon');
+    const playLabel = document.getElementById('play-label');
+    const btnRewind = document.getElementById('btn-rewind');
+    const rewindIcon = document.getElementById('rewind-icon');
+    const rewindLabel = document.getElementById('rewind-label');
+
+    function setPlayDirection(dir) {
+      state.playDir = dir;
+      playIcon.textContent = dir === 1 ? '❚❚' : '▶';
+      playLabel.textContent = dir === 1 ? 'Pauzeren' : 'Vooruitspoelen';
+      btnPlay.classList.toggle('active', dir === 1);
+
+      rewindIcon.textContent = dir === -1 ? '❚❚' : '◀◀';
+      rewindLabel.textContent = dir === -1 ? 'Pauzeren' : 'Terugspoelen';
+      btnRewind.classList.toggle('active', dir === -1);
+
+      if (dir === 1 && state.timeNorm >= 0.999) {
+        state.timeNorm = 0.0;
+        recomputeHydrology('debounced', true);
+      } else if (dir === -1 && state.timeNorm <= 0.001) {
+        state.timeNorm = 1.0;
+        recomputeHydrology('debounced', true);
+      }
+    }
+
+    btnPlay.addEventListener('click', () => setPlayDirection(state.playDir === 1 ? 0 : 1));
+    btnRewind.addEventListener('click', () => setPlayDirection(state.playDir === -1 ? 0 : -1));
+
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.speed = Number(btn.dataset.speed);
+        document.querySelectorAll('.speed-btn').forEach(b => b.classList.toggle('active', b === btn));
+      });
+    });
+
+    // Smooth ~1.5s animated Delta <-> Estuarium transition
+    document.getElementById('btn-mouth-delta').addEventListener('click', () => {
+      state.mouthTarget = 0.0;
+      updateHUD(Math.round(Math.max(0, state.tempOffset + 0.5) * state.timeNorm * 16 + state.mouthFactor * 22));
+    });
+    document.getElementById('btn-mouth-estuary').addEventListener('click', () => {
+      state.mouthTarget = 1.0;
+      updateHUD(Math.round(Math.max(0, state.tempOffset + 0.5) * state.timeNorm * 16 + state.mouthFactor * 22));
+    });
+
+    // Ruimte voor de Rivier (nevengeul) toggle
+    const btnRfr = document.getElementById('btn-rfr');
+    const rfrStateEl = document.getElementById('rfr-state');
+    btnRfr.addEventListener('click', () => {
+      state.roomForRiverEnabled = !state.roomForRiverEnabled;
+      btnRfr.classList.toggle('active', state.roomForRiverEnabled);
+      rfrStateEl.textContent = state.roomForRiverEnabled ? 'Aan' : 'Uit';
+      rfrStateEl.style.color = state.roomForRiverEnabled ? '#34d399' : '#9fb3c8';
+      recomputeHydrology('immediate', true);
+    });
+
+    document.querySelectorAll('.cam-btn').forEach(btn => {
+      btn.addEventListener('click', () => flyToCamera(btn.dataset.cam));
+    });
+
+    // 3D Labels Toggle
+    const btnLabels = document.getElementById('btn-labels');
+    btnLabels.addEventListener('click', () => {
+      state.showLabels = !state.showLabels;
+      btnLabels.classList.toggle('active', state.showLabels);
+      labelsLayer.classList.toggle('hidden', !state.showLabels);
+    });
+
+    // Wolken 3-state Toggle (Aan -> Transparant 30% -> Uit)
+    const btnClouds = document.getElementById('btn-clouds');
+    const cloudsLabel = document.getElementById('clouds-label');
+    btnClouds.addEventListener('click', () => {
+      if (state.cloudMode === 'on') {
+        state.cloudMode = 'transparent';
+        cloudsLabel.textContent = 'Wolken: 30%';
+        btnClouds.classList.add('active');
+      } else if (state.cloudMode === 'transparent') {
+        state.cloudMode = 'off';
+        cloudsLabel.textContent = 'Wolken: Uit';
+        btnClouds.classList.remove('active');
+      } else {
+        state.cloudMode = 'on';
+        cloudsLabel.textContent = 'Wolken: Aan';
+        btnClouds.classList.add('active');
+      }
+      cloudGroup.visible = state.cloudMode !== 'off';
+    });
+
+    // Kringloop-pijlen Toggle
+    const btnCycleArrows = document.getElementById('btn-cycle-arrows');
+    btnCycleArrows.addEventListener('click', () => {
+      state.showCycleArrows = !state.showCycleArrows;
+      btnCycleArrows.classList.toggle('active', state.showCycleArrows);
+      cycleArrowsGroup.visible = state.showCycleArrows;
+    });
+
+    // RTI Drawer Toggle
+    const rtiDrawer = document.getElementById('rti-drawer');
+    const btnRti = document.getElementById('btn-rti');
+    function toggleRti(force) {
+      const open = force !== undefined ? force : rtiDrawer.classList.contains('collapsed');
+      rtiDrawer.classList.toggle('collapsed', !open);
+      btnRti.classList.toggle('active', open);
+    }
+    btnRti.addEventListener('click', () => toggleRti());
+    document.getElementById('btn-rti-close').addEventListener('click', () => toggleRti(false));
+
+    document.querySelectorAll('.rti-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const ans = document.getElementById(btn.dataset.ans);
+        const isOpen = ans.classList.toggle('open');
+        btn.textContent = isOpen ? '▾ Verberg antwoordmodel' : '▸ Toon antwoordmodel';
+      });
+    });
+
+    // Digibord-modus
+    document.getElementById('btn-digibord').addEventListener('click', () => {
+      document.body.classList.add('digibord');
+    });
+    document.getElementById('digibord-restore').addEventListener('click', () => {
+      document.body.classList.remove('digibord');
+    });
+
+    // Colofon Modal
+    const colofonModal = document.getElementById('colofon-modal');
+    const openColofon = () => colofonModal.classList.add('open');
+    const closeColofon = () => colofonModal.classList.remove('open');
+    document.getElementById('btn-colofon-top').addEventListener('click', openColofon);
+    document.getElementById('btn-colofon-footer').addEventListener('click', openColofon);
+    document.getElementById('btn-colofon-close').addEventListener('click', closeColofon);
+    colofonModal.addEventListener('click', e => { if (e.target === colofonModal) closeColofon(); });
+
+    // =========================================================================
+    // 13. MAIN ANIMATION LOOP
+    // =========================================================================
+    // Sync initial slider values & paint satellite texture once at startup
+    document.getElementById('slider-urban').value = state.urban;
+    document.getElementById('slider-temp').value = Math.round(state.tempOffset * 10);
+    document.getElementById('slider-time').value = Math.round(state.timeNorm * 100);
+    paintSatelliteTexture();
+    recomputeHydrology('immediate', true);
+    updateTerrainGeometry();
+    updateSkirtWalls();
+    terrainDirty = false;
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.05);
+      const elapsed = clock.elapsedTime;
+
+      waterUniforms.uTime.value = elapsed;
+
+      // Free timeline playback (forward or rewind)
+      if (state.playDir !== 0) {
+        state.timeNorm = clamp(state.timeNorm + state.playDir * dt * 0.045 * state.speed, 0, 1);
+        if ((state.playDir === 1 && state.timeNorm >= 1) || (state.playDir === -1 && state.timeNorm <= 0)) {
+          setPlayDirection(0);
+        }
+        recomputeHydrology('debounced', true);
+      }
+
+      // Smooth ~1.5s animated transition between Delta (0) and Estuarium (1)
+      if (Math.abs(state.mouthFactor - state.mouthTarget) > 0.001) {
+        const step = dt / 1.5; // ~1.5 seconds full transition
+        if (state.mouthFactor < state.mouthTarget) {
+          state.mouthFactor = Math.min(state.mouthTarget, state.mouthFactor + step);
+        } else {
+          state.mouthFactor = Math.max(state.mouthTarget, state.mouthFactor - step);
+        }
+        recomputeHydrology('debounced', true);
+      }
+
+      // Coalesced <0.6ms terrain & skirt update once per frame when dirty
+      if (terrainDirty) {
+        updateTerrainGeometry();
+        updateSkirtWalls();
+        updateWaterMeshes();
+        terrainDirty = false;
+      }
+
+      // Smooth camera transition
+      if (camAnim) {
+        camAnim.t = Math.min(1, camAnim.t + dt * 1.45);
+        const ease = 1 - Math.pow(1 - camAnim.t, 3);
+        camera.position.lerpVectors(camAnim.startPos, camAnim.endPos, ease);
+        controls.target.lerpVectors(camAnim.startTarget, camAnim.endTarget, ease);
+        if (camAnim.t >= 1) camAnim = null;
+      }
+
+      // Animate clouds moving from Sea (+X) toward Mountains (-X)
+      const pNorm = state.precip / 100;
+      const cloudOpacityMul = state.cloudMode === 'transparent' ? 0.30 : state.cloudMode === 'off' ? 0.0 : 1.0;
+      if (cloudGroup.visible) {
+        for (const c of cloudClusters) {
+          c.group.position.x -= dt * c.speed * (0.7 + pNorm * 0.9);
+          if (c.group.position.x < -58) {
+            c.group.position.x = 58;
+            c.group.position.z = (Math.random() - 0.5) * 52;
+          }
+          // Orographic lift as clouds reach mountains
+          const lift = smoothstep(-5, -45, c.group.position.x) * 4.5;
+          c.group.position.y = c.baseY + lift;
+          // Darken clouds when heavy precipitation or banking against mountains
+          const storminess = clamp(pNorm * 0.65 + smoothstep(0, -35, c.group.position.x) * 0.25 * pNorm, 0, 0.85);
+          const shade = lerp(0.96, 0.52, storminess);
+          c.mat.color.setRGB(shade, shade + 0.02, shade + 0.05);
+          c.mat.opacity = lerp(0.35, 0.92, clamp(pNorm * 0.85 + 0.2, 0, 1)) * cloudOpacityMul;
+        }
+      }
+
+      // Animate Bright Rising Evaporation Plumes & Arrow Chevrons
+      const evapBoost = clamp(0.75 + (state.tempOffset + 2) * 0.16, 0.45, 1.65);
+      evapMat.opacity = clamp(0.42 + evapBoost * 0.22, 0.36, 0.78);
+      const ePos = evapGeo.attributes.position;
+      for (let i = 0; i < EVAP_COUNT; i++) {
+        let y = ePos.getY(i) + dt * evapSpeeds[i] * evapBoost;
+        let x = ePos.getX(i) - dt * 0.95 + Math.sin(elapsed * 1.4 + i) * dt * 0.45;
+        if (y > 24.0) {
+          y = 0.7;
+          const overSea = i < 165;
+          x = overSea ? lerp(35, 54, Math.random()) : lerp(-10, 35, Math.random());
+          const z = overSea
+            ? (Math.random() - 0.5) * 58
+            : getRiverCenterZ(x, state.canalization, state.meanderNaturalness, state.meanderPhase) + (Math.random() - 0.5) * 14;
+          ePos.setZ(i, z);
+        }
+        ePos.setX(i, x);
+        ePos.setY(i, y);
+      }
+      ePos.needsUpdate = true;
+
+      evapArrowMat.opacity = clamp(0.55 + evapBoost * 0.25, 0.5, 0.92);
+      const eaPos = evapArrowGeo.attributes.position;
+      for (let i = 0; i < EVAP_ARROW_COUNT; i++) {
+        let y = eaPos.getY(i) + dt * evapArrowSpeed[i] * evapBoost;
+        let x = eaPos.getX(i) - dt * 0.75;
+        if (y > 23.5) {
+          y = 1.1;
+          const overSea = i < 38;
+          x = overSea ? lerp(38, 53, Math.random()) : lerp(-6, 36, Math.random());
+          const z = overSea
+            ? (Math.random() - 0.5) * 48
+            : getRiverCenterZ(x, state.canalization, state.meanderNaturalness, state.meanderPhase) + (Math.random() - 0.5) * 10;
+          eaPos.setZ(i, z);
+        }
+        eaPos.setX(i, x);
+        eaPos.setY(i, y);
+      }
+      eaPos.needsUpdate = true;
+
+      // Animate 3D Water-Cycle Arc Arrows (Kringloop-pijlen)
+      if (state.showCycleArrows) {
+        for (const anim of cycleAnimators) {
+          for (const a of anim.arrows) {
+            const t = (elapsed * anim.speed + a.phase) % 1.0;
+            const tNext = Math.min(0.999, t + 0.015);
+            anim.curve.getPointAt(t, _arcPos);
+            anim.curve.getPointAt(tNext, _arcLook);
+            a.mesh.position.copy(_arcPos);
+            a.mesh.lookAt(_arcLook);
+          }
+        }
+      }
+
+      // Animate Rain
+      rainLines.visible = pNorm > 0.06;
+      if (rainLines.visible) {
+        rainMat.opacity = clamp(pNorm * 0.58, 0.06, 0.58);
+        const activeRain = Math.floor(RAIN_COUNT * clamp(pNorm * 1.05, 0.08, 1));
+        rainGeo.setDrawRange(0, activeRain * 2);
+        const rPos = rainGeo.attributes.position;
+        for (let i = 0; i < activeRain; i++) {
+          let x = rPos.getX(i * 2) - dt * 2.2;
+          let y = rPos.getY(i * 2) - dt * rainVel[i];
+          const z = rPos.getZ(i * 2);
+          if (y < 0.2) {
+            x = lerp(-36, 36, Math.random());
+            y = 22 + Math.random() * 6;
+          }
+          rPos.setXYZ(i * 2, x, y, z);
+          rPos.setXYZ(i * 2 + 1, x - 0.25, y - 1.25, z);
+        }
+        rPos.needsUpdate = true;
+      }
+
+      // Animate Snow in High Mountains (reduces at high temperature)
+      const snowChance = clamp(1 - (state.tempOffset - 1.5) * 0.28, 0.12, 1.0);
+      snowPoints.visible = pNorm > 0.08 && snowChance > 0.15;
+      if (snowPoints.visible) {
+        const activeSnow = Math.floor(SNOW_COUNT * pNorm * snowChance);
+        snowGeo.setDrawRange(0, activeSnow);
+        const sPos = snowGeo.attributes.position;
+        for (let i = 0; i < activeSnow; i++) {
+          let x = sPos.getX(i) + Math.sin(elapsed * 1.3 + i) * dt * 0.6;
+          let y = sPos.getY(i) - dt * snowSpeeds[i];
+          if (y < 11.5) {
+            x = lerp(-54, -22, Math.random());
+            y = 26 + Math.random() * 5;
+          }
+          sPos.setX(i, x);
+          sPos.setY(i, y);
+        }
+        sPos.needsUpdate = true;
+      }
+
+      // Animate Subsurface Infiltration Droplets on Front Cross-Section
+      const infilFactor = pNorm * (1 - (state.urban / 100) * 0.78);
+      infilPoints.visible = infilFactor > 0.05;
+      if (infilPoints.visible) {
+        const activeInfil = Math.floor(INFIL_COUNT * clamp(infilFactor * 1.25, 0.1, 1));
+        infilGeo.setDrawRange(0, activeInfil);
+        const iPos = infilGeo.attributes.position;
+        for (let i = 0; i < activeInfil; i++) {
+          const ix = iPos.getX(i);
+          let iy = iPos.getY(i) - dt * infilSpeed[i];
+          const gwY = getGroundwaterYAtFront(ix);
+          if (iy < gwY) {
+            const nx = lerp(-34, 34, Math.random());
+            iPos.setX(i, nx);
+            iy = getTerrainHeight(nx, WORLD_D * 0.5, state.canalization, state.roomForRiver) - 0.15;
+          }
+          iPos.setY(i, iy);
+        }
+        infilPos && (iPos.needsUpdate = true);
+      }
+
+      controls.update();
+      update3DLabels();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // Resize handler
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // GeoStudio snapshot helper
+    function sendGeoStudioThumbnail() {
+      try {
+        if (!renderer || !renderer.domElement || !scene || !camera) return;
+        renderer.render(scene, camera);
+        const gl = renderer.domElement;
+        if (!gl.width || !gl.height) return;
+        const tw = 640;
+        const th = 360;
+        const off = document.createElement('canvas');
+        off.width = tw;
+        off.height = th;
+        const ctx = off.getContext('2d');
+        if (!ctx) return;
+        ctx.fillStyle = '#0d1722';
+        ctx.fillRect(0, 0, tw, th);
+        ctx.drawImage(gl, 0, 0, tw, th);
+        const dataUrl = off.toDataURL('image/jpeg', 0.86);
+        if (dataUrl && dataUrl.length > 1000) {
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'GEOSTUDIO_THUMBNAIL', module: 'waterkringloop', dataUrl: dataUrl }, '*');
+          }
+        }
+      } catch(e) {}
+    }
+    setTimeout(sendGeoStudioThumbnail, 700);
+    setTimeout(sendGeoStudioThumbnail, 1600);
+    window.addEventListener('message', function(ev) {
+      if (ev.data && ev.data.type === 'REQUEST_GEOSTUDIO_THUMBNAIL') {
+        setTimeout(sendGeoStudioThumbnail, 100);
+      }
+    });
+  </script>
+</body>
+</html>

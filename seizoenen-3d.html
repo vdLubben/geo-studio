@@ -1,0 +1,2328 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aarde &amp; Zon — 3D Seizoenen, Aardas &amp; Invalshoek</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231D4E89'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23FFFFFF' stroke-width='4'/%3E%3Cpolygon points='32,20 39,32 32,44 25,32' fill='%23FFFFFF' transform='rotate(25 32 32)'/%3E%3C/svg%3E" />
+  <style>
+    :root {
+      --bg-panel: rgba(10, 16, 30, 0.78);
+      --bg-panel-hover: rgba(20, 32, 56, 0.88);
+      --border-panel: rgba(148, 189, 255, 0.22);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent-blue: #38bdf8;
+      --accent-gold: #fbbf24;
+      --accent-orange: #fb7185;
+      --accent-beam-a: #fde047;
+      --accent-beam-b: #ff5a26;
+      --radius: 14px;
+      --shadow: 0 12px 36px rgba(0, 0, 0, 0.48);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #02040a;
+      color: var(--text-main);
+      font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      user-select: none;
+    }
+
+    #canvas-container {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Overlay voor 3D-geprojecteerde labels */
+    #labels-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 5;
+    }
+
+    .scene-label {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(6, 12, 24, 0.72);
+      border: 1px solid rgba(148, 189, 255, 0.28);
+      color: #e2e8f0;
+      white-space: nowrap;
+      backdrop-filter: blur(6px);
+      transition: opacity 0.2s ease;
+    }
+
+    .scene-label.pole {
+      font-size: 12px;
+      font-weight: 700;
+      color: #7dd3fc;
+      border-color: rgba(125, 211, 252, 0.45);
+      padding: 2px 8px;
+    }
+
+    .scene-label.nl-label {
+      color: #ffedd5;
+      border-color: rgba(251, 146, 60, 0.7);
+      background: rgba(124, 45, 18, 0.78);
+    }
+
+    /* Bundel-labels (Invalshoek & Atmosfeer) */
+    .beam-card {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      min-width: 210px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(8, 14, 28, 0.88);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .beam-card.beam-a {
+      border-color: rgba(253, 224, 71, 0.85);
+      box-shadow: 0 0 22px rgba(253, 224, 71, 0.2), 0 10px 28px rgba(0, 0, 0, 0.55);
+    }
+
+    .beam-card.beam-b {
+      border-color: rgba(255, 90, 38, 0.88);
+      box-shadow: 0 0 22px rgba(255, 90, 38, 0.24), 0 10px 28px rgba(0, 0, 0, 0.55);
+    }
+
+    .beam-card-title {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12.5px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .beam-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .beam-a .beam-dot {
+      background: var(--accent-beam-a);
+      box-shadow: 0 0 8px var(--accent-beam-a);
+    }
+
+    .beam-b .beam-dot {
+      background: var(--accent-beam-b);
+      box-shadow: 0 0 8px var(--accent-beam-b);
+    }
+
+    .beam-metrics {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 3px 10px;
+      font-size: 11.5px;
+      line-height: 1.35;
+    }
+
+    .beam-metrics .k {
+      color: var(--text-muted);
+    }
+
+    .beam-metrics .v {
+      text-align: right;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    .beam-a .v.highlight { color: #fef08a; }
+    .beam-b .v.highlight { color: #fdba74; }
+
+    /* Didactisch Infopaneel linksboven */
+    #info-panel {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      width: 300px;
+      padding: 14px 16px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-panel);
+      border-radius: var(--radius);
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+      z-index: 20;
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(148, 189, 255, 0.14);
+    }
+
+    .app-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: #f8fafc;
+    }
+
+    .app-subtitle {
+      font-size: 10.5px;
+      color: var(--accent-blue);
+      font-weight: 600;
+      margin-top: 1px;
+    }
+
+    .date-badge {
+      text-align: right;
+    }
+
+    .date-main {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--accent-gold);
+    }
+
+    .date-utc {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .info-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .info-label {
+      color: var(--text-muted);
+    }
+
+    .info-val {
+      font-weight: 700;
+      text-align: right;
+      color: #f8fafc;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .info-box {
+      background: rgba(30, 41, 59, 0.45);
+      border: 1px solid rgba(148, 189, 255, 0.14);
+      border-radius: 10px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .info-box-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #bae6fd;
+    }
+
+    .season-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.18);
+      color: #7dd3fc;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+
+    /* Bedieningspaneel rechts */
+    #control-panel {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      width: 332px;
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      padding: 15px 16px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-panel);
+      border-radius: var(--radius);
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+    }
+
+    #control-panel::-webkit-scrollbar {
+      width: 6px;
+    }
+    #control-panel::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 999px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .section-title span.val-inline {
+      color: var(--accent-gold);
+      font-variant-numeric: tabular-nums;
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 12px;
+    }
+
+    .control-group {
+      padding-bottom: 11px;
+      border-bottom: 1px solid rgba(148, 189, 255, 0.12);
+    }
+
+    .control-group:last-child {
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    /* Sliders */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.25);
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #f8fafc;
+      border: 2.5px solid var(--accent-blue);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+      cursor: pointer;
+      transition: transform 0.12s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    /* Knoppengrids */
+    .btn-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .btn-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: 1px solid rgba(148, 189, 255, 0.2);
+      background: rgba(30, 41, 59, 0.58);
+      color: var(--text-main);
+      border-radius: 9px;
+      padding: 7px 8px;
+      font-size: 11.5px;
+      font-weight: 600;
+      transition: all 0.16s ease;
+      line-height: 1.25;
+    }
+
+    button:hover {
+      background: rgba(51, 65, 85, 0.85);
+      border-color: rgba(125, 211, 252, 0.45);
+    }
+
+    button.active {
+      background: rgba(14, 165, 233, 0.28);
+      border-color: var(--accent-blue);
+      color: #e0f2fe;
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.22);
+    }
+
+    button.season-btn {
+      text-align: left;
+      padding: 6px 8px;
+    }
+
+    button.season-btn small {
+      display: block;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    button.season-btn.active small {
+      color: #bae6fd;
+    }
+
+    /* Play / Snelheid rij */
+    .play-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    #btn-play {
+      flex: 1.05;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 8px 8px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    #btn-play.playing {
+      background: rgba(251, 191, 36, 0.22);
+      border-color: var(--accent-gold);
+      color: #fef08a;
+    }
+
+    .speed-group {
+      display: flex;
+      gap: 4px;
+      flex: 1.25;
+    }
+
+    .speed-group button {
+      flex: 1;
+      padding: 8px 3px;
+      font-size: 11px;
+    }
+
+    /* Prominente Invalshoek Toggle */
+    .feature-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 11px;
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.14), rgba(255, 90, 38, 0.14));
+      border: 1.5px solid rgba(251, 191, 36, 0.45);
+      color: #fef3c7;
+      font-size: 12.5px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .feature-toggle:hover {
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.24), rgba(255, 90, 38, 0.24));
+      border-color: rgba(253, 224, 71, 0.85);
+    }
+
+    .feature-toggle.active {
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.34), rgba(255, 90, 38, 0.32));
+      border-color: #fde047;
+      box-shadow: 0 0 20px rgba(251, 191, 36, 0.28);
+      color: #ffffff;
+    }
+
+    /* Toggle-rijen */
+    .toggle-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .toggle-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #e2e8f0;
+      cursor: pointer;
+      padding: 3px 2px;
+    }
+
+    .switch {
+      position: relative;
+      width: 38px;
+      height: 20px;
+      background: rgba(148, 163, 184, 0.28);
+      border-radius: 999px;
+      transition: background 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform 0.2s ease;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    }
+
+    .toggle-item input {
+      display: none;
+    }
+
+    .toggle-item input:checked + .switch {
+      background: var(--accent-blue);
+    }
+
+    .toggle-item input:checked + .switch::after {
+      transform: translateX(18px);
+    }
+
+    /* Digibord-modus */
+    body.digibord-mode #control-panel {
+      transform: translateX(380px);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #digibord-restore-btn {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 30;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: rgba(10, 16, 30, 0.84);
+      border: 1px solid rgba(125, 211, 252, 0.45);
+      color: #e0f2fe;
+      font-size: 12px;
+      font-weight: 700;
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      display: none;
+      align-items: center;
+      gap: 7px;
+    }
+
+    body.digibord-mode #digibord-restore-btn {
+      display: flex;
+    }
+
+    /* Legenda onderaan wanneer invalshoek aan staat */
+    #beam-legend {
+      position: fixed;
+      bottom: 52px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 9px 16px;
+      border-radius: 999px;
+      background: rgba(8, 14, 28, 0.85);
+      border: 1px solid rgba(251, 191, 36, 0.35);
+      backdrop-filter: blur(12px);
+      display: none;
+      align-items: center;
+      gap: 16px;
+      font-size: 12px;
+      z-index: 15;
+      box-shadow: var(--shadow);
+      white-space: nowrap;
+    }
+
+    #beam-legend.visible {
+      display: flex;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: #e2e8f0;
+    }
+
+    .legend-swatch {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+
+    /* Zonrichting indicator linksonder */
+    #sun-hint {
+      position: fixed;
+      bottom: 14px;
+      left: 16px;
+      font-size: 11px;
+      color: rgba(226, 232, 240, 0.65);
+      background: rgba(8, 14, 28, 0.6);
+      border: 1px solid rgba(148, 189, 255, 0.14);
+      padding: 5px 10px;
+      border-radius: 999px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    /* Licentie & Credits in infopaneel */
+    .info-credits {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(148, 189, 255, 0.14);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 10px;
+      line-height: 1.35;
+      color: rgba(148, 163, 184, 0.9);
+    }
+
+    .about-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 600;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(125, 211, 252, 0.32);
+      color: #bae6fd;
+      flex-shrink: 0;
+    }
+
+    .about-trigger:hover {
+      background: rgba(56, 189, 248, 0.25);
+      border-color: rgba(125, 211, 252, 0.65);
+      color: #ffffff;
+    }
+
+    /* Footer rechtsonder */
+    #app-footer {
+      position: fixed;
+      bottom: 14px;
+      right: 16px;
+      z-index: 18;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 11px;
+      border-radius: 999px;
+      background: rgba(8, 14, 28, 0.72);
+      border: 1px solid rgba(148, 189, 255, 0.18);
+      backdrop-filter: blur(10px);
+      font-size: 11px;
+      color: rgba(203, 213, 225, 0.85);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    /* Inklapbaar Colofon / Over deze module venster */
+    #colofon-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 16, 0.52);
+      backdrop-filter: blur(4px);
+      z-index: 40;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    #colofon-backdrop.open {
+      display: flex;
+    }
+
+    #colofon-modal {
+      width: 100%;
+      max-width: 440px;
+      background: rgba(10, 17, 32, 0.94);
+      border: 1px solid rgba(125, 211, 252, 0.32);
+      border-radius: 16px;
+      padding: 18px 20px;
+      box-shadow: 0 20px 54px rgba(0, 0, 0, 0.65);
+      color: var(--text-main);
+    }
+
+    .colofon-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(148, 189, 255, 0.16);
+    }
+
+    .colofon-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .colofon-close {
+      padding: 3px 9px;
+      border-radius: 8px;
+      font-size: 12px;
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(148, 189, 255, 0.22);
+      color: #cbd5e1;
+    }
+
+    .colofon-body {
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .colofon-credit-bar {
+      margin-top: 4px;
+      padding: 9px 11px;
+      border-radius: 10px;
+      background: rgba(30, 41, 59, 0.55);
+      border: 1px solid rgba(148, 189, 255, 0.18);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #e2e8f0;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      #info-panel { width: 250px; padding: 11px 12px; }
+      #control-panel { width: 280px; }
+      #beam-legend { font-size: 10.5px; gap: 10px; padding: 7px 12px; bottom: 56px; }
+      #sun-hint { display: none; }
+      #app-footer { font-size: 10px; right: 10px; left: 10px; justify-content: space-between; }
+    }
+  </style>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <!-- 3D-geprojecteerde labels -->
+  <div id="labels-layer">
+    <div id="lbl-north" class="scene-label pole">Noordpool (90° NB)</div>
+    <div id="lbl-south" class="scene-label pole">Zuidpool (90° ZB)</div>
+    <div id="lbl-eq" class="scene-label">Evenaar (0°)</div>
+    <div id="lbl-tropic-n" class="scene-label">Kreeftskeerkring (23,5° NB)</div>
+    <div id="lbl-tropic-s" class="scene-label">Steenbokskeerkring (23,5° ZB)</div>
+    <div id="lbl-arctic" class="scene-label">Noordpoolcirkel (66,5° NB)</div>
+    <div id="lbl-nl" class="scene-label nl-label">Nederland (52° NB)</div>
+
+    <!-- Invalshoek bundelkaarten -->
+    <div id="card-beam-a" class="beam-card beam-a" style="display:none;">
+      <div class="beam-card-title">
+        <span class="beam-dot"></span>
+        <span>Bundel A — Lage breedte</span>
+      </div>
+      <div class="beam-metrics">
+        <span class="k">Breedteligging:</span><span class="v" id="ba-lat">0,0°</span>
+        <span class="k">Invalshoek:</span><span class="v highlight" id="ba-angle">90° (loodrecht)</span>
+        <span class="k">Weg door dampkring:</span><span class="v highlight" id="ba-atm">1,0× atmosfeerdikte</span>
+        <span class="k">Verlicht oppervlak:</span><span class="v" id="ba-area">1,0× (hoge energie/m²)</span>
+      </div>
+    </div>
+
+    <div id="card-beam-b" class="beam-card beam-b" style="display:none;">
+      <div class="beam-card-title">
+        <span class="beam-dot"></span>
+        <span>Bundel B — Hoge breedte (60° NB)</span>
+      </div>
+      <div class="beam-metrics">
+        <span class="k">Invalshoek:</span><span class="v highlight" id="bb-angle">28° (schuin)</span>
+        <span class="k">Weg door dampkring:</span><span class="v highlight" id="bb-atm">2,0× atmosfeerdikte</span>
+        <span class="k">Verlicht oppervlak:</span><span class="v" id="bb-area">2,1× groter (lagere energie/m²)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Didactisch Infopaneel linksboven -->
+  <aside id="info-panel">
+    <div class="app-header">
+      <div>
+        <div class="app-title">Zon, Aarde &amp; Seizoenen</div>
+        <div class="app-subtitle">Basisboek § 2.2 &amp; § 2.3 — 3D Simulatie</div>
+      </div>
+      <div class="date-badge">
+        <div class="date-main" id="info-date">21 juni</div>
+        <div class="date-utc" id="info-utc">12:00 UTC</div>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-row">
+        <span class="info-label">Loodrechte zonnestand:</span>
+        <span class="info-val" id="info-subsolar">23,5° NB</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Aardas-helling:</span>
+        <span class="info-val">23,5°</span>
+      </div>
+
+      <div class="info-box">
+        <div class="info-box-head">
+          <span>Nederland (52° NB)</span>
+          <span class="season-pill" id="info-nl-season">Zomer</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Daglengte:</span>
+          <span class="info-val" id="info-nl-daylen">16u 30m</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Max. zonshoogte (middag):</span>
+          <span class="info-val" id="info-nl-alt">61,5°</span>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-box-head">
+          <span>Noordpool (90° NB)</span>
+          <span class="season-pill" id="info-np-state">Middernachtzon</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Daglengte:</span>
+          <span class="info-val" id="info-np-daylen">24u 00m</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-credits">
+      <span>Gemaakt door Rens van der Lubben • Code: MIT-licentie • Lesmateriaal: CC BY-SA 4.0</span>
+      <button class="about-trigger" data-open-colofon type="button" title="Over deze module & licentie" aria-label="Over deze module">ⓘ</button>
+    </div>
+  </aside>
+
+  <!-- Zwevend Bedieningspaneel rechts -->
+  <aside id="control-panel">
+    <!-- Module 2: Invalshoek & Atmosfeer -->
+    <div class="control-group">
+      <div class="section-title">Temperatuurfactor breedteligging</div>
+      <button id="btn-beams" class="feature-toggle" type="button">
+        <span>☀️ Invalshoek &amp; Atmosfeer vergelijken</span>
+        <span id="beams-status-badge" style="font-size:11px; opacity:0.85;">UIT</span>
+      </button>
+    </div>
+
+    <!-- Seizoenen-slider -->
+    <div class="control-group">
+      <div class="section-title">
+        <span>Seizoenen (baan om de zon)</span>
+        <span class="val-inline" id="slider-date-label">21 juni</span>
+      </div>
+      <input id="season-slider" type="range" min="1" max="365" step="0.25" value="172" />
+      <div class="btn-grid-2">
+        <button class="season-btn" data-day="80" type="button">21 maart<small>Lente-equinox</small></button>
+        <button class="season-btn active" data-day="172" type="button">21 juni<small>Zomerzonnewende</small></button>
+        <button class="season-btn" data-day="266" type="button">23 september<small>Herfst-equinox</small></button>
+        <button class="season-btn" data-day="355" type="button">21 december<small>Winterzonnewende</small></button>
+      </div>
+    </div>
+
+    <!-- Dag- en nacht-slider -->
+    <div class="control-group">
+      <div class="section-title">
+        <span>Dag &amp; nacht (aardrotatie)</span>
+        <span class="val-inline" id="slider-utc-label">12:00 UTC</span>
+      </div>
+      <input id="time-slider" type="range" min="0" max="24" step="0.05" value="12" />
+    </div>
+
+    <!-- Auto-afspelen -->
+    <div class="control-group">
+      <div class="section-title">Automatisch afspelen</div>
+      <div class="play-row">
+        <button id="btn-play" type="button">▶ Auto-afspelen</button>
+        <div class="speed-group">
+          <button class="speed-btn" data-speed="0.5" type="button">0,5×</button>
+          <button class="speed-btn active" data-speed="1" type="button">1×</button>
+          <button class="speed-btn" data-speed="5" type="button">5×</button>
+          <button class="speed-btn" data-speed="20" type="button">20×</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Camerastandpunten -->
+    <div class="control-group">
+      <div class="section-title">Camerastandpunt</div>
+      <div class="btn-grid-3">
+        <button id="cam-side" class="active" type="button">Zijaanzicht<br><small style="color:var(--text-muted)">scheve as</small></button>
+        <button id="cam-north" type="button">Noordpool<br><small style="color:var(--text-muted)">poolcirkel</small></button>
+        <button id="cam-nl" type="button">Focus op<br><small style="color:var(--text-muted)">Nederland</small></button>
+      </div>
+    </div>
+
+    <!-- Schakelaars -->
+    <div class="control-group">
+      <div class="section-title">Weergave &amp; hulplijnen</div>
+      <div class="toggle-list">
+        <label class="toggle-item">
+          <span>Breedtecirkels &amp; aardas</span>
+          <input id="toggle-guides" type="checkbox" checked />
+          <span class="switch"></span>
+        </label>
+        <label class="toggle-item">
+          <span>Subsolaire lichtstraal</span>
+          <input id="toggle-subsolar" type="checkbox" checked />
+          <span class="switch"></span>
+        </label>
+        <label class="toggle-item">
+          <span>Atmosfeerlaag (dampkring)</span>
+          <input id="toggle-atmosphere" type="checkbox" checked />
+          <span class="switch"></span>
+        </label>
+        <label class="toggle-item">
+          <span>Digibord-modus (paneel inklappen)</span>
+          <input id="toggle-digibord" type="checkbox" />
+          <span class="switch"></span>
+        </label>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Knop om paneel terug te halen in digibord-modus -->
+  <button id="digibord-restore-btn" type="button">⚙ Bedieningspaneel openen</button>
+
+  <!-- Legenda onderaan bij Invalshoek-module -->
+  <div id="beam-legend">
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:#fde047; box-shadow:0 0 8px #fde047;"></span>
+      <span>Kort pad door dampkring &amp; klein, fel oppervlak (hoge energie/m²)</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:#ff5a26; box-shadow:0 0 8px #ff5a26;"></span>
+      <span>Lang schuin pad door dampkring &amp; groot, uitgesmeerd oppervlak (lagere energie/m²)</span>
+    </div>
+  </div>
+
+  <div id="sun-hint">☀ Zonlicht vanaf rechts • Sleep = draaien • Houd <strong>A</strong> ingedrukt + sleep = verplaatsen • Scroll = zoomen</div>
+
+  <!-- Footer met licentie & credits -->
+  <footer id="app-footer">
+    <span>Gemaakt door Rens van der Lubben • Code: MIT-licentie • Lesmateriaal: CC BY-SA 4.0</span>
+    <button class="about-trigger" data-open-colofon type="button">ⓘ Over deze module</button>
+  </footer>
+
+  <!-- Inklapbaar Colofon / Info-venster -->
+  <div id="colofon-backdrop" role="dialog" aria-modal="true" aria-labelledby="colofon-heading">
+    <div id="colofon-modal">
+      <div class="colofon-header">
+        <div class="colofon-title" id="colofon-heading">ⓘ Over deze module &amp; licentie</div>
+        <button id="colofon-close-btn" class="colofon-close" type="button" aria-label="Sluiten">✕ Sluiten</button>
+      </div>
+      <div class="colofon-body">
+        <p>
+          Deze interactieve 3D-simulatie is ontwikkeld voor het vak aardrijkskunde (onderbouw havo/vwo, passend bij <em>Basisboek § 2.2 Zon en aarde</em> en <em>§ 2.3 Temperatuurfactoren: breedteligging</em>).
+        </p>
+        <p>
+          <strong>Vrij te gebruiken voor collega-docenten:</strong> je mag deze webapplicatie kosteloos gebruiken op het digibord, delen met leerlingen of collega's en naar wens aanpassen, onder vermelding van de maker (<strong>CC BY-SA 4.0</strong> voor het lesmateriaal en <strong>MIT-licentie</strong> voor de broncode).
+        </p>
+        <div class="colofon-credit-bar">
+          Gemaakt door Rens van der Lubben • Code: MIT-licentie • Lesmateriaal: CC BY-SA 4.0
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // =========================================================================
+    // 1. CONSTANTEN & STAAT
+    // =========================================================================
+    const OBLIQUITY_DEG = 23.5;
+    const OBLIQUITY_RAD = THREE.MathUtils.degToRad(OBLIQUITY_DEG);
+    const EARTH_RADIUS = 1.0;
+    const ATMOSPHERE_RADIUS = 1.04; // 1.04x aardstraal voor zichtbare dampkringdikte
+    const BEAM_RADIUS = 0.046;      // Exact gelijke straal voor Bundel A en Bundel B
+    const HIGH_LAT_DEG = 60.0;      // Bundel B op 60° NB (altijd aan de dagzijde, ook 21 dec)
+    const NL_LAT_DEG = 52.1;
+    const NL_LON_DEG = 5.3;
+    const SUN_DIR = new THREE.Vector3(1, 0, 0); // Parallel zonlicht vanaf +X
+
+    const state = {
+      dayOfYear: 172,       // Start op 21 juni (zomerzonnewende)
+      utcHours: 12.0,       // 12:00 UTC (Europa in de zon)
+      isPlaying: false,
+      speed: 1,
+      showGuides: true,
+      showSubsolar: true,
+      showAtmosphere: true,
+      showBeams: false,
+      digibordMode: false,
+    };
+
+    // Camera-animatie doel
+    let camAnim = null;
+
+    // =========================================================================
+    // 2. ASTRONOMISCHE HULPFUNCTIES
+    // =========================================================================
+    const MONTHS_NL = [
+      { name: 'januari', days: 31 },
+      { name: 'februari', days: 28 },
+      { name: 'maart', days: 31 },
+      { name: 'april', days: 30 },
+      { name: 'mei', days: 31 },
+      { name: 'juni', days: 30 },
+      { name: 'juli', days: 31 },
+      { name: 'augustus', days: 31 },
+      { name: 'september', days: 30 },
+      { name: 'oktober', days: 31 },
+      { name: 'november', days: 30 },
+      { name: 'december', days: 31 },
+    ];
+
+    function formatDateNL(dayFloat) {
+      let d = Math.floor(((dayFloat - 1) % 365 + 365) % 365) + 1;
+      for (const m of MONTHS_NL) {
+        if (d <= m.days) return `${d} ${m.name}`;
+        d -= m.days;
+      }
+      return '31 december';
+    }
+
+    function formatUTC(hours) {
+      const hNorm = ((hours % 24) + 24) % 24;
+      const hh = Math.floor(hNorm);
+      const mm = Math.floor((hNorm - hh) * 60);
+      return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')} UTC`;
+    }
+
+    // Stuksgewijze vloeiende eclipticale lengte λ zodat exacte data (80, 172, 266, 355)
+    // exact 0°, 90°, 180°, 270° opleveren.
+    function getEclipticLongitude(day) {
+      const d = ((day - 1) % 365 + 365) % 365 + 1;
+      const anchors = [
+        { d: 80, lam: 0 },
+        { d: 172, lam: Math.PI * 0.5 },
+        { d: 266, lam: Math.PI },
+        { d: 355, lam: Math.PI * 1.5 },
+        { d: 80 + 365, lam: Math.PI * 2 },
+      ];
+      const dd = d < 80 ? d + 365 : d;
+      for (let i = 0; i < anchors.length - 1; i++) {
+        if (dd >= anchors[i].d && dd <= anchors[i + 1].d) {
+          const t = (dd - anchors[i].d) / (anchors[i + 1].d - anchors[i].d);
+          return anchors[i].lam + t * (anchors[i + 1].lam - anchors[i].lam);
+        }
+      }
+      return 0;
+    }
+
+    function getSolarDeclinationRad(day) {
+      const lam = getEclipticLongitude(day);
+      return Math.asin(Math.sin(OBLIQUITY_RAD) * Math.sin(lam));
+    }
+
+    function getDayLengthHours(latDeg, declRad) {
+      if (Math.abs(latDeg) >= 89.9) {
+        const sign = latDeg > 0 ? 1 : -1;
+        if (sign * declRad > 0.002) return 24;
+        if (sign * declRad < -0.002) return 0;
+        return 12;
+      }
+      const latRad = THREE.MathUtils.degToRad(latDeg);
+      const cosH0 = -Math.tan(latRad) * Math.tan(declRad);
+      if (cosH0 <= -1) return 24;
+      if (cosH0 >= 1) return 0;
+      return (24 / Math.PI) * Math.acos(cosH0);
+    }
+
+    function formatDuration(hours) {
+      if (hours >= 23.99) return '24u 00m';
+      if (hours <= 0.01) return '0u 00m';
+      const h = Math.floor(hours);
+      const m = Math.round((hours - h) * 60);
+      if (m === 60) return `${h + 1}u 00m`;
+      return `${h}u ${String(m).padStart(2, '0')}m`;
+    }
+
+    function getSeasonNL(day) {
+      const d = ((day - 1) % 365 + 365) % 365 + 1;
+      if (d >= 80 && d < 172) return 'Lente';
+      if (d >= 172 && d < 266) return 'Zomer';
+      if (d >= 266 && d < 355) return 'Herfst';
+      return 'Winter';
+    }
+
+    function fmtNum(n, dec = 1) {
+      return n.toFixed(dec).replace('.', ',');
+    }
+
+    // Padlengte door de bolvormige dampkringschil (R=1 tot R=ATMOSPHERE_RADIUS)
+    // Gegeven sin(invalshoek) = dot(P0, SUN_DIR)
+    function computeAtmospherePath(sinAlpha) {
+      const h = ATMOSPHERE_RADIUS - EARTH_RADIUS;
+      const s = Math.max(0.001, sinAlpha);
+      const t = Math.sqrt(s * s + 2 * h + h * h) - s;
+      return {
+        length: t,
+        relativeThickness: t / h,
+      };
+    }
+
+    // =========================================================================
+    // 3. PROCEDURELE FALLBACK-TEXTUREN (altijd direct beeld, ook offline)
+    // =========================================================================
+    function createFallbackDayTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createLinearGradient(0, 0, 0, 512);
+      grad.addColorStop(0, '#0a2547');
+      grad.addColorStop(0.5, '#0c3b6e');
+      grad.addColorStop(1, '#0a2547');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1024, 512);
+
+      // Eenvoudige continenten als fallback tijdens het laden
+      const land = (pts, color) => {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        pts.forEach(([lon, lat], i) => {
+          const x = ((lon + 180) / 360) * 1024;
+          const y = ((90 - lat) / 180) * 512;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.closePath();
+        ctx.fill();
+      };
+      // Europa + Azië
+      land([[-10,36],[0,51],[10,55],[30,70],[120,72],[145,50],[120,22],[95,10],[70,22],[40,35],[15,38]], '#3b6e44');
+      // Afrika
+      land([[-17,15],[10,36],[35,31],[50,11],[38,-25],[18,-34],[10,-5],[-5,5]], '#7c7a49');
+      // Noord-Amerika
+      land([[-165,65],[-125,70],[-60,55],[-80,25],[-100,18],[-125,45]], '#42704a');
+      // Zuid-Amerika
+      land([[-80,10],[-35,-6],[-52,-33],[-70,-54],[-80,-5]], '#356b3d');
+      // Australië
+      land([[114,-22],[152,-25],[148,-38],[115,-34]], '#947448');
+      // Antarctica & Groenland
+      land([[-180,-72],[180,-72],[180,-90],[-180,-90]], '#dce7f0');
+      land([[-52,60],[-20,70],[-25,82],[-60,78]], '#dce7f0');
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    function createFallbackNightTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, 1024, 512);
+
+      // Realistische stadslicht-clusters (Europa/NL, VS, Oost-Azië, India, Nijl, Zuid-Amerika)
+      const hubs = [
+        [5, 52, 26, 1.0], [2, 48.8, 20, 0.9], [10, 50, 22, 0.9], [12, 42, 16, 0.8],
+        [-3, 40, 14, 0.7], [37, 55, 16, 0.8], [31, 30, 14, 0.9], // Nijl
+        [-74, 40.7, 28, 1.0], [-87, 41.8, 22, 0.85], [-118, 34, 20, 0.9], [-99, 19.4, 15, 0.8],
+        [-46, -23.5, 16, 0.85], [-58, -34.6, 14, 0.75],
+        [77, 28.6, 26, 0.95], [73, 19, 20, 0.85], [116, 39.9, 28, 1.0],
+        [121, 31.2, 26, 1.0], [114, 22.5, 22, 0.95], [139.7, 35.7, 24, 1.0], [127, 37.5, 16, 0.9],
+        [106, -6, 14, 0.7], [151, -33.8, 12, 0.7]
+      ];
+      hubs.forEach(([lon, lat, r, intensity]) => {
+        const cx = ((lon + 180) / 360) * 1024;
+        const cy = ((90 - lat) / 180) * 512;
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+        g.addColorStop(0, `rgba(255, 215, 130, ${intensity})`);
+        g.addColorStop(0.35, `rgba(255, 165, 60, ${intensity * 0.55})`);
+        g.addColorStop(1, 'rgba(255, 120, 20, 0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fijne lichtpuntjes rondom de stad
+        for (let i = 0; i < 18; i++) {
+          const ang = Math.random() * Math.PI * 2;
+          const dist = Math.random() * r * 0.85;
+          ctx.fillStyle = `rgba(255, 225, 150, ${0.4 + Math.random() * 0.5})`;
+          ctx.fillRect(cx + Math.cos(ang) * dist, cy + Math.sin(ang) * dist, 1.4, 1.4);
+        }
+      });
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    function createFallbackFlatTexture(hex) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 4;
+      canvas.height = 4;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = hex;
+      ctx.fillRect(0, 0, 4, 4);
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    // =========================================================================
+    // 4. THREE.JS SCÈNE, CAMERA & RENDERER
+    // =========================================================================
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(
+      40,
+      window.innerWidth / window.innerHeight,
+      0.05,
+      200
+    );
+    camera.position.set(0.55, 0.55, 3.35);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+    container.appendChild(renderer.domElement);
+
+    // Gebalanceerd warm-wit zonlicht + subtiel omgevingslicht
+    const sunDirectionalLight = new THREE.DirectionalLight(0xfffcf5, 2.1);
+    sunDirectionalLight.position.set(10, 0, 0);
+    scene.add(sunDirectionalLight);
+
+    const ambientFillLight = new THREE.AmbientLight(0x8fa8c8, 0.20);
+    scene.add(ambientFillLight);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.minDistance = 1.25;
+    controls.maxDistance = 8.5;
+    controls.enablePan = true;
+    controls.screenSpacePanning = true;
+    controls.panSpeed = 1.0;
+
+    // Houd toets 'A' ingedrukt om de hele scène/animatie met linkermuisknop te verslepen (pannen)
+    let isPanKeyDown = false;
+    function setPanMode(active) {
+      if (isPanKeyDown === active) return;
+      isPanKeyDown = active;
+      controls.mouseButtons.LEFT = active ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
+      renderer.domElement.style.cursor = active ? 'grab' : '';
+    }
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'a' || e.key === 'A') {
+        setPanMode(true);
+      }
+    });
+    window.addEventListener('keyup', (e) => {
+      if (e.key === 'a' || e.key === 'A') {
+        setPanMode(false);
+      }
+    });
+    window.addEventListener('blur', () => setPanMode(false));
+    renderer.domElement.addEventListener('pointerdown', () => {
+      if (isPanKeyDown) renderer.domElement.style.cursor = 'grabbing';
+    });
+    window.addEventListener('pointerup', () => {
+      renderer.domElement.style.cursor = isPanKeyDown ? 'grab' : '';
+    });
+
+    // Stop camera-animatie zodra gebruiker zelf sleept
+    controls.addEventListener('start', () => {
+      camAnim = null;
+    });
+
+    // =========================================================================
+    // 5. STERRENHEMEL & ZON-GLOED IN DE VERTE
+    // =========================================================================
+    function createStarfield() {
+      const count = 3600;
+      const positions = new Float32Array(count * 3);
+      const colors = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        const r = 35 + Math.random() * 55;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+        positions[i * 3 + 1] = r * Math.cos(phi);
+        positions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+
+        const tint = Math.random();
+        const col = new THREE.Color();
+        if (tint < 0.2) col.setRGB(0.75, 0.86, 1.0);
+        else if (tint < 0.35) col.setRGB(1.0, 0.92, 0.78);
+        else col.setRGB(0.95, 0.97, 1.0);
+        const bright = 0.45 + Math.random() * 0.55;
+        colors[i * 3] = col.r * bright;
+        colors[i * 3 + 1] = col.g * bright;
+        colors[i * 3 + 2] = col.b * bright;
+      }
+      const geom = new THREE.BufferGeometry();
+      geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      const mat = new THREE.PointsMaterial({
+        size: 0.16,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.9,
+        depthWrite: false,
+      });
+      return new THREE.Points(geom, mat);
+    }
+    scene.add(createStarfield());
+
+    // Subtiele zon-gloed ver rechts (+X) zodat leerlingen de zonrichting intuïtief zien
+    function createSunGlow() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      const g = ctx.createRadialGradient(128, 128, 2, 128, 128, 128);
+      g.addColorStop(0, 'rgba(255, 252, 230, 1)');
+      g.addColorStop(0.16, 'rgba(255, 224, 130, 0.9)');
+      g.addColorStop(0.45, 'rgba(255, 170, 60, 0.28)');
+      g.addColorStop(1, 'rgba(255, 140, 20, 0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 256, 256);
+
+      const spriteMat = new THREE.SpriteMaterial({
+        map: new THREE.CanvasTexture(canvas),
+        blending: THREE.AdditiveBlending,
+        transparent: true,
+        depthWrite: false,
+      });
+      const sprite = new THREE.Sprite(spriteMat);
+      sprite.position.set(22, 0, 0);
+      sprite.scale.set(6.5, 6.5, 1);
+      return sprite;
+    }
+    scene.add(createSunGlow());
+
+    // =========================================================================
+    // 6. HIËRARCHIE VAN DE AARDE (Seizoen -> Aardas 23,5° -> Dagrotatie)
+    // =========================================================================
+    const seasonYawGroup = new THREE.Group();
+    scene.add(seasonYawGroup);
+
+    const earthTiltGroup = new THREE.Group();
+    earthTiltGroup.rotation.z = -OBLIQUITY_RAD; // Lokale +Y wijst naar +X (zon) als seasonYaw = 0 (21 juni)
+    seasonYawGroup.add(earthTiltGroup);
+
+    const earthSpinGroup = new THREE.Group();
+    earthTiltGroup.add(earthSpinGroup);
+
+    // =========================================================================
+    // 7. REALISTISCHE AARDE-SHADER (Dag + Nachtlichten + Specular + Reliëf)
+    // =========================================================================
+    const texLoader = new THREE.TextureLoader();
+    texLoader.setCrossOrigin('anonymous');
+
+    const dayTexFallback = createFallbackDayTexture();
+    const nightTexFallback = createFallbackNightTexture();
+    const specTexFallback = createFallbackFlatTexture('#222222');
+    const bumpTexFallback = createFallbackFlatTexture('#808080');
+
+    const earthUniforms = {
+      uDayMap: { value: dayTexFallback },
+      uNightMap: { value: nightTexFallback },
+      uSpecularMap: { value: specTexFallback },
+      uBumpMap: { value: bumpTexFallback },
+      uSunDir: { value: SUN_DIR.clone() },
+      uUseBump: { value: 0.0 },
+    };
+
+    const earthShaderMat = new THREE.ShaderMaterial({
+      uniforms: earthUniforms,
+      vertexShader: /* glsl */ `
+        varying vec2 vUv;
+        varying vec3 vWorldNormal;
+        varying vec3 vWorldPos;
+        void main() {
+          vUv = uv;
+          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+          vWorldPos = worldPosition.xyz;
+          vWorldNormal = normalize(mat3(modelMatrix) * normal);
+          gl_Position = projectionMatrix * viewMatrix * worldPosition;
+        }
+      `,
+      fragmentShader: /* glsl */ `
+        uniform sampler2D uDayMap;
+        uniform sampler2D uNightMap;
+        uniform sampler2D uSpecularMap;
+        uniform sampler2D uBumpMap;
+        uniform vec3 uSunDir;
+        uniform float uUseBump;
+
+        varying vec2 vUv;
+        varying vec3 vWorldNormal;
+        varying vec3 vWorldPos;
+
+        void main() {
+          vec3 N = normalize(vWorldNormal);
+          vec3 L = normalize(uSunDir);
+          vec3 V = normalize(cameraPosition - vWorldPos);
+
+          // Subtiel reliëf (afgeleide van bump/normal map)
+          float bumpBoost = 1.0;
+          if (uUseBump > 0.5) {
+            vec3 nTex = texture2D(uBumpMap, vUv).rgb * 2.0 - 1.0;
+            bumpBoost = clamp(1.0 + nTex.r * 0.28 - nTex.g * 0.12, 0.78, 1.25);
+          }
+
+          float ndotl = dot(N, L);
+
+          // Haarscherpe, realistische dag-nachtgrens (terminator)
+          float dayMask = smoothstep(-0.055, 0.095, ndotl);
+          float diffuse = max(ndotl, 0.0);
+          float litCurve = pow(diffuse, 0.85) * bumpBoost;
+
+          // Originele, onveranderde satellietkleuren (diepblauwe oceanen, woestijnen, bossen)
+          vec3 dayColor = texture2D(uDayMap, vUv).rgb;
+          vec3 nightColor = texture2D(uNightMap, vUv).rgb;
+          float specMask = texture2D(uSpecularMap, vUv).r;
+
+          // Gebalanceerd warm-wit zonlicht (zonder overbelichting van Sahara/Groenland)
+          vec3 sunLightColor = vec3(1.0, 0.985, 0.955);
+          vec3 H = normalize(L + V);
+          float spec = pow(max(dot(N, H), 0.0), 32.0) * specMask * smoothstep(0.0, 0.22, ndotl);
+
+          // Subtiele nachtzijde (ambient ~0.20 equivalent): terminator blijft scherp, contouren net leesbaar
+          vec3 nightBase = dayColor * vec3(0.075, 0.105, 0.155);
+
+          // Gouden stadslichten aan de nachtzijde
+          float nightMask = smoothstep(0.04, -0.14, ndotl);
+          vec3 cityLights = pow(nightColor, vec3(1.1)) * vec3(1.55, 1.20, 0.72) * 1.85;
+
+          // Subtiele warme schemergloed op de terminator
+          float twilight = exp(-pow((ndotl + 0.012) / 0.070, 2.0));
+          vec3 twilightColor = vec3(1.0, 0.40, 0.14) * twilight * 0.14;
+
+          vec3 litDay = dayColor * (0.04 + sunLightColor * (1.02 * litCurve))
+                      + vec3(0.88, 0.93, 1.0) * spec * 0.26;
+          vec3 color = mix(nightBase + cityLights * nightMask, litDay, dayMask) + twilightColor;
+
+          // Subtiele atmosferische randstrooiing op de dagzijde
+          float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.4);
+          color += vec3(0.16, 0.44, 0.90) * fresnel * (0.04 + 0.20 * dayMask);
+
+          gl_FragColor = vec4(color, 1.0);
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+        }
+      `,
+    });
+
+    const earthMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(EARTH_RADIUS, 96, 96),
+      earthShaderMat
+    );
+    earthSpinGroup.add(earthMesh);
+
+    // Laad hoogwaardige echte satelliettexturen van jsDelivr (met automatische fallback)
+    const CDN_PLANETS = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r169/examples/textures/planets/';
+    texLoader.load(CDN_PLANETS + 'earth_atmos_2048.jpg', (tex) => {
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.anisotropy = 8;
+      earthUniforms.uDayMap.value = tex;
+    });
+    texLoader.load(CDN_PLANETS + 'earth_specular_2048.jpg', (tex) => {
+      earthUniforms.uSpecularMap.value = tex;
+    });
+    texLoader.load(CDN_PLANETS + 'earth_normal_2048.jpg', (tex) => {
+      earthUniforms.uBumpMap.value = tex;
+      earthUniforms.uUseBump.value = 1.0;
+    });
+    texLoader.load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-night.jpg', (tex) => {
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.anisotropy = 8;
+      earthUniforms.uNightMap.value = tex;
+    });
+
+    // =========================================================================
+    // 8. ZICHTBARE ATMOSFEERLAAG (DAMPKRING op 1.04x aardstraal)
+    // =========================================================================
+    const atmoUniforms = {
+      uSunDir: { value: SUN_DIR.clone() },
+      uHighlight: { value: 0.0 }, // Extra duidelijk wanneer Invalshoek-module aan staat
+    };
+
+    const atmoMat = new THREE.ShaderMaterial({
+      uniforms: atmoUniforms,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.FrontSide,
+      blending: THREE.NormalBlending,
+      vertexShader: /* glsl */ `
+        varying vec3 vWorldNormal;
+        varying vec3 vWorldPos;
+        void main() {
+          vec4 wp = modelMatrix * vec4(position, 1.0);
+          vWorldPos = wp.xyz;
+          vWorldNormal = normalize(mat3(modelMatrix) * normal);
+          gl_Position = projectionMatrix * viewMatrix * wp;
+        }
+      `,
+      fragmentShader: /* glsl */ `
+        uniform vec3 uSunDir;
+        uniform float uHighlight;
+        varying vec3 vWorldNormal;
+        varying vec3 vWorldPos;
+        void main() {
+          vec3 N = normalize(vWorldNormal);
+          vec3 V = normalize(cameraPosition - vWorldPos);
+          vec3 L = normalize(uSunDir);
+
+          float ndotv = clamp(dot(N, V), 0.0, 1.0);
+          float rim = pow(1.0 - ndotv, 1.85);
+          float sharpEdge = smoothstep(0.0, 0.35, 1.0 - ndotv);
+          float daySide = smoothstep(-0.28, 0.35, dot(N, L));
+
+          // Lichtblauwe dampkring, extra helder langs de rand zodat de schil-dikte goed zichtbaar is
+          vec3 dayCol = vec3(0.45, 0.78, 1.0);
+          vec3 nightCol = vec3(0.14, 0.32, 0.62);
+          vec3 col = mix(nightCol, dayCol, daySide);
+
+          float baseAlpha = (0.07 + rim * 0.44) * (0.35 + 0.65 * daySide);
+          float boostAlpha = (0.13 + sharpEdge * 0.36 + rim * 0.42) * (0.45 + 0.55 * daySide);
+          float alpha = mix(baseAlpha, boostAlpha, uHighlight);
+
+          gl_FragColor = vec4(col, clamp(alpha, 0.0, 0.72));
+        }
+      `,
+    });
+
+    const atmosphereMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(ATMOSPHERE_RADIUS, 96, 96),
+      atmoMat
+    );
+    scene.add(atmosphereMesh);
+
+    // =========================================================================
+    // 10. HULPLIJNEN: AARDAS, BREEDTECIRKELS & NEDERLAND-MARKER
+    // =========================================================================
+    const guidesGroup = new THREE.Group();
+    earthTiltGroup.add(guidesGroup);
+
+    // Aardas (noord- en zuidpoolstok)
+    const axisGeom = new THREE.CylinderGeometry(0.0085, 0.0085, 2.84, 16);
+    const axisMat = new THREE.MeshBasicMaterial({ color: 0xbae6fd });
+    const axisMesh = new THREE.Mesh(axisGeom, axisMat);
+    guidesGroup.add(axisMesh);
+
+    // Poolknopjes
+    const poleCapGeom = new THREE.SphereGeometry(0.022, 16, 16);
+    const northCap = new THREE.Mesh(poleCapGeom, new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+    northCap.position.set(0, 1.42, 0);
+    guidesGroup.add(northCap);
+
+    const southCap = new THREE.Mesh(poleCapGeom, new THREE.MeshBasicMaterial({ color: 0x7dd3fc }));
+    southCap.position.set(0, -1.42, 0);
+    guidesGroup.add(southCap);
+
+    // Functie voor 3D-breedtecirkel op de aardbol
+    function createLatitudeCircle(latDeg, colorHex, dashed = false, opacity = 0.85) {
+      const latRad = THREE.MathUtils.degToRad(latDeg);
+      const r = (EARTH_RADIUS + 0.0035) * Math.cos(latRad);
+      const y = (EARTH_RADIUS + 0.0035) * Math.sin(latRad);
+      const segments = 128;
+      const pts = [];
+      for (let i = 0; i <= segments; i++) {
+        const theta = (i / segments) * Math.PI * 2;
+        pts.push(new THREE.Vector3(r * Math.cos(theta), y, r * Math.sin(theta)));
+      }
+      const geom = new THREE.BufferGeometry().setFromPoints(pts);
+      let line;
+      if (dashed) {
+        const mat = new THREE.LineDashedMaterial({
+          color: colorHex,
+          dashSize: 0.045,
+          gapSize: 0.03,
+          transparent: true,
+          opacity,
+        });
+        line = new THREE.Line(geom, mat);
+        line.computeLineDistances();
+      } else {
+        const mat = new THREE.LineBasicMaterial({
+          color: colorHex,
+          transparent: true,
+          opacity,
+        });
+        line = new THREE.Line(geom, mat);
+      }
+      return line;
+    }
+
+    guidesGroup.add(createLatitudeCircle(0, 0x38bdf8, false, 0.92));      // Evenaar
+    guidesGroup.add(createLatitudeCircle(23.5, 0xfbbf24, true, 0.82));   // Kreeftskeerkring
+    guidesGroup.add(createLatitudeCircle(-23.5, 0xfbbf24, true, 0.82));  // Steenbokskeerkring
+    guidesGroup.add(createLatitudeCircle(66.5, 0x93c5fd, true, 0.82));   // Noordpoolcirkel
+    guidesGroup.add(createLatitudeCircle(-66.5, 0x93c5fd, true, 0.82));  // Zuidpoolcirkel
+
+    // Nederland-marker (52.1° NB, 5.3° OL) op earthSpinGroup zodat hij meedraait!
+    function latLonToLocalVec(latDeg, lonDeg, radius) {
+      const lat = THREE.MathUtils.degToRad(latDeg);
+      const lon = THREE.MathUtils.degToRad(lonDeg);
+      // In Three.js SphereGeometry: lon 0° -> +X, lon +90° (Oost) -> -Z
+      return new THREE.Vector3(
+        radius * Math.cos(lat) * Math.cos(lon),
+        radius * Math.sin(lat),
+        -radius * Math.cos(lat) * Math.sin(lon)
+      );
+    }
+
+    const nlPosLocal = latLonToLocalVec(NL_LAT_DEG, NL_LON_DEG, EARTH_RADIUS + 0.008);
+    const nlMarkerGroup = new THREE.Group();
+    const nlDot = new THREE.Mesh(
+      new THREE.SphereGeometry(0.017, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0xf97316 })
+    );
+    nlDot.position.copy(nlPosLocal);
+    nlMarkerGroup.add(nlDot);
+
+    const nlRing = new THREE.Mesh(
+      new THREE.RingGeometry(0.022, 0.032, 24),
+      new THREE.MeshBasicMaterial({ color: 0xffedd5, side: THREE.DoubleSide })
+    );
+    nlRing.position.copy(nlPosLocal);
+    nlRing.lookAt(nlPosLocal.clone().multiplyScalar(2));
+    nlMarkerGroup.add(nlRing);
+    earthSpinGroup.add(nlMarkerGroup);
+
+    // =========================================================================
+    // 11. SUBSOLAIRE LICHTSTRAAL (optioneel in normale stand)
+    // =========================================================================
+    const subsolarGroup = new THREE.Group();
+    scene.add(subsolarGroup);
+
+    const subsolarRayGeom = new THREE.CylinderGeometry(0.006, 0.006, 2.4, 12);
+    subsolarRayGeom.rotateZ(Math.PI / 2);
+    const subsolarRay = new THREE.Mesh(
+      subsolarRayGeom,
+      new THREE.MeshBasicMaterial({
+        color: 0xfde047,
+        transparent: true,
+        opacity: 0.72,
+      })
+    );
+    subsolarRay.position.set(EARTH_RADIUS + 1.2, 0, 0);
+    subsolarGroup.add(subsolarRay);
+
+    const subsolarSpot = new THREE.Mesh(
+      new THREE.SphereGeometry(0.022, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0xfef08a })
+    );
+    subsolarSpot.position.set(EARTH_RADIUS + 0.004, 0, 0);
+    subsolarGroup.add(subsolarSpot);
+
+    // =========================================================================
+    // 12. MODULE INVALSHOEK & ATMOSFEER (Bundel A + Bundel B + Oppervlaktespreiding)
+    // =========================================================================
+    const beamsGroup = new THREE.Group();
+    beamsGroup.visible = false;
+    scene.add(beamsGroup);
+
+    // Helper om één lichtbundel te bouwen (Ruimte-cilinder + Atmosfeer-cilinder + richtingpijl)
+    function createSunBeam(atmoColorHex, spaceColorHex) {
+      const group = new THREE.Group();
+
+      // 1. Buiten de dampkring (ruimte-traject): halftransparante zonlichtcilinder
+      const spaceGeom = new THREE.CylinderGeometry(BEAM_RADIUS, BEAM_RADIUS, 1.0, 32, 1, true);
+      spaceGeom.rotateZ(Math.PI / 2); // Lengte langs X-as
+      const spaceMat = new THREE.MeshBasicMaterial({
+        color: spaceColorHex,
+        transparent: true,
+        opacity: 0.24,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      });
+      const spaceMesh = new THREE.Mesh(spaceGeom, spaceMat);
+      group.add(spaceMesh);
+
+      // Subtiele hartlijn/randlijnen in de ruimte voor strakke parallelle uitstraling
+      const edgeOffsets = [
+        new THREE.Vector3(0, BEAM_RADIUS, 0),
+        new THREE.Vector3(0, -BEAM_RADIUS, 0),
+      ];
+      const edgeLines = edgeOffsets.map((off) => {
+        const g = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(-0.5, off.y, off.z),
+          new THREE.Vector3(0.5, off.y, off.z),
+        ]);
+        const l = new THREE.Line(
+          g,
+          new THREE.LineBasicMaterial({
+            color: spaceColorHex,
+            transparent: true,
+            opacity: 0.55,
+          })
+        );
+        group.add(l);
+        return l;
+      });
+
+      // Richtingspijl (kegel) midden op het ruimte-segment richting de aarde (-X)
+      const arrowGeom = new THREE.ConeGeometry(BEAM_RADIUS * 0.52, 0.085, 16);
+      arrowGeom.rotateZ(Math.PI / 2); // Punt naar -X (richting de aarde)
+      const arrowMesh = new THREE.Mesh(
+        arrowGeom,
+        new THREE.MeshBasicMaterial({
+          color: atmoColorHex,
+          transparent: true,
+          opacity: 0.9,
+        })
+      );
+      group.add(arrowMesh);
+
+      // 2. Binnen de dampkring (Effect 1 — Weg door de atmosfeer): felgekleurde, opvallende cilinder
+      const atmoGeom = new THREE.CylinderGeometry(BEAM_RADIUS * 1.02, BEAM_RADIUS * 1.02, 1.0, 32, 1, false);
+      atmoGeom.rotateZ(Math.PI / 2);
+      const atmoMat = new THREE.MeshBasicMaterial({
+        color: atmoColorHex,
+        transparent: true,
+        opacity: 0.88,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      });
+      const atmoMesh = new THREE.Mesh(atmoGeom, atmoMat);
+      group.add(atmoMesh);
+
+      // Ring op het punt waar de bundel de dampkring binnendringt
+      const entryRing = new THREE.Mesh(
+        new THREE.RingGeometry(BEAM_RADIUS * 0.92, BEAM_RADIUS * 1.15, 32),
+        new THREE.MeshBasicMaterial({
+          color: 0xffffff,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.85,
+        })
+      );
+      entryRing.rotation.y = Math.PI / 2;
+      group.add(entryRing);
+
+      return { group, spaceMesh, edgeLines, arrowMesh, atmoMesh, entryRing };
+    }
+
+    const beamA = createSunBeam(0xfde047, 0xfef08a); // Felgeel (kort pad)
+    const beamB = createSunBeam(0xff4d1a, 0xfdba74); // Fel oranje-rood (lang pad)
+    beamsGroup.add(beamA.group);
+    beamsGroup.add(beamB.group);
+
+    // Effect 2 — Exacte 3D-oppervlaktespreiding (gloeiende cirkel/ellips op het aardoppervlak)
+    // Door in een shader op een overlay-bol (R = 1.0055) de exacte loodrechte afstand tot de
+    // cilinder-assen te berekenen, vormt zich automatisch een kleine cirkel bij 90° en een
+    // grotere, uitgesmeerde ellips bij schuine invalshoek!
+    const footprintUniforms = {
+      uSunDir: { value: SUN_DIR.clone() },
+      uCenterA: { value: new THREE.Vector3(1, 0, 0) },
+      uCenterB: { value: new THREE.Vector3(0.5, 0.866, 0) },
+      uBeamRadius: { value: BEAM_RADIUS },
+      uSinAlphaA: { value: 1.0 },
+      uSinAlphaB: { value: 0.5 },
+    };
+
+    const footprintMat = new THREE.ShaderMaterial({
+      uniforms: footprintUniforms,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.NormalBlending,
+      vertexShader: /* glsl */ `
+        varying vec3 vWorldPos;
+        varying vec3 vWorldNormal;
+        void main() {
+          vec4 wp = modelMatrix * vec4(position, 1.0);
+          vWorldPos = wp.xyz;
+          vWorldNormal = normalize(mat3(modelMatrix) * normal);
+          gl_Position = projectionMatrix * viewMatrix * wp;
+        }
+      `,
+      fragmentShader: /* glsl */ `
+        uniform vec3 uSunDir;
+        uniform vec3 uCenterA;
+        uniform vec3 uCenterB;
+        uniform float uBeamRadius;
+        uniform float uSinAlphaA;
+        uniform float uSinAlphaB;
+
+        varying vec3 vWorldPos;
+        varying vec3 vWorldNormal;
+
+        void main() {
+          vec3 P = normalize(vWorldPos);
+          vec3 S = normalize(uSunDir);
+          float ndots = dot(P, S);
+          if (ndots <= 0.005) discard;
+
+          // Loodrechte afstand tot hartlijn Bundel A (parallel aan S, door uCenterA)
+          vec3 vA = P - uCenterA;
+          vec3 perpA = vA - dot(vA, S) * S;
+          float dA = length(perpA);
+
+          // Loodrechte afstand tot hartlijn Bundel B (parallel aan S, door uCenterB)
+          vec3 vB = P - uCenterB;
+          vec3 perpB = vB - dot(vB, S) * S;
+          float dB = length(perpB);
+
+          vec3 col = vec3(0.0);
+          float alpha = 0.0;
+
+          // Bundel A: klein, stralend felgeel/wit vlak (hoge energie per m²)
+          if (dA < uBeamRadius * 1.18) {
+            float inside = 1.0 - smoothstep(uBeamRadius * 0.88, uBeamRadius * 1.02, dA);
+            float rim = smoothstep(uBeamRadius * 0.82, uBeamRadius * 0.96, dA) *
+                        (1.0 - smoothstep(uBeamRadius * 0.98, uBeamRadius * 1.14, dA));
+            float core = 1.0 - smoothstep(0.0, uBeamRadius * 0.9, dA);
+            vec3 cA = mix(vec3(1.0, 0.88, 0.15), vec3(1.0, 1.0, 0.82), core * 0.75);
+            col = cA;
+            alpha = max(inside * (0.65 + 0.30 * uSinAlphaA), rim * 0.95);
+          }
+
+          // Bundel B: duidelijk groter, ovaler, lichter gekleurd vlak (lagere energie per m²)
+          if (dB < uBeamRadius * 1.18) {
+            float inside = 1.0 - smoothstep(uBeamRadius * 0.90, uBeamRadius * 1.02, dB);
+            float rim = smoothstep(uBeamRadius * 0.80, uBeamRadius * 0.96, dB) *
+                        (1.0 - smoothstep(uBeamRadius * 0.98, uBeamRadius * 1.14, dB));
+            // Helderheid schaalt omlaag bij kleinere invalshoek (uitgesmeerde energie)
+            float energyScale = clamp(uSinAlphaB, 0.22, 1.0);
+            vec3 cB = mix(vec3(1.0, 0.42, 0.16), vec3(1.0, 0.78, 0.52), 0.45);
+            vec3 rimCol = vec3(1.0, 0.36, 0.12);
+            vec3 finalB = mix(cB, rimCol, rim * 0.85);
+            float aB = max(inside * (0.28 + 0.34 * energyScale), rim * 0.95);
+            if (aB > alpha) {
+              col = finalB;
+              alpha = aB;
+            }
+          }
+
+          if (alpha < 0.01) discard;
+          gl_FragColor = vec4(col, alpha);
+        }
+      `,
+    });
+
+    const footprintMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(EARTH_RADIUS + 0.0055, 96, 96),
+      footprintMat
+    );
+    beamsGroup.add(footprintMesh);
+
+    // Posities voor 2D-labels van Bundel A en Bundel B
+    const beamALabelPos3D = new THREE.Vector3();
+    const beamBLabelPos3D = new THREE.Vector3();
+
+    function positionBeam(beamObj, surfacePoint, pathLen) {
+      const startX = 2.65;
+      const entryPoint = surfacePoint.clone().addScaledVector(SUN_DIR, pathLen);
+      // Laat de cilinder een fractie in de ondoorzichtige aardbol steken zodat
+      // er door de bolkromming geen spleetje ontstaat aan de schuine rand
+      const innerPoint = surfacePoint.clone().addScaledVector(SUN_DIR, -0.028);
+
+      // 1. Atmosfeer-segment (van innerPoint tot entryPoint)
+      const atmoMid = innerPoint.clone().lerp(entryPoint, 0.5);
+      beamObj.atmoMesh.position.copy(atmoMid);
+      beamObj.atmoMesh.scale.set(Math.max(0.01, pathLen + 0.028), 1, 1);
+
+      // Ring op dampkringrand
+      beamObj.entryRing.position.copy(entryPoint);
+
+      // 2. Ruimte-segment (van entryPoint tot x = startX)
+      const spaceLen = Math.max(0.2, startX - entryPoint.x);
+      const spaceMid = new THREE.Vector3(entryPoint.x + spaceLen * 0.5, surfacePoint.y, surfacePoint.z);
+      beamObj.spaceMesh.position.copy(spaceMid);
+      beamObj.spaceMesh.scale.set(spaceLen, 1, 1);
+
+      beamObj.edgeLines.forEach((l) => {
+        l.position.copy(spaceMid);
+        l.scale.set(spaceLen, 1, 1);
+      });
+
+      // Richtingspijl
+      beamObj.arrowMesh.position.set(entryPoint.x + Math.min(0.65, spaceLen * 0.45), surfacePoint.y, surfacePoint.z);
+    }
+
+    // =========================================================================
+    // 13. SIMULATIE-UPDATE (Seizoen, Rotatie, Bundels, Infopaneel)
+    // =========================================================================
+    const ui = {
+      infoDate: document.getElementById('info-date'),
+      infoUtc: document.getElementById('info-utc'),
+      infoSubsolar: document.getElementById('info-subsolar'),
+      infoNlSeason: document.getElementById('info-nl-season'),
+      infoNlDaylen: document.getElementById('info-nl-daylen'),
+      infoNlAlt: document.getElementById('info-nl-alt'),
+      infoNpState: document.getElementById('info-np-state'),
+      infoNpDaylen: document.getElementById('info-np-daylen'),
+      sliderDateLabel: document.getElementById('slider-date-label'),
+      sliderUtcLabel: document.getElementById('slider-utc-label'),
+      seasonSlider: document.getElementById('season-slider'),
+      timeSlider: document.getElementById('time-slider'),
+      baLat: document.getElementById('ba-lat'),
+      baAngle: document.getElementById('ba-angle'),
+      baAtm: document.getElementById('ba-atm'),
+      baArea: document.getElementById('ba-area'),
+      bbAngle: document.getElementById('bb-angle'),
+      bbAtm: document.getElementById('bb-atm'),
+      bbArea: document.getElementById('bb-area'),
+      cardBeamA: document.getElementById('card-beam-a'),
+      cardBeamB: document.getElementById('card-beam-b'),
+    };
+
+    const _axisWorld = new THREE.Vector3();
+    const _eqSunDir = new THREE.Vector3();
+    const _invQuat = new THREE.Quaternion();
+    const _sunLocal = new THREE.Vector3();
+
+    function updateSimulation() {
+      // 1. Seizoensstand (oriëntatie van de 23,5°-as t.o.v. de zon op +X)
+      const lam = getEclipticLongitude(state.dayOfYear);
+      const seasonYaw = lam - Math.PI * 0.5;
+      seasonYawGroup.rotation.y = seasonYaw;
+      seasonYawGroup.updateMatrixWorld(true);
+
+      // 2. Dagrotatie (00:00 - 24:00 UTC), exact gekoppeld aan de nulmeridiaan
+      earthTiltGroup.getWorldQuaternion(_invQuat).invert();
+      _sunLocal.copy(SUN_DIR).applyQuaternion(_invQuat);
+      const sunLocalLon = Math.atan2(-_sunLocal.z, _sunLocal.x);
+      const utcOffsetRad = ((state.utcHours - 12.0) / 24.0) * Math.PI * 2;
+      earthSpinGroup.rotation.y = sunLocalLon + utcOffsetRad;
+
+      // 3. Declinatie & didactische data
+      const declRad = getSolarDeclinationRad(state.dayOfYear);
+      const declDeg = THREE.MathUtils.radToDeg(declRad);
+
+      const dateStr = formatDateNL(state.dayOfYear);
+      const utcStr = formatUTC(state.utcHours);
+      ui.infoDate.textContent = dateStr;
+      ui.infoUtc.textContent = utcStr;
+      ui.sliderDateLabel.textContent = dateStr;
+      ui.sliderUtcLabel.textContent = utcStr;
+
+      let subsolarTxt;
+      if (Math.abs(declDeg) < 0.15) subsolarTxt = '0,0° (Evenaar)';
+      else if (declDeg > 23.35) subsolarTxt = '23,5° NB (Kreeftskeerkring)';
+      else if (declDeg < -23.35) subsolarTxt = '23,5° ZB (Steenbokskeerkring)';
+      else subsolarTxt = `${fmtNum(Math.abs(declDeg), 1)}° ${declDeg > 0 ? 'NB' : 'ZB'}`;
+      ui.infoSubsolar.textContent = subsolarTxt;
+
+      // Nederland (52° NB)
+      const nlDayLen = getDayLengthHours(52, declRad);
+      const nlMaxAlt = 90 - Math.abs(52 - declDeg);
+      ui.infoNlSeason.textContent = getSeasonNL(state.dayOfYear);
+      ui.infoNlDaylen.textContent = formatDuration(nlDayLen);
+      ui.infoNlAlt.textContent = `${fmtNum(nlMaxAlt, 1)}°`;
+
+      // Noordpool (90° NB)
+      const npDayLen = getDayLengthHours(90, declRad);
+      ui.infoNpDaylen.textContent = formatDuration(npDayLen);
+      if (npDayLen >= 23.9) ui.infoNpState.textContent = 'Middernachtzon';
+      else if (npDayLen <= 0.1) ui.infoNpState.textContent = 'Poolnacht';
+      else ui.infoNpState.textContent = 'Dag = Nacht (Equinox)';
+
+      // 4. Module Invalshoek & Atmosfeer — Bundel A (subsolair) & Bundel B (62° NB)
+      // Wereldvector van de aardas (van zuidpool naar noordpool)
+      _axisWorld.set(0, 1, 0).applyQuaternion(earthTiltGroup.getWorldQuaternion(new THREE.Quaternion())).normalize();
+      // Punt op de Evenaar op de zonnemeridiaan
+      _eqSunDir.copy(SUN_DIR).addScaledVector(_axisWorld, -_axisWorld.dot(SUN_DIR)).normalize();
+
+      // Bundel A: subsolaire punt (exact loodrecht, 90°)
+      const pA = SUN_DIR.clone().multiplyScalar(EARTH_RADIUS);
+      const sinAlphaA = 1.0;
+      const pathA = computeAtmospherePath(sinAlphaA);
+
+      // Bundel B: hoge breedte (62° NB) op de zonnemeridiaan
+      const latBRad = THREE.MathUtils.degToRad(HIGH_LAT_DEG);
+      const pB = _eqSunDir.clone().multiplyScalar(Math.cos(latBRad))
+        .addScaledVector(_axisWorld, Math.sin(latBRad))
+        .normalize()
+        .multiplyScalar(EARTH_RADIUS);
+
+      const sinAlphaB = Math.max(0.05, pB.dot(SUN_DIR));
+      const alphaBDeg = THREE.MathUtils.radToDeg(Math.asin(sinAlphaB));
+      const pathB = computeAtmospherePath(sinAlphaB);
+      const areaFactorB = 1.0 / sinAlphaB;
+
+      positionBeam(beamA, pA, pathA.length);
+      positionBeam(beamB, pB, pathB.length);
+
+      footprintUniforms.uCenterA.value.copy(pA).normalize();
+      footprintUniforms.uCenterB.value.copy(pB).normalize();
+      footprintUniforms.uSinAlphaA.value = sinAlphaA;
+      footprintUniforms.uSinAlphaB.value = sinAlphaB;
+
+      // Posities voor zwevende bundelkaarten
+      beamALabelPos3D.set(pA.x + 0.85, pA.y - 0.24, pA.z);
+      beamBLabelPos3D.set(pB.x + 0.85, pB.y + 0.24, pB.z);
+
+      // Tekst op bundelkaarten bijwerken
+      const latATxt = Math.abs(declDeg) < 0.15
+        ? '0,0° (Evenaar)'
+        : `${fmtNum(Math.abs(declDeg), 1)}° ${declDeg > 0 ? 'NB' : 'ZB'} (subsolair)`;
+      ui.baLat.textContent = latATxt;
+      ui.baAngle.textContent = '90° (loodrecht)';
+      ui.baAtm.textContent = `${fmtNum(pathA.relativeThickness, 1)}× atmosfeerdikte`;
+      ui.baArea.textContent = '1,0× (hoge energie/m²)';
+
+      ui.bbAngle.textContent = `${fmtNum(alphaBDeg, 0)}° (schuin)`;
+      ui.bbAtm.textContent = `${fmtNum(pathB.relativeThickness, 1)}× atmosfeerdikte`;
+      ui.bbArea.textContent = `${fmtNum(areaFactorB, 1)}× groter (lagere energie/m²)`;
+
+      // Subsolaire hulplijn alleen tonen als toggle aan staat én bundels uit staan
+      subsolarGroup.visible = state.showSubsolar && !state.showBeams;
+      beamsGroup.visible = state.showBeams;
+      atmoUniforms.uHighlight.value = state.showBeams ? 1.0 : 0.0;
+    }
+
+    // =========================================================================
+    // 14. 3D -> 2D LABELPROJECTIE
+    // =========================================================================
+    const labelElems = {
+      north: document.getElementById('lbl-north'),
+      south: document.getElementById('lbl-south'),
+      eq: document.getElementById('lbl-eq'),
+      tropicN: document.getElementById('lbl-tropic-n'),
+      tropicS: document.getElementById('lbl-tropic-s'),
+      arctic: document.getElementById('lbl-arctic'),
+      nl: document.getElementById('lbl-nl'),
+    };
+
+    const _proj = new THREE.Vector3();
+    const _worldPt = new THREE.Vector3();
+    const _camDir = new THREE.Vector3();
+
+    function projectToScreen(worldPos, el, visible = true, checkOcclusion = false) {
+      if (!visible) {
+        el.style.display = 'none';
+        return;
+      }
+      if (checkOcclusion) {
+        _camDir.copy(camera.position).normalize();
+        const ptNorm = worldPos.clone().normalize();
+        if (ptNorm.dot(_camDir) < 0.08) {
+          el.style.display = 'none';
+          return;
+        }
+      }
+      _proj.copy(worldPos).project(camera);
+      if (_proj.z > 1) {
+        el.style.display = 'none';
+        return;
+      }
+      const x = (_proj.x * 0.5 + 0.5) * window.innerWidth;
+      const y = (-_proj.y * 0.5 + 0.5) * window.innerHeight;
+      el.style.display = 'block';
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+    }
+
+    function updateLabels() {
+      const guidesOn = state.showGuides;
+
+      // Noord- en Zuidpool
+      northCap.getWorldPosition(_worldPt);
+      _worldPt.y += 0.08;
+      projectToScreen(_worldPt, labelElems.north, guidesOn);
+
+      southCap.getWorldPosition(_worldPt);
+      _worldPt.y -= 0.08;
+      projectToScreen(_worldPt, labelElems.south, guidesOn);
+
+      // Breedtecirkel-labels aan de zijkant van de bol (alleen wanneer bundels uit staan om rust te bewaren)
+      const showCircleLabels = guidesOn && !state.showBeams;
+      const placeLatLabel = (latDeg, el) => {
+        if (!showCircleLabels) {
+          el.style.display = 'none';
+          return;
+        }
+        const lat = THREE.MathUtils.degToRad(latDeg);
+        // Plaats op de naar de camera gerichte meridiaan (ongeveer -X/+Z rand)
+        _worldPt.set(-Math.cos(lat) * 1.03, Math.sin(lat) * 1.03, 0.22);
+        earthTiltGroup.localToWorld(_worldPt);
+        projectToScreen(_worldPt, el, true, true);
+      };
+
+      placeLatLabel(0, labelElems.eq);
+      placeLatLabel(23.5, labelElems.tropicN);
+      placeLatLabel(-23.5, labelElems.tropicS);
+      placeLatLabel(66.5, labelElems.arctic);
+
+      // Nederland-label
+      nlDot.getWorldPosition(_worldPt);
+      const nlOffset = _worldPt.clone().multiplyScalar(1.09);
+      projectToScreen(nlOffset, labelElems.nl, guidesOn, true);
+
+      // Bundelkaarten (Invalshoek & Atmosfeer)
+      projectToScreen(beamALabelPos3D, ui.cardBeamA, state.showBeams);
+      projectToScreen(beamBLabelPos3D, ui.cardBeamB, state.showBeams);
+    }
+
+    // =========================================================================
+    // 15. VLOEIENDE CAMERA-PRESETS
+    // =========================================================================
+    function animateCameraTo(targetPos, lookAtTarget = new THREE.Vector3(0, 0, 0), durationMs = 750) {
+      camAnim = {
+        startPos: camera.position.clone(),
+        endPos: targetPos.clone(),
+        startTarget: controls.target.clone(),
+        endTarget: lookAtTarget.clone(),
+        startTime: performance.now(),
+        duration: durationMs,
+      };
+    }
+
+    function setCameraSide() {
+      animateCameraTo(new THREE.Vector3(0.45, 0.45, 3.35));
+    }
+
+    function setCameraBeamView() {
+      // Licht van opzij (+Z, iets +X en +Y) zodat invalshoek én dampkringdikte perfect zichtbaar zijn
+      animateCameraTo(new THREE.Vector3(0.85, 0.32, 2.95));
+    }
+
+    function setCameraNorthPole() {
+      // Kijk recht boven de gekantelde Noordpool
+      const poleDir = new THREE.Vector3(0, 1, 0)
+        .applyQuaternion(earthTiltGroup.getWorldQuaternion(new THREE.Quaternion()))
+        .normalize();
+      animateCameraTo(poleDir.multiplyScalar(3.25).add(new THREE.Vector3(0.08, 0, 0.15)));
+    }
+
+    function setCameraNetherlands() {
+      nlDot.getWorldPosition(_worldPt);
+      const nlDir = _worldPt.clone().normalize();
+      animateCameraTo(nlDir.multiplyScalar(2.45));
+    }
+
+    // =========================================================================
+    // 16. UI EVENTS & INTERACTIE
+    // =========================================================================
+    const seasonBtns = Array.from(document.querySelectorAll('.season-btn'));
+    function highlightSeasonBtn(day) {
+      seasonBtns.forEach((b) => {
+        const d = Number(b.dataset.day);
+        b.classList.toggle('active', Math.abs(d - day) < 1.5);
+      });
+    }
+
+    ui.seasonSlider.addEventListener('input', (e) => {
+      state.dayOfYear = parseFloat(e.target.value);
+      highlightSeasonBtn(state.dayOfYear);
+      updateSimulation();
+    });
+
+    seasonBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.dayOfYear = Number(btn.dataset.day);
+        ui.seasonSlider.value = state.dayOfYear;
+        highlightSeasonBtn(state.dayOfYear);
+        updateSimulation();
+      });
+    });
+
+    ui.timeSlider.addEventListener('input', (e) => {
+      state.utcHours = parseFloat(e.target.value);
+      updateSimulation();
+    });
+
+    // Play / Pauze & snelheid
+    const btnPlay = document.getElementById('btn-play');
+    btnPlay.addEventListener('click', () => {
+      state.isPlaying = !state.isPlaying;
+      btnPlay.classList.toggle('playing', state.isPlaying);
+      btnPlay.textContent = state.isPlaying ? '⏸ Pauzeren' : '▶ Auto-afspelen';
+    });
+
+    const speedBtns = Array.from(document.querySelectorAll('.speed-btn'));
+    speedBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.speed = Number(btn.dataset.speed);
+        speedBtns.forEach((b) => b.classList.toggle('active', b === btn));
+      });
+    });
+
+    // Camera-knoppen
+    const camBtns = {
+      side: document.getElementById('cam-side'),
+      north: document.getElementById('cam-north'),
+      nl: document.getElementById('cam-nl'),
+    };
+    function setActiveCamBtn(key) {
+      Object.entries(camBtns).forEach(([k, el]) => el.classList.toggle('active', k === key));
+    }
+    camBtns.side.addEventListener('click', () => { setActiveCamBtn('side'); setCameraSide(); });
+    camBtns.north.addEventListener('click', () => { setActiveCamBtn('north'); setCameraNorthPole(); });
+    camBtns.nl.addEventListener('click', () => { setActiveCamBtn('nl'); setCameraNetherlands(); });
+
+    // Invalshoek & Atmosfeer vergelijken (hoofdschakelaar)
+    const btnBeams = document.getElementById('btn-beams');
+    const beamsBadge = document.getElementById('beams-status-badge');
+    const beamLegend = document.getElementById('beam-legend');
+
+    const toggleAtmosphere = document.getElementById('toggle-atmosphere');
+
+    btnBeams.addEventListener('click', () => {
+      state.showBeams = !state.showBeams;
+      btnBeams.classList.toggle('active', state.showBeams);
+      beamsBadge.textContent = state.showBeams ? 'AAN' : 'UIT';
+      beamLegend.classList.toggle('visible', state.showBeams);
+      if (state.showBeams) {
+        if (!state.showAtmosphere) {
+          state.showAtmosphere = true;
+          toggleAtmosphere.checked = true;
+          atmosphereMesh.visible = true;
+        }
+        setActiveCamBtn('side');
+        setCameraBeamView();
+      }
+      updateSimulation();
+    });
+
+    // Toggles
+    document.getElementById('toggle-guides').addEventListener('change', (e) => {
+      state.showGuides = e.target.checked;
+      guidesGroup.visible = state.showGuides;
+      nlMarkerGroup.visible = state.showGuides;
+    });
+
+    document.getElementById('toggle-subsolar').addEventListener('change', (e) => {
+      state.showSubsolar = e.target.checked;
+      updateSimulation();
+    });
+
+    toggleAtmosphere.addEventListener('change', (e) => {
+      state.showAtmosphere = e.target.checked;
+      atmosphereMesh.visible = state.showAtmosphere;
+    });
+
+    const toggleDigibord = document.getElementById('toggle-digibord');
+    const restoreBtn = document.getElementById('digibord-restore-btn');
+    function setDigibordMode(on) {
+      state.digibordMode = on;
+      toggleDigibord.checked = on;
+      document.body.classList.toggle('digibord-mode', on);
+    }
+    toggleDigibord.addEventListener('change', (e) => setDigibordMode(e.target.checked));
+    restoreBtn.addEventListener('click', () => setDigibordMode(false));
+
+    // Colofon / Over deze module venster
+    const colofonBackdrop = document.getElementById('colofon-backdrop');
+    const colofonCloseBtn = document.getElementById('colofon-close-btn');
+    const setColofonOpen = (open) => colofonBackdrop.classList.toggle('open', open);
+
+    document.querySelectorAll('[data-open-colofon]').forEach((btn) => {
+      btn.addEventListener('click', () => setColofonOpen(true));
+    });
+    colofonCloseBtn.addEventListener('click', () => setColofonOpen(false));
+    colofonBackdrop.addEventListener('click', (e) => {
+      if (e.target === colofonBackdrop) setColofonOpen(false);
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && colofonBackdrop.classList.contains('open')) {
+        setColofonOpen(false);
+      }
+    });
+
+    // =========================================================================
+    // 17. ANIMATIE-LOOP & RESIZE
+    // =========================================================================
+    let lastTime = performance.now();
+
+    function animate(now) {
+      requestAnimationFrame(animate);
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+
+      // Automatisch afspelen: zowel dagrotatie als jaarlijkse seizoenswisseling
+      if (state.isPlaying) {
+        state.utcHours = (state.utcHours + dt * 2.2 * state.speed) % 24;
+        state.dayOfYear = ((state.dayOfYear - 1 + dt * 2.6 * state.speed) % 365) + 1;
+        ui.timeSlider.value = state.utcHours.toFixed(2);
+        ui.seasonSlider.value = state.dayOfYear.toFixed(2);
+        highlightSeasonBtn(state.dayOfYear);
+        updateSimulation();
+      }
+
+      // Vloeiende camera-animatie
+      if (camAnim) {
+        const t = Math.min((now - camAnim.startTime) / camAnim.duration, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+        camera.position.lerpVectors(camAnim.startPos, camAnim.endPos, ease);
+        controls.target.lerpVectors(camAnim.startTarget, camAnim.endTarget, ease);
+        if (t >= 1) camAnim = null;
+      }
+
+      controls.update();
+      updateLabels();
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Initiële render
+    updateSimulation();
+    animate(performance.now());
+  </script>
+</body>
+</html>

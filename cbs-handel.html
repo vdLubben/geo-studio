@@ -1,0 +1,3289 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CBS Internationale Goederenhandel — Aardrijkskunde § 10.6</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231D4E89'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23FFFFFF' stroke-width='4'/%3E%3Cpolygon points='32,20 39,32 32,44 25,32' fill='%23FFFFFF' transform='rotate(25 32 32)'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --surface: #ffffff;
+      --surface-subtle: #f8fafc;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --text: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --primary: #1d4ed8;
+      --primary-hover: #1e40af;
+      --primary-soft: #eff6ff;
+      --primary-border: #bfdbfe;
+      --positive: #0f766e;
+      --positive-bg: #f0fdfa;
+      --negative: #b91c1c;
+      --negative-bg: #fef2f2;
+      --neutral-bg: #f1f5f9;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.06);
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .topbar-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand-eyebrow {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--primary);
+    }
+
+    .brand-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .topbar-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #94a3b8;
+      flex-shrink: 0;
+    }
+
+    .status-dot.live {
+      background: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+    }
+
+    .status-dot.loading {
+      background: #f59e0b;
+      animation: pulse 1.2s infinite ease-in-out;
+    }
+
+    .status-dot.error {
+      background: #ef4444;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.85); }
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.86rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .btn:hover {
+      background: var(--surface-subtle);
+      border-color: #94a3b8;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
+
+    .btn-sm {
+      padding: 6px 11px;
+      font-size: 0.8rem;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 20px 24px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Loading & Error States */
+    .overlay-banner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 40px 24px;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .overlay-banner.error {
+      border-color: #fecaca;
+      background: #fffafa;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .spinner-sm {
+      width: 15px;
+      height: 15px;
+      border: 2px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Control Panel */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .controls-card {
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .controls-top-row {
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .control-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    /* Indicator Tabs */
+    .indicator-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .indicator-btn {
+      text-align: left;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--surface-subtle);
+      color: var(--text);
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .indicator-btn:hover {
+      border-color: var(--primary-border);
+      background: #f8fbff;
+    }
+
+    .indicator-btn.active {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      box-shadow: inset 0 0 0 1px var(--primary);
+    }
+
+    .indicator-btn-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .indicator-btn.active .indicator-btn-title {
+      color: var(--primary);
+    }
+
+    .indicator-btn-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* Search Autocomplete */
+    .search-wrapper {
+      position: relative;
+    }
+
+    .search-input-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 13px;
+      width: 17px;
+      height: 17px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 11px 38px 11px 40px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 0.95rem;
+      color: var(--text);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.14);
+    }
+
+    .search-spinner {
+      position: absolute;
+      right: 12px;
+    }
+
+    .autocomplete-list {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+      max-height: 280px;
+      overflow-y: auto;
+      z-index: 50;
+      list-style: none;
+    }
+
+    .autocomplete-item {
+      padding: 10px 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.92rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+
+    .autocomplete-item:hover,
+    .autocomplete-item.highlighted {
+      background: var(--primary-soft);
+    }
+
+    .autocomplete-code {
+      font-size: 0.76rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--text-muted);
+      background: var(--neutral-bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .autocomplete-empty {
+      padding: 12px 14px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    /* Region Selector */
+    .divider {
+      height: 1px;
+      background: var(--border);
+    }
+
+    .region-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .region-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .region-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .sitc-filter-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .sitc-select {
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      max-width: 310px;
+    }
+
+    .sitc-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.14);
+    }
+
+    .province-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip-group-sep {
+      width: 1px;
+      background: var(--border-strong);
+      margin: 4px 2px;
+      align-self: stretch;
+    }
+
+    .region-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .region-chip:hover {
+      border-color: #94a3b8;
+      background: var(--surface-subtle);
+    }
+
+    .region-chip.active {
+      background: var(--text);
+      border-color: var(--text);
+      color: #ffffff;
+    }
+
+    .region-chip.nl-chip.active {
+      background: #0f172a;
+      border-color: #0f172a;
+      color: #ffffff;
+    }
+
+    .chip-swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--border-strong);
+      flex-shrink: 0;
+    }
+
+    .region-chip.active .chip-swatch {
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+    }
+
+    .muni-chips-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 4px;
+    }
+
+    .muni-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px 6px 12px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      border: 1px solid var(--primary-border);
+      color: var(--text);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .muni-remove {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(15, 23, 42, 0.08);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.9rem;
+      line-height: 1;
+    }
+
+    .muni-remove:hover {
+      background: rgba(15, 23, 42, 0.18);
+    }
+
+    /* KPI Grid */
+    .kpi-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .kpi-focus-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+    }
+
+    .kpi-focus-select {
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .kpi-card {
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .kpi-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+
+    .kpi-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      line-height: 1.18;
+    }
+
+    .kpi-sub {
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .delta-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .delta-badge.up {
+      background: var(--positive-bg);
+      color: var(--positive);
+    }
+
+    .delta-badge.down {
+      background: var(--negative-bg);
+      color: var(--negative);
+    }
+
+    .delta-badge.neutral {
+      background: var(--neutral-bg);
+      color: var(--text-secondary);
+    }
+
+    /* Charts Layout */
+    .chart-card {
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .chart-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .chart-title {
+      font-size: 1.12rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    .chart-subtitle {
+      font-size: 0.86rem;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .chart-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .segmented {
+      display: inline-flex;
+      background: var(--neutral-bg);
+      padding: 3px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    .segmented button {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .segmented button.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .main-chart-wrap {
+      position: relative;
+      height: 430px;
+      width: 100%;
+    }
+
+    .secondary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .secondary-chart-wrap {
+      position: relative;
+      height: 360px;
+      width: 100%;
+    }
+
+    .chart-note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+    }
+
+    /* Year Slider Bar (reused from cbs-vruchtbaarheid) */
+    .map-year-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+    }
+
+    .map-year-slider {
+      flex: 1;
+      min-width: 140px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .map-year-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 54px;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      background: var(--primary-soft);
+      border: 1px solid var(--primary-border);
+      color: var(--primary);
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    /* Footer / Didactic Reference */
+    .concepts-card {
+      padding: 18px 22px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .concept-item h3 {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .concept-item p {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+    }
+
+    .footer-source {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0 4px;
+    }
+
+    .footer-source a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .footer-source a:hover {
+      text-decoration: underline;
+    }
+
+    /* Europe Choropleth Map Card */
+    .map-body-grid {
+      display: grid;
+      grid-template-columns: minmax(340px, 1.35fr) minmax(270px, 0.75fr);
+      gap: 24px;
+      align-items: center;
+    }
+
+    .eu-map-stage {
+      position: relative;
+      background: #f0f6fc;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 440px;
+      overflow: hidden;
+    }
+
+    .eu-map-svg {
+      width: 100%;
+      max-width: 660px;
+      height: auto;
+      max-height: 480px;
+      display: block;
+      user-select: none;
+    }
+
+    .country-path {
+      stroke: #ffffff;
+      stroke-width: 1.0;
+      stroke-linejoin: round;
+      cursor: pointer;
+      transition: opacity 0.15s ease, stroke-width 0.15s ease, filter 0.15s ease;
+    }
+
+    .country-path:hover {
+      filter: brightness(0.9);
+      stroke: #0f172a;
+      stroke-width: 1.8;
+    }
+
+    .country-path.selected {
+      stroke: #0f172a;
+      stroke-width: 2.1;
+    }
+
+    .country-path.nl-home {
+      fill: #334155;
+      stroke: #ffffff;
+      stroke-width: 1.3;
+      cursor: default;
+    }
+
+    .country-path.nl-home:hover {
+      filter: none;
+      stroke: #0f172a;
+      stroke-width: 1.5;
+    }
+
+    .country-iso-label {
+      font-family: var(--font);
+      font-size: 9.5px;
+      font-weight: 700;
+      text-anchor: middle;
+      dominant-baseline: central;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .map-tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: rgba(15, 23, 42, 0.95);
+      color: #ffffff;
+      padding: 10px 13px;
+      border-radius: 8px;
+      font-size: 0.83rem;
+      line-height: 1.45;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.24);
+      z-index: 20;
+      min-width: 200px;
+      transition: opacity 0.1s ease;
+    }
+
+    .map-tooltip-title {
+      font-weight: 700;
+      font-size: 0.88rem;
+      margin-bottom: 3px;
+    }
+
+    .map-tooltip-val {
+      font-weight: 600;
+      color: #bfdbfe;
+    }
+
+    .map-tooltip-hint {
+      margin-top: 4px;
+      font-size: 0.74rem;
+      color: #94a3b8;
+    }
+
+    .map-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .map-panel-box {
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .map-panel-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .legend-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.84rem;
+      color: var(--text);
+    }
+
+    .legend-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .legend-swatch {
+      width: 22px;
+      height: 15px;
+      border-radius: 4px;
+      border: 1px solid rgba(15, 23, 42, 0.15);
+      flex-shrink: 0;
+    }
+
+    .legend-count {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .map-summary-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .map-summary-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.84rem;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .map-summary-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .map-summary-key {
+      color: var(--text-secondary);
+    }
+
+    .map-summary-val {
+      font-weight: 700;
+      color: var(--text);
+      text-align: right;
+    }
+
+    /* Responsive */
+    @media (max-width: 1120px) {
+      .map-body-grid {
+        grid-template-columns: 1fr;
+      }
+      .controls-top-row {
+        grid-template-columns: 1fr;
+      }
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .secondary-grid {
+        grid-template-columns: 1fr;
+      }
+      .concepts-card {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .container {
+        padding: 14px;
+      }
+      .indicator-tabs {
+        grid-template-columns: 1fr;
+      }
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+      .main-chart-wrap {
+        height: 340px;
+      }
+      .kpi-value {
+        font-size: 1.5rem;
+      }
+      .sitc-select {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Header -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-eyebrow">Aardrijkskunde VO &middot; Hoofdstuk 10: Globalisering &middot; &sect; 10.6 Handel en samenwerking</span>
+        <h1 class="brand-title">Internationale Goederenhandel van Nederland</h1>
+      </div>
+      <div class="topbar-meta">
+        <a href="index.html" class="btn btn-sm" title="Terug naar GeoStudio" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px;">&larr; GeoStudio</a>
+        <div class="status-pill" id="statusPill">
+          <span class="status-dot loading" id="statusDot"></span>
+          <span id="statusText">Verbinding maken met CBS Open Data...</span>
+        </div>
+        <button type="button" class="btn btn-sm" id="reloadBtn" title="Gegevens opnieuw ophalen bij CBS">
+          Verversen
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Initial Loading Banner -->
+    <section class="overlay-banner" id="loadingBanner">
+      <div class="spinner" aria-hidden="true"></div>
+      <div>
+        <h2 style="font-size:1.1rem; font-weight:700; margin-bottom:4px;">CBS-handelscijfers worden opgehaald</h2>
+        <p id="loadingStepText" style="font-size:0.9rem; color:var(--text-secondary);">
+          Dimensies, goederensecties (SITC), landen en jaarcijfers inspecteren (tabel 85429NED)...
+        </p>
+      </div>
+    </section>
+
+    <!-- Error Banner -->
+    <section class="overlay-banner error hidden" id="errorBanner" role="alert">
+      <div>
+        <h2 style="font-size:1.1rem; font-weight:700; color:var(--negative); margin-bottom:6px;">
+          Gegevens ophalen bij het CBS is tijdelijk niet gelukt
+        </h2>
+        <p id="errorDetailText" style="font-size:0.9rem; color:var(--text-secondary); max-width:620px;">
+          De CBS Open Data-server reageert niet of de internetverbinding is onderbroken.
+        </p>
+      </div>
+      <button type="button" class="btn btn-primary" id="retryBtn">Opnieuw proberen</button>
+    </section>
+
+    <!-- Main Dashboard Content -->
+    <div id="dashboardContent" class="hidden" style="display:flex; flex-direction:column; gap:20px;">
+      <!-- Controls & Trade Partner Comparator -->
+      <section class="card controls-card" aria-label="Filters en handelspartner-vergelijker">
+        <div class="controls-top-row">
+          <!-- Indicator Selector -->
+          <div class="control-group">
+            <span class="control-label">1. Kies indicator</span>
+            <div class="indicator-tabs" role="tablist" aria-label="Indicator keuze">
+              <button type="button" class="indicator-btn active" data-indicator="export" role="tab" aria-selected="true">
+                <span class="indicator-btn-title">Uitvoerwaarde (export)</span>
+                <span class="indicator-btn-sub">Waarde van uitgevoerde goederen (mln euro)</span>
+              </button>
+              <button type="button" class="indicator-btn" data-indicator="import" role="tab" aria-selected="false">
+                <span class="indicator-btn-title">Invoerwaarde (import)</span>
+                <span class="indicator-btn-sub">Waarde van ingevoerde goederen (mln euro)</span>
+              </button>
+              <button type="button" class="indicator-btn" data-indicator="balance" role="tab" aria-selected="false">
+                <span class="indicator-btn-title">Handelsbalans (uitvoer &minus; invoer)</span>
+                <span class="indicator-btn-sub">Overschot of tekort per handelspartner</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Country / Trade Partner Search -->
+          <div class="control-group">
+            <span class="control-label">
+              <span>2. Land of handelspartner toevoegen</span>
+              <span id="countryCountHint" style="font-weight:500; text-transform:none; letter-spacing:0;"></span>
+            </span>
+            <div class="search-wrapper">
+              <div class="search-input-box">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input
+                  type="text"
+                  id="countrySearchInput"
+                  class="search-input"
+                  placeholder="Zoek land, bijv. China, Duitsland, Verenigde Staten of Noorwegen..."
+                  autocomplete="off"
+                  aria-label="Zoek een land of handelspartner"
+                  aria-expanded="false"
+                  aria-controls="countryAutocomplete"
+                />
+                <span class="spinner-sm search-spinner hidden" id="countryLoadingSpinner" aria-label="Land laden"></span>
+              </div>
+              <ul class="autocomplete-list hidden" id="countryAutocomplete" role="listbox"></ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Continents, Key Partners & SITC Filter -->
+        <div class="region-section">
+          <div class="region-header">
+            <span class="control-label">3. Vergelijk werelddelen &amp; kernlanden</span>
+            <div class="region-actions">
+              <div class="sitc-filter-group">
+                <label for="sitcSelect">Goederensectie (SITC):</label>
+                <select id="sitcSelect" class="sitc-select" aria-label="Filter op SITC goederensectie"></select>
+                <span class="spinner-sm hidden" id="sitcLoadingSpinner" aria-label="Goederensectie laden"></span>
+              </div>
+              <span id="countryErrorMsg" style="font-size:0.82rem; color:var(--negative);"></span>
+              <button type="button" class="btn btn-sm" id="resetRegionsBtn">Alleen totaal</button>
+            </div>
+          </div>
+          <div class="province-grid" id="quickChipsGrid"></div>
+          <div class="muni-chips-row hidden" id="customChipsRow"></div>
+        </div>
+      </section>
+
+      <!-- KPI Section -->
+      <section aria-label="Kerncijfers">
+        <div class="kpi-header-row" style="margin-bottom:10px;">
+          <div class="kpi-focus-group">
+            <label for="kpiFocusSelect">Kerncijfers weergeven voor:</label>
+            <select id="kpiFocusSelect" class="kpi-focus-select"></select>
+          </div>
+          <span id="kpiYearRangeBadge" style="font-size:0.82rem; color:var(--text-muted); font-weight:500;"></span>
+        </div>
+
+        <div class="kpi-grid">
+          <article class="card kpi-card">
+            <span class="kpi-label" id="kpi1Label">Meest recente waarde</span>
+            <span class="kpi-value" id="kpi1Value">&mdash;</span>
+            <span class="kpi-sub" id="kpi1Sub">&mdash;</span>
+          </article>
+          <article class="card kpi-card">
+            <span class="kpi-label" id="kpi2Label">Verschil t.o.v. 2015</span>
+            <span class="kpi-value" id="kpi2Value">&mdash;</span>
+            <span class="kpi-sub" id="kpi2Sub">&mdash;</span>
+          </article>
+          <article class="card kpi-card">
+            <span class="kpi-label" id="kpi3Label">Aandeel in Nederlandse handel</span>
+            <span class="kpi-value" id="kpi3Value">&mdash;</span>
+            <span class="kpi-sub" id="kpi3Sub">&mdash;</span>
+          </article>
+          <article class="card kpi-card">
+            <span class="kpi-label" id="kpi4Label">Handelsbalans</span>
+            <span class="kpi-value" id="kpi4Value">&mdash;</span>
+            <span class="kpi-sub" id="kpi4Sub">&mdash;</span>
+          </article>
+        </div>
+      </section>
+
+      <!-- Primary Time-Series Chart -->
+      <section class="card chart-card" aria-label="Tijdreeksgrafiek internationale handel">
+        <div class="chart-header">
+          <div>
+            <h2 class="chart-title" id="mainChartTitle">Uitvoerwaarde van Nederland (2015 &ndash; heden)</h2>
+            <p class="chart-subtitle" id="mainChartSubtitle">
+              Ontwikkeling van de internationale goederenhandel door de tijd. Beweeg over de grafiek voor exacte jaarcijfers.
+            </p>
+          </div>
+          <div class="chart-toolbar">
+            <div class="segmented" id="yearRangeToggle" role="group" aria-label="Periode kiezen">
+              <button type="button" class="active" data-startyear="2015">2015&ndash;heden</button>
+              <button type="button" data-startyear="2020">2020&ndash;heden</button>
+            </div>
+          </div>
+        </div>
+        <div class="main-chart-wrap">
+          <canvas id="mainLineChart"></canvas>
+        </div>
+        <p class="chart-note" id="mainChartNote"></p>
+      </section>
+
+      <!-- Europe Choropleth Map -->
+      <section class="card chart-card" aria-label="Kaart van Europa per handelspartner">
+        <div class="chart-header">
+          <div>
+            <h2 class="chart-title" id="mapChartTitle">Kaart van Europa &mdash; Nederlandse goederenhandel</h2>
+            <p class="chart-subtitle" id="mapChartSubtitle">
+              Europese spreiding per handelspartner. Klik op een land om het toe te voegen aan of te verwijderen uit de grafieken.
+            </p>
+          </div>
+          <div class="chart-toolbar">
+            <div class="segmented" role="group" aria-label="Snelkeuze kaartjaar">
+              <button type="button" id="mapYearFirstBtn">2015</button>
+              <button type="button" id="mapYearLatestBtn" class="active">Meest recent</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="map-body-grid">
+          <div class="eu-map-stage" id="euMapStage">
+            <svg id="euMapSvg" class="eu-map-svg" viewBox="80 48 475 415" role="img" aria-label="Choropletenkaart van Europa met Nederlandse goederenhandel per land"></svg>
+            <div class="map-tooltip hidden" id="mapTooltip" role="status"></div>
+          </div>
+
+          <div class="map-sidebar">
+            <div class="map-panel-box">
+              <span class="map-panel-title" id="mapLegendTitle">Legenda</span>
+              <div class="legend-list" id="mapLegendList"></div>
+              <p id="mapLegendHint" style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
+                Donkerder blauw betekent een hogere handelswaarde. Landen met een donkere omlijning zijn actief geselecteerd in de lijngrafiek. Nederland (donkergrijs) is het referentieland.
+              </p>
+            </div>
+
+            <div class="map-panel-box">
+              <span class="map-panel-title">Kaartjaar kiezen</span>
+              <div class="map-year-bar">
+                <input type="range" id="mapYearSlider" class="map-year-slider" min="2015" max="2025" value="2025" aria-label="Kies jaartal voor de kaart van Europa" />
+                <span class="map-year-pill" id="mapYearValue">2025</span>
+              </div>
+            </div>
+
+            <div class="map-panel-box">
+              <span class="map-panel-title" id="mapSummaryTitle">Samenvatting Europa</span>
+              <div class="map-summary-list" id="mapSummaryList"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Secondary Analytical Charts -->
+      <section class="secondary-grid" aria-label="Verdiepende grafieken">
+        <!-- Verdiepende grafiek 1: Top Trade Partners Ranking with Year Slider -->
+        <article class="card chart-card">
+          <div class="chart-header">
+            <div>
+              <h2 class="chart-title" id="rankingChartTitle">Belangrijkste handelspartners van Nederland</h2>
+              <p class="chart-subtitle" id="rankingChartSubtitle">Ranglijst van kernlanden en toegevoegde handelspartners</p>
+            </div>
+            <div class="chart-toolbar">
+              <div class="segmented" role="group" aria-label="Snelkeuze jaartal ranglijst">
+                <button type="button" id="rankingYearFirstBtn">2015</button>
+                <button type="button" id="rankingYearLatestBtn" class="active">Meest recent</button>
+              </div>
+            </div>
+          </div>
+          <div class="map-year-bar">
+            <span style="font-size:0.8rem; font-weight:600; color:var(--text-secondary);">Jaar:</span>
+            <input type="range" id="rankingYearSlider" class="map-year-slider" min="2015" max="2025" value="2025" aria-label="Kies jaartal voor de ranglijst van handelspartners" />
+            <span class="map-year-pill" id="rankingYearValue">2025</span>
+          </div>
+          <div class="secondary-chart-wrap">
+            <canvas id="rankingBarChart"></canvas>
+          </div>
+        </article>
+
+        <!-- Verdiepende grafiek 2: Continents Import vs Export / Re-exports Breakdown -->
+        <article class="card chart-card">
+          <div class="chart-header">
+            <div>
+              <h2 class="chart-title" id="secondary2ChartTitle">Handel per werelddeel: invoer vs. uitvoer</h2>
+              <p class="chart-subtitle" id="secondary2ChartSubtitle">Vergelijking van import- en exportstromen per continent</p>
+            </div>
+            <div class="chart-toolbar">
+              <div class="segmented" id="secondary2ModeToggle" role="group" aria-label="Weergave verdiepende grafiek 2">
+                <button type="button" class="active" data-mode="continents">Werelddelen</button>
+                <button type="button" data-mode="reexport">Wederuitvoer</button>
+              </div>
+            </div>
+          </div>
+          <div class="secondary-chart-wrap">
+            <canvas id="secondary2Chart"></canvas>
+          </div>
+          <p class="chart-note" id="secondary2Note"></p>
+        </article>
+      </section>
+
+      <!-- Didactic Geography Reference -->
+      <section class="card concepts-card" aria-label="Kernbegrippen paragraaf 10.6">
+        <div class="concept-item">
+          <h3>Handelsbalans (overschot &amp; tekort)</h3>
+          <p>
+            Het verschil tussen de <strong>uitvoerwaarde (export)</strong> en de <strong>invoerwaarde (import)</strong>. Nederland heeft doorgaans een groot handelsoverschot met de EU, maar een handelstekort met landen als China door de omvangrijke invoer van consumentengoederen en elektronica.
+          </p>
+        </div>
+        <div class="concept-item">
+          <h3>Nederland als doorvoerland (wederuitvoer)</h3>
+          <p>
+            Dankzij mainports als de haven van Rotterdam en Schiphol is een groot deel van de Nederlandse uitvoer <strong>wederuitvoer</strong>: goederen die eerst worden ingevoerd en daarna vrijwel onbewerkt worden doorverkocht naar het Europese achterland.
+          </p>
+        </div>
+        <div class="concept-item">
+          <h3>Europese samenwerking &amp; globalisering</h3>
+          <p>
+            Binnen de <strong>Europese Unie (EU)</strong> geldt vrij verkeer van goederen zonder invoerrechten. Hierdoor blijft veruit het grootste deel van de Nederlandse handel gericht op Europese buurlanden zoals Duitsland en Belgi&euml;, terwijl grondstoffen en eindproducten wereldwijd worden verhandeld.
+          </p>
+        </div>
+      </section>
+
+      <footer class="footer-source" style="display:flex; flex-direction:column; gap:6px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <span>
+            Bron: <a href="https://opendata.cbs.nl/ODataApi/OData/85429NED" target="_blank" rel="noopener noreferrer">CBS Open Data &ndash; tabel 85429NED</a> (Internationale goederenhandel; grensoverschrijding, kerncijfers, SITC &amp; GEONOM).
+          </span>
+          <span id="lastUpdatedLabel"></span>
+        </div>
+        <div style="font-size:11.5px; color:var(--text-muted); border-top:1px solid var(--border); padding-top:6px;">
+          Gemaakt door Rens van der Lubben &bull; Code: MIT-licentie &bull; Lesmateriaal: CC BY-SA 4.0
+        </div>
+      </footer>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+
+      // ============================================================
+      // Configuration & Constants
+      // ============================================================
+      const CBS_BASE = 'https://opendata.cbs.nl/ODataApi/OData/85429NED';
+
+      // Accessible, high-contrast color palette for Digibord readability
+      const COLOR_PALETTE = [
+        '#1d4ed8', // Blue
+        '#0f766e', // Teal
+        '#d97706', // Amber
+        '#be123c', // Rose
+        '#7c3aed', // Violet
+        '#0369a1', // Sky
+        '#b45309', // Ochre
+        '#15803d', // Green
+        '#9333ea', // Purple
+        '#c2410c', // Orange
+        '#0e7490', // Cyan
+        '#a21caf'  // Fuchsia
+      ];
+
+      // Preferred continents / blocs (resolved dynamically from /Landen)
+      const CONTINENT_SPECS = [
+        { match: /^eu\s*\(exclusief nederland\)$/i, shortLabel: 'EU (excl. NL)', isBloc: true },
+        { match: /^europa\s*\(exclusief nederland\)$/i, shortLabel: 'Europa', isContinent: true },
+        { match: /^azi[eë]$/i, shortLabel: 'Azië', isContinent: true },
+        { match: /^amerika$/i, shortLabel: 'Noord- en Zuid-Amerika', isContinent: true },
+        { match: /^afrika$/i, shortLabel: 'Afrika', isContinent: true },
+        { match: /^oceani[eë]$/i, shortLabel: 'Oceanië', isContinent: true }
+      ];
+
+      // Preferred top trading partner countries (resolved dynamically from /Landen)
+      const PARTNER_NAMES = [
+        'Duitsland',
+        'België',
+        'Verenigd Koninkrijk',
+        'Verenigde Staten',
+        'China',
+        'Frankrijk',
+        'Italië',
+        'Spanje',
+        'Polen',
+        'Noorwegen'
+      ];
+
+      const fmtInt = new Intl.NumberFormat('nl-NL', { maximumFractionDigits: 0 });
+      const fmtDec1 = new Intl.NumberFormat('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+      // 5-class sequential cartographic blue scale (light -> dark) for export/import
+      const MAP_SCALE_SEQ = [
+        { bg: '#eff6ff', text: '#0f172a' },
+        { bg: '#bfdbfe', text: '#0f172a' },
+        { bg: '#60a5fa', text: '#0f172a' },
+        { bg: '#2563eb', text: '#ffffff' },
+        { bg: '#1e3a8a', text: '#ffffff' }
+      ];
+
+      // 5-class diverging scale for trade balance (deficit -> surplus)
+      const MAP_SCALE_BAL = [
+        { bg: '#b91c1c', text: '#ffffff' }, // Sterk tekort
+        { bg: '#fca5a5', text: '#0f172a' }, // Licht tekort
+        { bg: '#ccfbf1', text: '#0f172a' }, // Klein overschot
+        { bg: '#2dd4bf', text: '#0f172a' }, // Ruim overschot
+        { bg: '#0f766e', text: '#ffffff' }  // Groot overschot
+      ];
+
+      // Compact ISO labels shown on larger European countries
+      const MAP_LABEL_ISOS = new Set([
+        'NL', 'DE', 'BE', 'FR', 'GB', 'IE', 'ES', 'PT', 'IT', 'PL',
+        'SE', 'NO', 'FI', 'IS', 'UA', 'RO', 'GR', 'TR', 'AT', 'CH', 'CZ', 'HU', 'BG', 'DK'
+      ]);
+
+      // Generalized Natural Earth SVG paths for 40 European countries (ETRS89-LAEA, viewBox 80 48 475 415)
+      const EU_COUNTRY_PATHS = [{"iso":"AL","name":"Albanië","lx":367,"ly":404,"d":"M362.7,406.5L363.1,397.2L361,396.9L359.8,393L362.9,387L363.8,389L366.1,387.7L370.6,391.3L372,402.6L377.7,408.6L375.1,415.9L372.1,417.5L373.2,419.5L371.7,421.7L362.2,413.8L364,414.4L362.1,411.1L362.7,406.5Z"},{"iso":"BA","name":"Bosnië en Herzegovina","lx":346,"ly":371,"d":"M344.6,386.4L340.7,380L330.4,372.2L329.9,368.6L326.4,365.2L326.8,360.4L330.9,362.6L332.6,359.8L335.8,359L343.9,360.8L350.3,359.6L352.5,362.1L356.8,361.2L355.3,367.7L360,370.7L356.9,371.6L359.5,376.5L355.1,377.8L356.5,380.8L355,379.7L353.3,381.1L352,389.4L344.6,386.4Z"},{"iso":"BG","name":"Bulgarije","lx":411,"ly":376,"d":"M432.5,371.7L429.8,376.8L435.9,381.3L432.3,383.1L428.9,381.4L424,384.3L422.4,387.8L419.9,388.4L421.3,392.4L414,395.3L404.4,393.3L393.2,398.1L393.1,393.1L386.4,387.5L387.8,385.4L386.2,381.5L390.3,376.4L385.8,373.7L383.8,367.7L385.6,364.8L388.9,366L387.5,368.3L388.8,369.1L409.5,367.4L421.1,358.6L429.8,358.1L431.3,359.8L436,359.7L436.7,362.1L432.9,365.1L432.5,371.7Z"},{"iso":"CY","name":"Cyprus","lx":504,"ly":446,"d":"M505.6,442.8L513.1,436.1L508.3,442.9L510.8,445.9L507,447.1L502.2,453.6L495.8,453.3L493.6,449.7L498.8,447.5L498.7,444.5L505.6,442.8Z"},{"iso":"DK","name":"Denemarken","lx":274,"ly":233,"d":"M288.3,248.2L289.3,247.3L290.6,250.1L284.8,248.7L285.9,246.7L288.3,248.2Z M283,240.5L283.3,244.8L281.4,245.9L275.8,240.3L280.1,238.9L281.2,241.1L282.2,238.9L283,240.5Z M295,234.2L295.4,237.6L292.7,240.4L294.6,242.6L291.6,244.2L292.8,246.1L286.4,243.8L283.8,237.5L287,237.3L288.1,235.5L286.5,234.4L289.8,234.7L290,238.3L291.2,235.3L291,238.3L290.4,234.6L293.2,232.6L295,234.2Z M277.8,221.7L280,222.8L280,225.5L277.1,226.7L280.2,226.1L279.2,228.8L280,227.5L284.3,229.1L282.9,232.4L281.4,233.2L281,230.9L280.6,230.9L279.6,232.3L279.3,236.4L277.1,236.2L278,237.9L275,237.9L276.8,239.1L274.3,244.8L276.4,247.6L272.9,248.5L269,247.4L267.5,244.7L269.1,244.6L268.7,241.1L265.2,239.6L265.6,234.4L265.9,236.5L267.3,235.5L265.7,232.9L265.5,234.2L265.7,227.7L266.4,225.8L269.7,228.6L272,224.8L271.8,227.6L273.6,228.1L272.7,223.5L277.8,221.7Z M280.8,215.5L280.2,222.6L272.3,221.9L269.4,223.1L268.6,227.4L266.6,226L269.1,221L274.1,220.7L277.7,215.6L282.1,213.8L280.8,215.5Z"},{"iso":"IE","name":"Ierland","lx":149,"ly":249,"d":"M160.7,232.4L154.2,236.7L157.3,241.7L159.1,242.2L161.7,239.2L163.3,244.2L166.7,245.5L164.7,245.7L164.6,257.9L159.6,264L160.1,266.2L155.9,264L155.4,265.7L151.3,265.1L146.9,267.5L144.7,266.1L145.1,267.9L141.9,269.1L133.5,268.4L137,265.9L131.8,265.8L136.5,264L132.5,264.3L131,262.3L136.2,260.4L131.4,258.7L136.6,259.4L138.2,255.9L144.3,256.3L136.2,255.4L145.3,249.2L140.7,248.3L141.5,246.6L137.4,245.2L143,241.2L140.5,240.4L141.8,239.8L140.6,235.9L151.6,238.4L150.5,237.2L154.6,234.8L150.7,233L157.7,228.4L159.2,230.3L160.2,228.4L158.9,232L160.6,231.3L162.1,227.5L164.6,229.9L160.7,232.4Z"},{"iso":"EE","name":"Estland","lx":373,"ly":194,"d":"M357.9,196.2L360.3,197.7L354.9,201.3L353.4,205.3L354.1,202.4L351,198.5L357.9,196.2Z M355.5,191.8L357.7,193.3L355.3,195.6L351.4,193.2L355.5,191.8Z M371.9,180.7L386.7,180.2L384,187.8L386.1,194.7L389.2,198L387.5,202.6L382.2,204L373.2,199.3L367.7,203.1L368.1,197.5L365.6,199.1L361,195.8L360.8,193.9L362.9,193.2L360.4,193.1L359.4,188.5L371.9,180.7Z"},{"iso":"AT","name":"Oostenrijk","lx":304,"ly":332,"d":"M308,319.4L314.9,321.2L317.1,315.9L332,318.2L331.9,322.5L334.8,326.4L334.3,330L329.3,331L331.8,332.3L329.8,334L330.7,338.8L315.2,347L297.9,344.5L295.7,339.8L287.5,341.5L286.3,343.8L281.2,341.1L278.9,343L274.8,340.4L274.5,334.8L276.3,334.1L279.4,337.9L281.8,334.1L286.8,336.4L299.9,332.7L302.2,335.1L299.9,327.4L304.8,324.4L305,322L307.3,322.5L308,319.4Z"},{"iso":"CZ","name":"Tsjechië","lx":323,"ly":305,"d":"M314.9,321.2L310.8,321.3L299.5,313L293.9,301.5L295.6,302.9L297.1,300.6L300.6,300.2L310.3,294.2L310.1,292.1L313.7,294.7L316.6,292.2L318.3,294.9L325.9,295.8L324.8,298.5L328.5,302L331.1,300.5L330,297.9L336.4,298.7L335.7,300.7L337.7,302.5L343.2,302.7L345.5,305.4L346,307.2L341.5,310.5L340.7,313.5L338.1,316L334,316.2L332.4,319.4L317.1,315.9L314.9,321.2Z"},{"iso":"FI","name":"Finland","lx":355,"ly":123,"d":"M351.8,60.1L357.8,63.6L356.4,71.2L358.2,71.4L357.8,75.3L359.9,78.9L367.4,82.9L366.2,93.3L375.2,105L374,106.2L375.7,114.7L378.7,115.7L379.6,120L383.5,122.6L381.7,127.6L392.9,134.4L388.3,152.2L380.6,167.8L377.4,167.7L374.2,170.5L374.1,167.8L373.5,171.1L370.1,171.7L371,173.5L369.2,172.4L363.3,178.3L357.4,179.9L357.7,178.4L354.6,182.2L356.7,179.2L355.6,180.6L356.2,179.1L353.7,178.3L354.5,175.7L351.7,177.8L351.8,175.7L343.9,173.9L343.8,163.1L338.2,149.4L340.8,145.9L339.6,143.6L343.7,142.4L342.5,140.3L347.4,134.2L351.2,122.4L355,121.4L354,119.8L355.3,119.6L353,113.4L349.6,112.5L349,109.6L346.9,111.4L343.6,107L343.4,99.9L340.5,96.2L340.8,93L339.1,92.8L338.9,87L323.1,76.5L325.2,76.5L325.7,72.9L331.6,79.2L335.2,79.5L338,76.5L342.7,78.5L345,73.1L343.7,65.1L345,61.7L350.2,58.3L351.8,60.1Z"},{"iso":"FR","name":"Frankrijk","lx":209,"ly":339,"d":"M273.2,392.3L274,399L270.7,407.8L267.2,405.5L268.4,404L265.5,400.7L266.9,399.6L265.5,395.7L266.8,393.5L271.8,392.3L272.6,388.4L273.2,392.3Z M222.5,289.8L223,293.1L226.7,293.8L227.5,297.1L233.8,300.5L233.4,304.1L236.1,304.6L238.7,302.2L238.7,306.6L243.2,310.4L250.4,311.1L252.6,314.9L264.2,317.7L258.8,327.6L258.7,333.9L257,335.7L253.8,334.8L244.8,349.7L251.8,347.4L253.5,353.3L251.5,355.7L254.3,359.9L249.6,362.9L253,366.4L251.3,369.7L252.2,372.8L258,374.4L256.8,378.9L244.6,387.1L235.1,383L236.8,381.7L235.2,380.5L233.4,382.4L232.3,380.1L231.7,382.6L226,380L217.9,384.9L216.6,387.5L218.1,392.4L212.4,393.1L207.8,392.4L205.7,389L197.2,385.1L196.6,387.1L190.7,386.4L178.8,380.2L179.6,377.8L176.5,376.2L179.8,373.3L185,361.7L184.1,360.4L183.2,361.6L186.2,351.2L189.5,359.8L188.5,352.8L185,349.4L187.1,342.4L182,339.5L179.9,334.9L180.7,329.8L183.8,331.1L177.5,329L179.3,326.8L175.6,326.3L176.9,324.8L173.5,324.6L173.4,326.2L167.4,320L164.2,320.4L161.9,317.1L165.5,316.9L163.9,313.9L166.7,314.9L162.2,313.1L164.7,310.4L172.2,311.4L175.4,309.6L178.7,314.7L182,313.2L184.2,315.5L184.5,313.4L189.2,314.7L186.8,301.3L191.9,302.6L192.4,306.6L199.1,308.5L204.3,307.2L201.8,306.2L202.9,304L213.2,300.3L215.4,291.6L222.5,289.8Z"},{"iso":"DE","name":"Duitsland","lx":281,"ly":285,"d":"M301.2,250L303.9,253.5L301.5,254.9L299.6,253.6L299.7,251.2L302.1,251.7L300.3,251L301.2,250Z M284.8,253.6L283.7,259.4L285.6,257.9L287.9,259L295.4,252.2L298.2,252.7L294.5,254.8L298.9,252.9L302,256.4L303.8,255.4L304.7,259.3L308,260.8L309.2,267.3L307.7,270.8L311.4,274L311.7,282.9L314.8,287.2L315,291.9L314,294.7L310.1,292.1L310.3,294.2L300.6,300.2L297.1,300.6L295.6,302.9L293.9,301.5L297.4,306.2L298.7,312L307.2,318.1L307.9,321.6L305,322L304.8,324.4L299.9,327.4L302.2,335.1L299.9,332.7L286.8,336.4L281.8,334.1L279.4,337.9L276.5,334.1L266.9,331.5L265.3,332.7L266.6,334.1L259.2,334.3L258.8,327.6L264.2,317.7L252.6,314.9L249.9,311.3L251.4,307.2L248.4,304.1L250.6,299.7L247.2,292.3L250,288.7L248.4,283.3L254.2,282.4L256.6,278.6L254.1,274.8L256.8,273.8L259.3,266.1L256.9,265.1L258.5,261.7L264,261.4L264.6,264.5L266.3,262.6L267.4,265.7L268.8,259.3L273,259.8L276.8,263.6L270.3,258.8L270.3,254.6L268.3,254.1L271.2,252.2L268.3,247.7L266.3,249.2L267.1,245.5L267.5,247.3L277.4,248.7L277.1,252.7L284.8,253.6Z"},{"iso":"GR","name":"Griekenland","lx":398,"ly":421,"d":"M412.6,464.3L415.5,463L417.4,465.5L431.3,462.9L432.1,465.4L436.5,462.4L436.7,464.1L435.4,466.1L422.3,469.4L418.4,467.2L409.8,467.6L410,463.7L411.3,464.7L411.3,462.6L412.6,464.3Z M449.2,452.1L447.9,449.1L451.9,444.6L449.2,452.1Z M377.2,435.9L379.3,439.5L375,438.8L377.2,435.9Z M427.5,429.5L425.9,429L425.2,425L427.9,424.9L427.5,429.5Z M402.6,426.3L409.4,427.5L411,432.2L414.2,432.6L414.5,434.4L408.9,430.6L405.1,431L400.2,426.9L396.9,427.6L400.7,424.4L402.6,426.3Z M428.2,416L430.3,419.2L426.1,418.9L427.3,417.1L425.9,418.8L423.5,418.2L426.6,415.1L428.2,416Z M421.8,388L424.4,388.6L425.6,391.4L423.2,393.4L424.1,396.6L422.4,399.6L413.3,398.2L401.3,403.8L403.3,407.5L408.5,409.4L402.1,408.4L405.2,412.6L399.5,409.7L399.3,411.4L403.2,413.3L399.7,413.1L398.6,410.5L394.7,409.2L394.3,406.3L391.8,408.7L392.6,414.1L401,422.7L398.5,424.1L399.8,422.8L396.9,421.2L396.2,423.2L398.7,424.8L394,427.7L408.3,432.1L410.5,437.7L409.4,439.2L405.2,435.5L400.3,437.8L402.2,441.2L405.9,442.6L402.9,444.9L398.2,442.5L404.7,454.8L398.6,451.5L398,456.6L393.8,449.7L391.8,450.4L391.7,453.6L389.8,452.8L388.4,445.8L382.6,440.6L384.6,437L387.1,437.2L388.8,434.8L398.8,437.9L401.8,434.8L393.6,432.7L393.6,434.1L383.9,434.4L382.3,436.2L377.7,431L381.2,428L378,427.2L377.4,429.2L369.7,421.5L371.7,421.7L373.2,419.5L372.1,417.5L375.1,415.9L377.7,409.9L376.8,406.6L382.2,405.5L385.2,402L391.7,400.7L392,398.2L404.3,393.3L414,395.3L420,393.1L421.6,391.3L419.9,388.4L421.8,388Z"},{"iso":"HR","name":"Kroatië","lx":331,"ly":361,"d":"M341.5,385.3L351.5,388.9L352.9,391.3L338.9,385.1L341.5,385.3Z M331.7,345L341.4,351.7L347.7,352L350.7,349.7L353.6,354.1L352.8,355.8L356.7,357.1L354.6,357.6L353.3,362L347.1,359.3L343.9,360.8L335.8,359L332.6,359.8L330.9,362.6L328.3,360.2L326.5,360.9L326.4,365.2L329.9,368.6L330.4,372.2L340.7,380L344,385.8L337.5,381L329.7,380.5L321.9,372.8L322.8,371.2L325.1,371.8L320.4,368.5L318.6,362.2L315.5,360L313.9,360L311,366.7L308.2,362.3L307.2,358.2L314.6,358L316.2,355.7L318.2,358L322,357.8L322,354.4L325.1,353L324.5,348.6L329.4,344.5L331.7,345Z"},{"iso":"HU","name":"Hongarije","lx":351,"ly":333,"d":"M350.7,349.7L347.7,352L341.4,351.7L331.4,344.6L329.5,340.8L327.6,340.6L330.7,338.8L329.8,334L331.8,332.3L329.5,330.6L334.3,330L335.4,326.2L340.1,329L347.1,328L348.1,324.5L353.9,321.5L356.4,322.4L362.6,316.2L367.5,315.4L370.5,317.8L374.2,316.4L379.4,319.4L379.3,322.4L373.9,327.2L369.4,342.5L365.2,345.2L356.5,345.9L350.7,349.7Z"},{"iso":"IS","name":"IJsland","lx":137,"ly":92,"d":"M160,92.5L161.4,94.9L159.1,97.4L161.7,97.7L159.4,100.5L161.4,99.2L163.8,102L162.9,104.8L160.5,104.8L162.5,107.1L160.1,106.3L160.9,108.4L159.3,107.6L160.3,108.9L158.5,110L156.5,108.3L154.7,112.6L152,113.5L150.5,111.5L143,114.6L135.6,113.6L134.3,115.7L129.8,115.5L123.5,110.6L121.7,104.4L113.4,102L114.9,99.1L117.7,101L122.7,99L119,98L123.5,95.9L119.5,96.4L120.5,92.1L113.7,89.6L113.7,87.3L124.3,91.1L125.6,89.5L121.9,87.9L127.2,86.9L124.6,85.7L126.3,84.5L117.6,82.5L115.3,79.9L117.1,79L118.6,81.3L119.1,77.7L121.4,81L122.7,80.2L120.4,77.6L123,79.5L121.5,76.3L123.2,77.5L124.1,75.1L126.3,81.2L126.3,76L128.8,76.7L126.4,74.8L127.1,73.5L129.8,75L131.8,81.5L130.4,84.7L128.7,83.4L128.3,91.4L133,86.6L133,89.2L137.6,83L138.6,88.8L140.3,85.2L143.9,85.1L144.2,92.4L145.9,86.2L148,89.6L151.2,88.1L153,90.4L155.3,85.9L157.6,86.5L158.6,92L162.6,90.6L160,92.5Z"},{"iso":"IT","name":"Italië","lx":303,"ly":385,"d":"M295.2,340.9L297.9,344.5L308.4,346L305.8,348.9L308.2,350.2L306.7,352.2L310.6,356.5L304,355.2L303.7,356.8L297,359L296.1,361.5L299.4,365L297,367.9L298.6,374.1L309.2,381.2L313.2,391.5L319.9,398L323.8,399.7L332.4,399.1L331.4,404.8L350.4,412.5L355.5,417.9L354.5,422.1L349.4,416.9L343.4,416L344.3,414.8L340.7,415.8L337.5,424.1L343.9,428L344.5,433L339.4,435.4L339.5,439.8L335.2,446.1L331.1,445.4L332.4,437.9L335.8,434.4L329.8,421.6L327,422.2L323,419.7L321.2,414.6L317.2,416.1L318.3,414L314.8,413.3L311.3,408.4L305.2,408.6L292.3,396.6L287.7,395.6L288.4,394L283.1,389L278.6,376.3L267.4,371.5L261.4,377.8L256.8,378.9L258,374.4L255.3,374.7L251.4,371.7L253,366.4L249.6,362.9L254.3,359.9L251.7,354.4L260.3,353.7L265.2,347.4L265.2,350L270,354.9L272.2,347L279.1,350.3L278.4,346.6L281.8,346.5L281.8,342.7L286.3,343.8L287.6,341.5L296,339.9L295.2,340.9Z M273.6,410.4L276.4,417.7L274.6,420.9L274,434L268.9,432.5L268.8,435.8L265.4,436.9L262.6,434.7L264.8,425.4L263.3,424.9L263.2,418L261.2,416.8L261.7,413L265.4,413.9L270.6,409.2L271.1,409.1L273.6,410.4Z M330,444L326.3,452L328.8,457.4L326.8,461.8L303.2,452.3L300.9,449.5L302.1,446.4L305.6,446.7L309.2,444.3L313.6,447L331.1,442.3L330,444Z"},{"iso":"LV","name":"Letland","lx":371,"ly":215,"d":"M350.3,223.6L349.5,218.9L352.3,209.5L357.4,206.4L363,213.4L366.6,214.2L369.8,210.1L367.7,203.1L373.2,199.3L382.3,204.1L384.3,202.2L388.5,202.3L396.7,215.9L394.1,222.4L390,222.9L387.9,225.3L376.8,221.4L374.9,218.8L370.7,222L356.8,222.7L350.9,227.8L350.3,223.6Z"},{"iso":"BY","name":"Wit-Rusland","lx":405,"ly":246,"d":"M388.1,225.3L390,222.9L394.1,222.4L396.3,217.2L401,218.6L405.2,217.4L406.6,220.3L408.9,217.6L412.6,217.2L416,218.6L418.6,224.8L417.9,228.1L423.5,233.3L427.4,234.3L427.9,237.4L432.7,236.8L435.6,239.2L433.4,244.4L427.6,245.1L427.3,247.4L430.2,249.2L434,256.7L428.3,258.9L428.3,269.1L424.9,267.1L419.3,270.2L417,267.6L415,270.9L410.8,268.9L407.7,272.1L402.8,269.7L388.5,270.6L382.6,272.7L380.8,276.4L377.5,277.9L376.8,271.5L373,269.8L377.4,263.3L371.7,249.9L377.9,249.4L384.2,242.9L386.7,244.1L384.6,242.6L384.8,235.9L390.5,229.5L388,229.4L388.1,225.3Z"},{"iso":"LT","name":"Litouwen","lx":374,"ly":234,"d":"M376,220.5L388.1,225.3L388,229.4L390.5,229.5L384.8,235.9L384.6,242.5L386.6,244.2L384.2,242.9L377.9,249.4L371.7,249.9L370.8,247.3L365.2,245.1L365.5,240.4L363.2,238.1L353.9,237.3L350.9,227.8L356.8,222.7L370.7,222L374.9,218.8L376,220.5Z"},{"iso":"SK","name":"Slowakije","lx":352,"ly":316,"d":"M335.5,326.2L331.9,322.4L333,317.5L338.5,315.7L343.9,307.7L348.6,308.2L350.7,305.6L353.5,309.9L355.9,310L357.8,307.1L362.2,307.6L367.3,305.1L375.1,308.1L373,316.9L370.1,317.7L367.5,315.4L361.5,316.5L356.5,322.4L353.9,321.5L348.1,324.5L346.9,328.1L340.1,329L335.5,326.2Z"},{"iso":"MK","name":"Noord-Macedonië","lx":382,"ly":398,"d":"M375.2,406.2L371.1,399.5L373.2,392.4L386,387.1L391,390.3L393.3,393.4L391.8,400.7L385.2,402L382.2,405.5L375.2,406.2Z"},{"iso":"BE","name":"België","lx":238,"ly":297,"d":"M235.7,288.9L237.3,286.5L241.3,286.7L242.7,289.5L247.2,291.1L245.7,295.6L249.9,297.5L250.7,301.1L245.7,305.2L246,310L243.2,310.4L238.7,306.6L238.7,302.2L236.1,304.6L233.4,304.1L232.9,299.5L227.5,297.1L226.7,293.8L223,293.1L222.5,289.8L227.1,287.5L235.7,288.9Z"},{"iso":"LU","name":"Luxemburg","lx":248,"ly":307,"d":"M247.8,302.6L251.4,307.2L249.9,311.3L245.7,310.1L245.5,305.7L247.8,302.6Z"},{"iso":"ME","name":"Montenegro","lx":359,"ly":386,"d":"M352,389.4L353.3,381.1L355,379.7L356.5,380.9L355.5,377.2L368.4,384.1L365.3,385.6L366.1,387.7L364.1,389.1L362.3,387.6L359.8,393L361,396.9L352,389.4Z"},{"iso":"NL","name":"Nederland","lx":245,"ly":279,"d":"M231.8,287.6L235.3,287.9L232.7,289.4L228.9,288.2L230.1,286.7L231.8,287.6Z M247.4,276L244.8,277.7L242.8,276.5L246.6,273.8L247.4,276Z M255.9,264.6L258.1,269.6L256.7,273.8L254.1,274.8L256.6,278.6L254.2,282.4L248.4,283.3L250.1,287.5L247.2,292.3L248.1,295.8L245.3,294.7L247.1,291L242.7,289.5L241.4,286.7L236.6,287.9L230.3,286.2L232.6,284.6L235.8,286.7L231.6,283.3L235.1,283.9L233.1,282.1L238.9,274.9L244.8,277.9L248,275.5L245.1,268.1L243,269.4L244.3,272.4L242.3,273.1L242,276.2L238.9,274.8L240.4,269.1L242.9,269.3L248.9,264.6L255.9,264.6Z"},{"iso":"NO","name":"Noorwegen","lx":294,"ly":124,"d":"M304,82.5L303.1,85.2L304.8,81.2L306.4,84.6L302.7,87.9L302.3,85.5L300.1,88.8L302.3,80.3L304,82.5Z M301.2,81.6L300.2,84.9L299.7,82.7L297.4,84.7L297.6,82.4L300.3,82.1L299.8,79.8L301.2,81.6Z M310,72.9L311.9,73.6L312,76.5L308.2,79.1L307,75L310,72.9Z M314.9,70.2L314.5,71.8L311.4,71.9L313.8,70.3L312.6,69.3L314.3,70.4L313.8,68L314.9,70.2Z M316,66.1L317.6,66.4L315.7,68.9L313.8,67.3L316,66.1Z M331.9,56.8L330.8,60.6L329.5,58.8L331.9,56.8Z M330.8,54.5L326.4,59.1L325.3,57.1L330.8,54.5Z M251.6,167.2L249.4,166.1L252,163.5L259.8,164.4L250.8,163.6L252.3,162.3L250.7,160.1L252.7,162.4L252.8,160.3L257.7,162.1L255.5,159.7L257.7,158.4L258.7,161.6L258.1,158.4L259.8,157.6L261.5,161.9L261.5,159.8L263.6,160L260.3,157.2L257.4,157.4L259.6,157L257.5,155.8L262.1,155.3L264.5,157.2L264.9,154.9L267.9,155L261.4,154.4L262,151.5L267.1,151.6L270.1,155.5L266.5,151.2L267.7,150.1L270.1,153.2L270.8,151.6L268.1,149.9L272.3,149L270.5,149L270.8,146.6L274.8,147.1L273.5,145.6L276.5,144L279.4,148.4L278.4,146.4L282.8,146.1L281.8,144.3L285.7,142.1L283.8,141.3L285.8,139.5L284.8,138.2L280.1,144.7L277.6,145.5L278.5,142.4L275.6,143.6L279,140.4L278.1,138.9L280.6,134.6L282.4,135.3L283,132.5L284.3,135.9L286.8,132.7L285.3,131.2L289.2,128.4L284.3,131L286.6,128.9L284.6,129.2L292.7,123.9L290.4,126L291.2,124.5L289.2,125L291.1,122.6L289.6,120L291.7,120.1L291,116.7L293.5,117.5L291,115L295.1,112.8L295.2,114.4L297.9,111.7L292.6,113.5L295,112L292.5,111.9L292.1,109.6L295.7,108.5L293.4,109.3L294.8,108.1L293.2,107.3L296.8,106.3L294.6,104.7L299.3,103.4L297.9,102.7L299.2,101.3L303.6,102.5L302.9,100.9L304.6,101.1L301.7,99.7L298.2,100.9L301,96.7L304,100L304.9,96.5L302,97.2L302,94.9L304.2,94.6L299.9,96L299.5,94L304.4,92.3L301.6,91.2L304.5,88.4L307.3,93.5L305.8,91.2L308,90.2L305.1,87.6L308.3,89.4L305.8,86.9L309.5,86.5L310.6,88.8L311,84.5L306.3,85.2L308.2,82.7L311.4,82.9L309.3,81.9L311.7,81.7L310,80.1L312.7,76.9L312.6,72.9L316.1,74.9L313.5,73.2L315,71.8L318,75.3L315.2,71.1L318.2,68.3L318.6,72.8L320.1,66.1L320.1,74.6L321.6,70.6L323.4,71.3L321.6,68.4L324.1,64.9L327.9,67.6L327.1,63.3L323.3,62.9L324.3,61.5L328.9,62.9L327.9,61.4L330.3,61.6L328,64L330.2,62.8L332.4,64.3L332.5,58.5L335.2,57.6L334.5,54.9L336.1,55.3L333.8,54L335.4,53.6L334.9,51.4L337.7,52.8L337.6,50.8L340,51.5L337.8,56.3L338.9,61.5L342.6,49.8L343.9,56.7L345.5,54.9L346.5,50.6L344.3,49.3L345.7,47L349.6,47.7L347.4,52.8L349.5,50.9L348.7,54L350.4,53.2L350.8,58.5L351.1,48.4L360.6,50.8L361.7,52.5L358.9,56L352.6,56.7L357.5,57.7L357.9,61.5L360.6,60.3L360.3,58L361.3,60.3L361.2,58.5L363.6,59.3L363.6,61.3L360.3,60.7L358.5,69L356.3,61.4L349,58.8L343.8,64.7L345,73.1L342.7,78.5L338,76.5L335.2,79.5L331.6,79.2L325.7,72.9L325.2,76.5L321.1,77L322.7,79.8L321.7,85.3L313.4,84.4L313.3,91.1L310.4,89.7L308.2,92.2L305.9,98.2L307.6,102.7L303.5,109.4L304.2,111.7L299.8,113.8L300.4,123.4L296.7,132.3L299.1,133.5L299.5,137L298.8,138.8L298.8,138.9L292,139.8L288.4,148.1L290.7,160L290,166.3L294.3,170.5L293.2,174.2L290.7,174.9L293.2,182L292.6,186L288.8,188.7L288,199.8L282.7,196.2L282.1,188.1L281.1,192.6L279.3,190.2L281.1,195.1L279.4,198.4L277.2,199.4L275.2,197.5L276.1,199L266.8,209.2L256.6,209.3L257.7,207.2L253.2,205.5L250,200.9L250.8,197.6L254.4,200.2L254.2,198.7L257.4,197.7L253.7,199.3L252.8,197.2L256.6,194.5L253.7,194.2L256.7,191.7L250.8,194.7L248.9,191.8L250.9,189.3L250.6,191.8L256,188.2L252.3,188.2L255.6,182.9L258.3,181.6L257.4,185.6L258.3,182.1L261.1,180.8L255.8,181.5L252.7,186.4L253,181.6L250.8,184.5L249.4,181.9L250.5,179.8L252.8,180.8L253,178L250.3,179.5L248.6,176.4L251.4,178.7L250.4,176.9L252.2,175.8L249.4,176.1L249.4,173.5L258.4,172.9L261.3,176.4L260.8,173.6L263.3,172.7L264.2,169.2L262.4,172.9L258.4,172.1L259.2,169.9L257.9,173.1L251.5,173.4L249.2,171L253.1,170.1L249.3,169.2L254.2,169.1L250.4,168.1L251.6,167.2Z"},{"iso":"PL","name":"Polen","lx":343,"ly":281,"d":"M346,307.2L343.4,302.7L336.2,301.2L336.4,298.7L330,297.9L331.1,300.5L328.5,302L324.9,298.6L325.7,295.7L318.3,294.9L316.6,292.2L314.1,294.1L315.4,289.2L311.7,282.9L311.5,274L307.7,270.8L309.2,267.3L308,260.8L309.8,261.2L310.3,259.3L307.5,258.1L320.7,253.2L323,249.6L332.8,245.1L338.1,246.5L335.4,245.9L338.4,250L344.4,248.2L341.9,250.7L345.4,248.3L367.2,245.4L371.1,247.7L376.8,260.2L377.4,263.8L373,269.8L376.8,271.5L377.2,277.3L383.2,285.2L381.9,285.8L383.2,290.5L381,291.3L375.1,302.2L377.8,308.5L367.3,305.1L362.2,307.6L357.8,307.1L355.9,310L353.5,309.9L350.7,305.6L348.6,308.2L346,307.2Z"},{"iso":"PT","name":"Portugal","lx":115,"ly":409,"d":"M118.2,382.1L132.2,384.5L132,387.8L134.8,389.7L127,394.7L127,400.7L124.1,404.1L125.1,406.4L123,410.1L118.4,409.1L122,417.7L117.3,423.6L120.1,427.6L113.3,433.5L113.4,438L108.5,439L98.4,436.3L104.9,421L100.3,419.8L100.1,416.7L103.6,416.4L103.5,414.1L101.7,416.5L98.5,414.8L111,394.8L112.3,381L118.9,378.9L118.2,382.1Z"},{"iso":"RO","name":"Roemenië","lx":404,"ly":348,"d":"M366,344.5L369.4,342.5L375.5,324.4L381.7,318.7L393.1,318.4L396.3,320.6L409.6,311.1L425,326.7L426.7,339.5L432.8,342.4L439.5,338.6L441.2,344.7L438.2,346.3L436.2,344.2L434.9,345.3L435,348.8L436.7,348L434.9,349.3L436.4,348.9L434.8,353.1L436,359.7L422.1,358.2L415.1,361.8L409.8,367.3L389.6,369.1L387.6,368.5L388.8,365.9L383.3,362.4L385.1,360.3L382.6,359.4L380.5,362.6L373.8,360L374.2,355.5L367.8,352.6L367.2,349.2L362.3,345.8L366,344.5Z"},{"iso":"MD","name":"Moldavië","lx":429,"ly":323,"d":"M423.6,324.7L408.5,310.2L416.3,307L428.2,309.6L430.2,315.8L433.6,316.2L434.7,320.7L438,321.4L438.5,324.7L440.7,325.6L431.5,327.3L432.7,332.8L430.5,339.4L428.2,340.8L423.6,324.7Z"},{"iso":"SI","name":"Slovenië","lx":317,"ly":350,"d":"M308.4,346L315.2,347L317.7,344.4L328.6,340.5L332,344.9L329.4,344.5L324.5,348.6L325.1,353L322,354.4L321.2,358.3L316.2,355.7L314.6,358L308.1,358.6L310.6,356.5L306.7,352.2L308.2,350.2L305.8,348.9L308.4,346Z"},{"iso":"ES","name":"Spanje","lx":152,"ly":402,"d":"M199.4,431.9L196.4,432.2L199.5,429.9L199.4,431.9Z M216.1,424.3L218,425.3L213.9,429.7L210.8,426L207.8,425.6L213.9,422L216.1,424.3Z M225.6,422.4L225.5,424.2L221.3,421.4L225.6,422.4Z M126.1,361.1L132.2,365.8L142.6,366.3L153.3,371.6L161.4,371.8L172,376.2L176.5,375.8L179.6,377.8L178.9,380.3L184.7,382.2L186,384.6L196.6,387.1L197.2,385.1L202.5,387.5L203,390.8L212.4,393.1L217,391.9L219.2,393.9L217.3,394.9L217.7,398.9L207.4,405L197.2,406.7L194.3,409.1L195.9,410.5L192.5,411.8L183.1,423.4L183.7,429L186.9,433L179.7,436.8L175.5,443.5L176.7,444.9L167.6,446.4L162,453.1L160.1,451.5L155.9,452.7L140.6,449.4L137.9,451.4L132.6,451.6L127.6,455.4L123.1,450.9L120.8,441.7L117.7,438.6L113.5,438.1L113.3,433.5L120.2,427.2L117.3,423.6L122,417.4L118.4,409.1L123,410.1L125.1,406.4L124.1,404.1L127,400.7L127,394.7L134.8,389.7L132,387.8L132.2,384.5L118.5,383L118.9,378.9L112.4,380.7L112.9,377.9L116.2,375.8L113.5,376.3L115.8,374.8L113.8,373.7L116,371.5L112.8,372.8L114.6,370L111.8,367.6L113.6,364.9L121.2,364.2L126.1,361.1Z"},{"iso":"SE","name":"Zweden","lx":316,"ly":160,"d":"M322.3,222.4L320.4,230L319.9,225.5L323.1,216L322.3,222.4Z M331.1,220.5L329.6,213.3L332.6,208.3L334.7,208.1L333.8,216.2L331.1,220.5Z M329.4,81.3L334.2,82.6L339,87L339.1,92.8L340.8,93L340.5,96.2L343.4,99.9L343.1,105.9L346.7,111.1L341.8,113.5L339.2,111.5L339.7,113.3L337.9,112.7L339,116L335.4,114.4L337.9,116.1L334.7,118.5L335.9,120L333.8,119.2L336,121.3L333.7,125.3L337.3,129.5L334.3,136.8L329.5,142.7L327.9,141.6L322.6,151.4L319.5,149.3L322,153.8L318.2,155.4L320.4,158.2L319.1,161.8L320.3,165.4L318.2,164.6L319.2,173.7L320.3,176.8L323,178.6L324.4,177.3L332.2,186.5L326.9,192L324.9,191.5L323.3,186.8L324.6,191L322.3,188.7L322.7,190.9L317.3,189.8L314.3,191.4L319.6,192.3L319.2,191L322.7,193.5L328.8,190.6L330.3,191.8L328.1,192.2L326.4,197.8L324.6,194.3L323.2,199.4L316.3,201.6L321,202.8L317.8,203.2L320.6,206.2L320.7,210L318.8,209L320.4,211.7L318.5,210.1L320.7,214.9L316.8,231.7L309,231.5L309.4,233.2L306.1,235.6L306.3,240.8L300.2,241.7L298.1,241.1L298.5,237.6L294.2,230.6L296.6,231.3L295.2,229.2L296.8,226.4L293.2,223.3L288.8,214.1L289.8,208L285.5,205.9L284.8,198.6L286,197.5L288,199.8L288.8,188.7L292.7,185.8L293.3,181L290.7,174.9L293.2,174.2L294.3,170.5L290,166.3L290.7,160L288.4,148.1L292,139.8L298.8,138.9L298.8,138.8L299.5,137L299.1,133.5L296.7,132.3L300.4,123.4L299.8,113.8L304.2,111.7L303.5,109.4L307.6,102.7L305.9,98.2L308.2,92.2L310.4,89.7L313.3,91.1L313.4,84.4L321.8,85.3L322.7,79.8L321.1,77L324.3,76.9L329.4,81.3Z"},{"iso":"CH","name":"Zwitserland","lx":266,"ly":343,"d":"M259.5,334.4L266.6,334.1L265.3,332.7L266.6,331.5L272.1,333.3L275.2,335.8L273.7,340.5L278.9,343L281.2,341.2L281.9,346.5L279,345.8L278.6,350.4L272.2,347.1L269.7,355L265.2,350L265.2,347.4L260.3,353.7L254,353.9L250.4,346.9L245,350.4L246.4,345.2L253.8,334.8L259.5,334.4Z"},{"iso":"TR","name":"Turkije","lx":500,"ly":400,"d":"M495.8,363.5L500.4,365.9L504.7,363.7L509.6,367.6L512.3,365.1L519.5,366.4L520.4,364.7L526.9,365L534.9,359.1L541.5,358.8L550.2,346.9L558.2,344.4L560.4,341.4L570.1,345.3L573.9,354.3L579.9,352.4L585.2,354.2L583.2,354L583.3,358.6L580.4,360.6L587.4,370.4L589.1,370.1L589,376.1L593.1,376.3L597.3,381.9L594.1,385.8L590.9,382.9L587,385.9L579.2,387.7L576.8,392.5L574.5,391.1L569.8,396L563,398.6L551.4,409.4L541.7,410.1L535,416.1L527.9,416.5L530.4,423.1L527.8,424.4L527.1,429.6L524.5,429.1L522,425.4L524.6,420.1L521.9,417.5L517.1,424.1L510.1,423.2L505.7,431.3L495.7,437.6L491.2,437.2L486.8,434L477,433.1L473.1,434.2L472.9,442.2L470.7,441.6L466.4,445L460.7,443.6L459.1,440.1L453,439.2L449.4,444L450.1,440.9L443.4,443.9L451.4,437.6L441.7,440.9L444.2,437.1L442.1,435.4L440.2,436.6L439.4,429.4L429.6,427.9L431.4,425.6L429.6,423.1L433.2,426.6L437.3,424L432.9,422.6L435.4,419.2L432.8,418.9L430.7,415.6L432.6,411.4L425,414.3L424.7,408.6L426.6,405.3L432,400.9L438.2,401.1L437.4,398.6L439.9,398.6L439.6,400.2L449.3,397.6L446.5,396.1L456,391.4L448.4,391.2L447.9,387.5L466.1,384.1L473,374.1L480.9,367.9L492.7,364.8L494.3,362.4L495.8,363.5Z M430.5,382.3L435.9,381.3L438,385.5L447.2,387.4L447.2,389.7L434.1,393.9L424.5,407.5L424.3,404.2L429.1,399.9L422.4,401L424.1,396.6L423.2,393.4L425.6,391.4L422,387L427.3,382.1L430.5,382.3Z"},{"iso":"GB","name":"Verenigd Koninkrijk","lx":187,"ly":243,"d":"M178.2,257.4L176.2,258.2L175.7,254.9L178.2,257.4Z M168.4,230.8L171.7,236.8L169.7,238.8L172.3,238.8L170.7,243.4L167,245.2L163.3,244.2L161.7,239.2L158.9,242.3L155.6,240.2L154.2,236.7L157.4,236L156.5,234.4L162.1,231.3L168.4,230.8Z M171.7,223.7L171.8,226.1L169.7,226.9L169.5,223.6L171.7,223.7Z M175.6,216.9L175.6,218.8L171.4,218.8L174.1,216.8L172.4,215L175.6,216.9Z M176.2,204.1L175.6,207.2L178.4,208.4L175.5,210.6L171.9,204.6L175.3,202.5L176.2,204.1Z M178,194.9L177.8,196.7L174.7,197.5L176.2,198.4L174.2,199.4L174.3,197.6L171.5,201L172.5,195.2L173.3,196.8L178.1,193L178,194.9Z M178.2,257.4L188.5,257.9L186.2,255L189.6,247.5L186.6,248.5L184.7,243.1L187.3,239.1L189.8,238.5L186.2,237.6L183.1,239.7L180.5,237.5L180,240.2L177.4,237.3L176.3,239.7L175.6,235.3L180.5,230.3L179.9,224.8L182.4,225.5L180.7,222.8L179.1,225.5L176.9,225.2L179.7,221.2L176.5,223.2L174.3,230.6L172.4,231L176.4,219.3L179.9,217.9L177.9,217.8L180.6,214.3L176.2,217.2L174.5,215.1L177.5,215.1L173.3,213.8L177.3,212.9L175.7,212.3L178.5,211.6L177.6,210L179.6,210.5L178.2,209.5L180.1,206.8L177.6,206.9L178.1,204.5L180,205.4L178.9,201.6L183.4,202.3L181.8,199.2L182.7,197.1L184.6,197.5L186,193.4L187,195.9L188.5,194.5L198,195.6L196.1,199.4L190.1,203.5L187.9,202.6L191.6,204L186.8,206.4L201.8,207.7L203.2,210.9L196.6,220.3L191.2,222L194,221.4L195.5,223.9L187.6,225.3L194.8,226.3L200.3,233L201,243L208.2,251.9L208.6,258.5L203,256.1L206,256.3L209.1,260.6L209.4,264.2L206.6,266.4L209.2,268L213,266.2L218.4,269.7L216.8,277.3L214.7,278.9L213.6,277.6L213.8,280.2L209.8,280.8L211.5,282.4L207.1,283.6L214.4,285.3L214.1,288.1L205,291.9L194.8,289.1L184.7,291.1L181.5,288.2L177.4,289L174.5,293.3L169.9,290.5L164.5,291.7L162.9,294L161.3,291.6L159.5,292.2L172.9,281.1L181.7,282.6L187.6,277L179.8,280.1L176.7,276.6L173.4,276.7L175.2,275.6L168.7,275.3L169.5,273.6L166.9,273.2L167.4,271.1L176.3,267.8L177.6,261.1L172.9,261.6L178.2,257.4Z M212.2,175.8L213.6,176.6L211,183.3L211.7,178.8L209.4,177.9L211.7,177.4L210.3,175.7L212.4,174.1L212.2,175.8Z"},{"iso":"UA","name":"Oekraïne","lx":453,"ly":302,"d":"M444.3,250.2L447.2,249.1L453.3,254L451.7,256.5L455.2,260.2L460.1,259L462.9,260.2L467.3,267.2L470.8,265.1L475.2,266.1L479.9,261.3L486.2,265.7L487.5,262.9L500.2,264.2L502.5,262.8L504.2,266.4L502,270.4L505.3,270.8L503.6,275L507.5,277.5L507.9,283.4L501.2,285.9L498.6,290.4L499.5,297L495.1,298.4L494.1,301.3L484.4,308.2L479.8,317.2L481.4,313.2L479.8,312.5L476.7,319.5L475.3,319.6L475.8,317.2L468.9,319.2L473.6,321.1L477.4,319.8L476.7,322.2L481.3,322.3L483.5,325.4L485.3,325.2L477.1,317.9L486.4,324.8L494.6,320L494.8,324.5L490.6,327.1L487.4,326.6L485.2,331.6L482.3,332.4L478.9,338.3L475.7,339.8L472.3,338.6L473.7,337.6L472,332.2L462.5,331.6L470.8,322.2L468.6,320.1L460.4,323.8L454,323.2L455.6,321.1L450.9,320.5L457.9,319.8L459.5,317L454.7,318.7L450.5,312.2L453.8,318.7L450.5,320L450.8,317.7L450,320.2L445.7,322.4L443.3,331.5L440,335.6L438.5,333.5L441.1,340.1L437.2,338.6L431.7,342.4L428.2,340.7L430.5,339.4L432.7,332.8L431.4,327.5L440.7,325.6L438.5,324.7L438,321.4L434.7,320.7L433.6,316.2L430.2,315.8L428.2,309.6L414.7,307.2L396.3,320.6L392.9,318.3L381.8,318.6L380,320.8L373.3,316.5L375.2,308L377.8,308.5L375.1,302.2L383.6,288.5L377.8,276.7L380.4,276.7L382.7,272.7L392.4,270L403,269.7L407.7,272.1L410.8,268.9L415,270.9L417,267.6L419.3,270.2L424.9,267.1L428.3,269.1L428.3,258.9L436.6,256.7L437.4,252.7L444.3,250.2Z"},{"iso":"RS","name":"Servië","lx":369,"ly":368,"d":"M366.1,387.7L365.1,386L368,383.6L357.5,377.5L359.7,375.2L356.9,371.6L360.1,370.8L355.3,367.7L356.9,361.5L353.7,361.4L354.6,357.6L356.7,357.1L352.8,355.8L353.6,354.1L350.7,349.7L357.3,345.6L361.7,345.4L367.2,349.2L367.8,352.6L374.2,355.5L373.9,360L380.5,362.6L382.6,359.4L385.6,360.7L383.2,362.1L385.6,364.3L383.7,369.9L385.8,373.8L390.3,376.4L386.2,381.5L387.2,386.9L375.8,390.6L372.8,395.2L366.1,387.7Z"},{"iso":"RU","name":"Rusland","lx":456,"ly":203,"d":"M354.4,236.7L365.1,239.6L365.9,245.9L345.4,248.3L349.1,244.9L345.6,245.8L345.7,242L348.7,241.7L351.6,237.2L349.4,241.4L353.4,241.6L354.4,236.7Z M415.5,113.5L550.1,227.8L547.2,228L548.2,233.1L546.7,236.3L548.9,242.4L551.8,243.4L552.1,253.3L557.1,252.4L559.8,257.1L562.2,257.6L561.7,255.7L567.7,254.1L578.7,260.5L575.5,262.8L576.7,264.7L583.6,264.7L580.1,268.9L582,271.8L580.2,271L576.8,277.3L574.2,277.3L576,279.2L573.1,278.2L575.7,281.2L574.8,294.2L582.4,296.7L585.7,302L585.8,296.9L588.8,307L603.6,314.7L601.5,324.6L597.4,326.1L589.6,322.3L579.5,323.4L578.7,319.9L573,319.9L562.9,326.5L562.6,324.7L552.9,323.8L543,328L530.6,328.9L529.2,331.9L516.2,326.2L511.1,326.6L506.7,324.2L504.6,325.7L501.1,323.1L496,323.2L498,320.6L495.5,320.9L496.3,319.1L499.1,320.7L503.9,318L501.4,314.7L502.4,309.2L503.9,309.6L504.1,307L507.1,307.1L498.1,302.7L504.5,300.2L502.7,300.1L502.8,298.3L508.1,294L506.7,291.3L500,296.2L498.9,293.6L501.2,285.9L508.1,283L507.5,277.5L503.6,275L505.3,270.8L502,270.5L504.2,266.4L502.5,262.8L500.2,264.2L487.5,262.9L486.2,265.7L479.9,261.3L475.2,266.1L470.8,265.1L467.3,267.2L462.9,260.2L460.1,259L455.2,260.2L451.7,256.5L453.4,254.1L447.1,249.1L437.4,252.7L437.2,256L434,256.7L430.2,249.2L427.3,247.3L427.8,244.8L433.4,244.4L435.6,239.2L432.7,236.8L427.9,237.4L427.4,234.3L423.5,233.3L417.9,228.1L418.6,224.8L416,218.5L410.8,217L406.6,220.3L405.2,217.4L396.7,217.3L391.4,209.3L391.2,204.5L387.2,202.1L389.2,198.1L386.1,194.7L384,187.7L386.8,181L384.7,175.6L386.9,176.6L387,174.2L389.1,174.5L390.4,171.4L396.4,171.4L396.6,170.1L385.8,168L385.2,163.8L380.8,167.3L388.3,152.2L392.9,134.4L381.7,127.6L383.5,122.6L379.6,120L378.7,115.7L375.7,114.7L374,106.2L375.2,105L366.2,93.3L367.4,82.9L359.9,78.9L357.8,75.3L358.2,71.4L356.4,71.2L358.7,68.7L360.4,60.6L363.6,61.3L362.8,58.3L366.9,58.3L366.3,54.9L372,56L371.6,57.9L368.2,57.9L370.4,59.2L369.6,60.6L372.7,58.9L372.6,61.2L374.8,58.8L374.9,64.7L375.7,59.7L385.5,57.8L399.4,62.7L406.7,63.3L405.6,62.1L410.7,65.1L413,64.5L417.4,69.1L418.1,79.4L411.8,87.1L396.9,89L392.9,87.8L391.6,89.2L385.1,88.3L381.1,85.6L377.5,86.4L386,89.9L384.3,91.3L387.5,90.8L384.9,91.8L388.7,91.6L387.4,93.5L391.2,92.9L396.1,95.6L397.5,97.4L395.8,96.9L396.3,102.1L401.3,107.1L401.9,110.6L415.5,113.5Z"}];
+
+      // ============================================================
+      // Application State
+      // ============================================================
+      const state = {
+        indicator: 'export',          // 'export' | 'import' | 'balance'
+        startYear: 2015,              // 2015 | 2020
+        mapYear: null,                // Europe map year slider
+        rankingYear: null,            // Slider year (2015..latestYear)
+        secondary2Mode: 'continents', // 'continents' | 'reexport'
+
+        // Dynamically resolved schema from /DataProperties
+        schema: {
+          landDim: 'Landen',
+          sitcDim: 'SITC',
+          periodDim: 'Perioden',
+          invoerField: 'TotaleInvoerwaarde_1',
+          uitvoerField: 'TotaleUitvoerwaarde_3',
+          wederuitvoerField: 'Wederuitvoerwaarde_4',
+          productNlField: 'UitvoerwaardeProductNL_5'
+        },
+
+        periods: [],                  // [{ key: '2015JJ00', year: 2015 }]
+        latestYear: null,
+        earliestYear: 2015,
+        partialYtdNote: null,
+
+        sitcList: [],                 // [{ key, title, shortTitle, isTotal }]
+        totalSitcKey: null,
+        selectedSitc: null,
+
+        totalLandKey: null,
+        quickContinents: [],          // [{ key, name, shortLabel, isContinent, isBloc }]
+        quickPartners: [],            // [{ key, name }]
+        allSearchableCountries: [],   // [{ key, name, groupName, searchKey }]
+        landMeta: new Map(),          // key -> { key, name, shortLabel, type, groupName }
+        euMapEntries: [],             // [{ iso, name, key, lx, ly, d, isHome }]
+        euMapKeys: [],
+        startupKeys: [],
+
+        selectedRegions: new Set(),
+        selectedCustomCountries: [],  // keys added via search that are not quick chips
+        focusRegion: null,
+
+        // Data cache: sitcKey -> Map<landKey, Map<year, row>>
+        dataBySitc: new Map(),
+        fetchedPairs: new Set(),      // `${sitcKey}|${landKey}`
+
+        colorMap: new Map(),
+        nextColorIdx: 0,
+
+        autocompleteIndex: -1,
+        autocompleteMatches: []
+      };
+
+      let mainLineChart = null;
+      let rankingBarChart = null;
+      let secondary2Chart = null;
+
+      // ============================================================
+      // DOM References
+      // ============================================================
+      const dom = {
+        statusDot: document.getElementById('statusDot'),
+        statusText: document.getElementById('statusText'),
+        reloadBtn: document.getElementById('reloadBtn'),
+        retryBtn: document.getElementById('retryBtn'),
+        loadingBanner: document.getElementById('loadingBanner'),
+        loadingStepText: document.getElementById('loadingStepText'),
+        errorBanner: document.getElementById('errorBanner'),
+        errorDetailText: document.getElementById('errorDetailText'),
+        dashboardContent: document.getElementById('dashboardContent'),
+        countryCountHint: document.getElementById('countryCountHint'),
+        countrySearchInput: document.getElementById('countrySearchInput'),
+        countryLoadingSpinner: document.getElementById('countryLoadingSpinner'),
+        countryAutocomplete: document.getElementById('countryAutocomplete'),
+        countryErrorMsg: document.getElementById('countryErrorMsg'),
+        sitcSelect: document.getElementById('sitcSelect'),
+        sitcLoadingSpinner: document.getElementById('sitcLoadingSpinner'),
+        quickChipsGrid: document.getElementById('quickChipsGrid'),
+        customChipsRow: document.getElementById('customChipsRow'),
+        resetRegionsBtn: document.getElementById('resetRegionsBtn'),
+        kpiFocusSelect: document.getElementById('kpiFocusSelect'),
+        kpiYearRangeBadge: document.getElementById('kpiYearRangeBadge'),
+        kpi1Label: document.getElementById('kpi1Label'),
+        kpi1Value: document.getElementById('kpi1Value'),
+        kpi1Sub: document.getElementById('kpi1Sub'),
+        kpi2Label: document.getElementById('kpi2Label'),
+        kpi2Value: document.getElementById('kpi2Value'),
+        kpi2Sub: document.getElementById('kpi2Sub'),
+        kpi3Label: document.getElementById('kpi3Label'),
+        kpi3Value: document.getElementById('kpi3Value'),
+        kpi3Sub: document.getElementById('kpi3Sub'),
+        kpi4Label: document.getElementById('kpi4Label'),
+        kpi4Value: document.getElementById('kpi4Value'),
+        kpi4Sub: document.getElementById('kpi4Sub'),
+        mainChartTitle: document.getElementById('mainChartTitle'),
+        mainChartSubtitle: document.getElementById('mainChartSubtitle'),
+        mainChartNote: document.getElementById('mainChartNote'),
+        yearRangeToggle: document.getElementById('yearRangeToggle'),
+        mapChartTitle: document.getElementById('mapChartTitle'),
+        mapChartSubtitle: document.getElementById('mapChartSubtitle'),
+        euMapStage: document.getElementById('euMapStage'),
+        euMapSvg: document.getElementById('euMapSvg'),
+        mapTooltip: document.getElementById('mapTooltip'),
+        mapLegendTitle: document.getElementById('mapLegendTitle'),
+        mapLegendList: document.getElementById('mapLegendList'),
+        mapLegendHint: document.getElementById('mapLegendHint'),
+        mapYearSlider: document.getElementById('mapYearSlider'),
+        mapYearValue: document.getElementById('mapYearValue'),
+        mapYearFirstBtn: document.getElementById('mapYearFirstBtn'),
+        mapYearLatestBtn: document.getElementById('mapYearLatestBtn'),
+        mapSummaryTitle: document.getElementById('mapSummaryTitle'),
+        mapSummaryList: document.getElementById('mapSummaryList'),
+        rankingChartTitle: document.getElementById('rankingChartTitle'),
+        rankingChartSubtitle: document.getElementById('rankingChartSubtitle'),
+        rankingYearSlider: document.getElementById('rankingYearSlider'),
+        rankingYearValue: document.getElementById('rankingYearValue'),
+        rankingYearFirstBtn: document.getElementById('rankingYearFirstBtn'),
+        rankingYearLatestBtn: document.getElementById('rankingYearLatestBtn'),
+        secondary2ChartTitle: document.getElementById('secondary2ChartTitle'),
+        secondary2ChartSubtitle: document.getElementById('secondary2ChartSubtitle'),
+        secondary2ModeToggle: document.getElementById('secondary2ModeToggle'),
+        secondary2Note: document.getElementById('secondary2Note'),
+        lastUpdatedLabel: document.getElementById('lastUpdatedLabel')
+      };
+
+      // ============================================================
+      // Utilities
+      // ============================================================
+      function setStatus(mode, text) {
+        dom.statusDot.className = 'status-dot ' + mode;
+        dom.statusText.textContent = text;
+      }
+
+      function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, ch => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[ch]));
+      }
+
+      function getRegionColor(key) {
+        if (key === state.totalLandKey) return '#0f172a';
+        if (!state.colorMap.has(key)) {
+          const color = COLOR_PALETTE[state.nextColorIdx % COLOR_PALETTE.length];
+          state.colorMap.set(key, color);
+          state.nextColorIdx += 1;
+        }
+        return state.colorMap.get(key);
+      }
+
+      function getDisplayName(key) {
+        const meta = state.landMeta.get(key);
+        return meta ? (meta.shortLabel || meta.name) : key;
+      }
+
+      function getSitcTitle(sitcKey) {
+        const item = state.sitcList.find(s => s.key === sitcKey);
+        return item ? item.shortTitle : 'Totaal goederen';
+      }
+
+      function formatMlnEuro(val, signed = false) {
+        if (val === null || val === undefined || Number.isNaN(val)) return '—';
+        const rounded = Math.round(val);
+        const absStr = fmtInt.format(Math.abs(rounded));
+        if (signed) {
+          const sign = rounded > 0 ? '+' : rounded < 0 ? '−' : '';
+          return `${sign}€ ${absStr} mln`;
+        }
+        const neg = rounded < 0 ? '−' : '';
+        return `${neg}€ ${absStr} mln`;
+      }
+
+      function formatMldHint(val) {
+        if (val === null || val === undefined || Number.isNaN(val)) return '';
+        const abs = Math.abs(val);
+        if (abs < 1000) return '';
+        const sign = val < 0 ? '−' : '';
+        return `≈ ${sign}€ ${fmtDec1.format(abs / 1000)} mld`;
+      }
+
+      function formatAxisTick(val) {
+        if (Math.abs(val) >= 1000) {
+          const mld = val / 1000;
+          const str = Number.isInteger(mld) ? fmtInt.format(mld) : fmtDec1.format(mld);
+          return `€ ${str} mld`;
+        }
+        return `€ ${fmtInt.format(val)} mln`;
+      }
+
+      async function fetchJson(url) {
+        const res = await fetch(url, { headers: { Accept: 'application/json' } });
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status} bij ophalen van CBS-data`);
+        }
+        return res.json();
+      }
+
+      function getRow(sitcKey, landKey, year) {
+        return state.dataBySitc.get(sitcKey)?.get(landKey)?.get(year) || null;
+      }
+
+      function getMetricValue(landKey, year, sitcKey = state.selectedSitc, indicator = state.indicator) {
+        const row = getRow(sitcKey, landKey, year);
+        if (!row) return null;
+        const imp = row[state.schema.invoerField];
+        const exp = row[state.schema.uitvoerField];
+        if (indicator === 'export') {
+          return typeof exp === 'number' ? exp : null;
+        }
+        if (indicator === 'import') {
+          return typeof imp === 'number' ? imp : null;
+        }
+        if (typeof exp === 'number' && typeof imp === 'number') {
+          return exp - imp;
+        }
+        return null;
+      }
+
+      function getLatestNonNull(landKey, sitcKey = state.selectedSitc, indicator = state.indicator) {
+        for (let i = state.periods.length - 1; i >= 0; i--) {
+          const yr = state.periods[i].year;
+          const val = getMetricValue(landKey, yr, sitcKey, indicator);
+          if (val !== null) return { year: yr, value: val };
+        }
+        return null;
+      }
+
+      function getEarliestNonNull(landKey, sitcKey = state.selectedSitc, indicator = state.indicator) {
+        for (let i = 0; i < state.periods.length; i++) {
+          const yr = state.periods[i].year;
+          const val = getMetricValue(landKey, yr, sitcKey, indicator);
+          if (val !== null) return { year: yr, value: val };
+        }
+        return null;
+      }
+
+      function isQuickChipKey(key) {
+        if (key === state.totalLandKey) return true;
+        if (state.quickContinents.some(c => c.key === key)) return true;
+        if (state.quickPartners.some(p => p.key === key)) return true;
+        return false;
+      }
+
+      function getOrderedSelectedRegions() {
+        const list = [];
+        if (state.totalLandKey && state.selectedRegions.has(state.totalLandKey)) {
+          list.push(state.totalLandKey);
+        }
+        for (const c of state.quickContinents) {
+          if (state.selectedRegions.has(c.key)) list.push(c.key);
+        }
+        for (const p of state.quickPartners) {
+          if (state.selectedRegions.has(p.key)) list.push(p.key);
+        }
+        for (const k of state.selectedCustomCountries) {
+          if (state.selectedRegions.has(k)) list.push(k);
+        }
+        return list;
+      }
+
+      // ============================================================
+      // CBS Open Data Fetching & Caching
+      // ============================================================
+      function ingestRows(sitcKey, rows) {
+        if (!state.dataBySitc.has(sitcKey)) {
+          state.dataBySitc.set(sitcKey, new Map());
+        }
+        const sitcMap = state.dataBySitc.get(sitcKey);
+        const landDim = state.schema.landDim;
+        const periodDim = state.schema.periodDim;
+
+        for (const row of rows) {
+          const landKey = row[landDim];
+          const periodKey = String(row[periodDim] || '');
+          const yr = parseInt(periodKey.slice(0, 4), 10);
+          if (!landKey || Number.isNaN(yr)) continue;
+          if (!sitcMap.has(landKey)) {
+            sitcMap.set(landKey, new Map());
+          }
+          sitcMap.get(landKey).set(yr, row);
+        }
+      }
+
+      async function ensureDataLoaded(sitcKey, landKeys, force = false) {
+        const uniqueKeys = Array.from(new Set(landKeys.filter(Boolean)));
+        const missing = force
+          ? uniqueKeys
+          : uniqueKeys.filter(k => !state.fetchedPairs.has(`${sitcKey}|${k}`));
+
+        if (missing.length === 0) return true;
+
+        const { landDim, sitcDim, periodDim, invoerField, uitvoerField, wederuitvoerField, productNlField } = state.schema;
+        const selectFields = [landDim, sitcDim, periodDim, invoerField, uitvoerField, wederuitvoerField, productNlField].join(',');
+        const periodFilter = state.periods.map(p => `${periodDim} eq '${p.key}'`).join(' or ');
+
+        // Chunk land keys into batches of 9 for fast, URL-safe OData queries
+        const chunks = [];
+        for (let i = 0; i < missing.length; i += 9) {
+          chunks.push(missing.slice(i, i + 9));
+        }
+
+        const results = await Promise.all(chunks.map(batch => {
+          const landFilter = batch.map(k => `${landDim} eq '${k}'`).join(' or ');
+          const filterExpr = `${sitcDim} eq '${sitcKey}' and (${periodFilter}) and (${landFilter})`;
+          const url = `${CBS_BASE}/TypedDataSet?$select=${encodeURIComponent(selectFields)}&$filter=${encodeURIComponent(filterExpr)}&$format=json`;
+          return fetchJson(url);
+        }));
+
+        for (const res of results) {
+          ingestRows(sitcKey, res.value || []);
+        }
+        for (const k of missing) {
+          state.fetchedPairs.add(`${sitcKey}|${k}`);
+        }
+        return true;
+      }
+
+      function resolveSchema(dataProps) {
+        const props = dataProps || [];
+        const dims = props.filter(p => p.Type === 'Dimension' || p.Type === 'TimeDimension');
+        const topics = props.filter(p => p.Type === 'Topic');
+
+        const landProp = dims.find(d => /land/i.test(d.Key)) || dims[0];
+        const sitcProp = dims.find(d => /sitc|goeder/i.test(d.Key));
+        const periodProp = dims.find(d => d.Type === 'TimeDimension' || /period/i.test(d.Key));
+
+        const invoerProp = topics.find(t => /^TotaleInvoerwaarde/i.test(t.Key)) || topics.find(t => /totale invoerwaarde/i.test(t.Title || ''));
+        const uitvoerProp = topics.find(t => /^TotaleUitvoerwaarde/i.test(t.Key)) || topics.find(t => /totale uitvoerwaarde/i.test(t.Title || ''));
+        const wederProp = topics.find(t => /^Wederuitvoerwaarde/i.test(t.Key)) || topics.find(t => /wederuitvoer/i.test(t.Title || ''));
+        const prodNlProp = topics.find(t => /^UitvoerwaardeProductNL/i.test(t.Key)) || topics.find(t => /product nl/i.test(t.Title || ''));
+
+        if (landProp) state.schema.landDim = landProp.Key;
+        if (sitcProp) state.schema.sitcDim = sitcProp.Key;
+        if (periodProp) state.schema.periodDim = periodProp.Key;
+        if (invoerProp) state.schema.invoerField = invoerProp.Key;
+        if (uitvoerProp) state.schema.uitvoerField = uitvoerProp.Key;
+        if (wederProp) state.schema.wederuitvoerField = wederProp.Key;
+        if (prodNlProp) state.schema.productNlField = prodNlProp.Key;
+      }
+
+      function shortenSitcTitle(raw) {
+        const clean = (raw || '').trim();
+        if (/^totaal/i.test(clean)) return 'Alle goederen (SITC totaal)';
+        return clean.length > 48 ? clean.slice(0, 46).trim() + '…' : clean;
+      }
+
+      async function loadInitialData() {
+        setStatus('loading', 'CBS-handelscijfers laden...');
+        dom.errorBanner.classList.add('hidden');
+        dom.loadingBanner.classList.remove('hidden');
+        dom.dashboardContent.classList.add('hidden');
+
+        try {
+          // Step 1: Inspect DataProperties, Perioden, Landen, SITC & CategoryGroups dynamically
+          dom.loadingStepText.textContent = 'Stap 1/2: Dimensies, goederensecties (SITC), landen en jaartallen ophalen (85429NED)...';
+
+          const [dpRes, periodenRes, landenRes, sitcRes, cgRes] = await Promise.all([
+            fetchJson(`${CBS_BASE}/DataProperties?$format=json`),
+            fetchJson(`${CBS_BASE}/Perioden?$format=json`),
+            fetchJson(`${CBS_BASE}/Landen?$format=json`),
+            fetchJson(`${CBS_BASE}/SITC?$format=json`),
+            fetchJson(`${CBS_BASE}/CategoryGroups?$format=json`).catch(() => ({ value: [] }))
+          ]);
+
+          resolveSchema(dpRes.value);
+
+          // Parse Periods: exclusively full-year JJ00 entries (exclude partial YTD like "2026 januari-augustus")
+          const allJJ00 = (periodenRes.value || []).filter(p => /^\d{4}JJ00$/.test(p.Key));
+          const fullYears = [];
+          let partialNote = null;
+
+          for (const p of allJJ00) {
+            const title = (p.Title || '').trim();
+            const yr = parseInt(p.Key.slice(0, 4), 10);
+            if (/^\d{4}(\s*\*+)?$/.test(title)) {
+              fullYears.push({ key: p.Key, year: yr, title });
+            } else {
+              partialNote = title;
+            }
+          }
+
+          fullYears.sort((a, b) => a.year - b.year);
+          if (!fullYears.length) {
+            throw new Error('Geen volledige jaarcijfers (JJ00) gevonden in CBS tabel 85429NED.');
+          }
+          state.periods = fullYears;
+          state.earliestYear = fullYears[0].year;
+          state.latestYear = fullYears[fullYears.length - 1].year;
+          state.partialYtdNote = partialNote;
+
+          // Configure ranking & map year sliders
+          dom.rankingYearSlider.min = String(state.earliestYear);
+          dom.rankingYearSlider.max = String(state.latestYear);
+          if (!state.rankingYear || state.rankingYear < state.earliestYear || state.rankingYear > state.latestYear) {
+            state.rankingYear = state.latestYear;
+          }
+          dom.rankingYearSlider.value = String(state.rankingYear);
+          dom.rankingYearValue.textContent = String(state.rankingYear);
+          dom.rankingYearFirstBtn.textContent = String(state.earliestYear);
+
+          dom.mapYearSlider.min = String(state.earliestYear);
+          dom.mapYearSlider.max = String(state.latestYear);
+          if (!state.mapYear || state.mapYear < state.earliestYear || state.mapYear > state.latestYear) {
+            state.mapYear = state.latestYear;
+          }
+          dom.mapYearSlider.value = String(state.mapYear);
+          dom.mapYearValue.textContent = String(state.mapYear);
+          dom.mapYearFirstBtn.textContent = String(state.earliestYear);
+
+          // Parse SITC goods sections
+          const rawSitc = sitcRes.value || [];
+          state.sitcList = rawSitc.map(s => {
+            const title = (s.Title || '').trim();
+            const isTotal = /^T\d+/i.test(s.Key) || /^totaal/i.test(title);
+            return {
+              key: s.Key,
+              title,
+              shortTitle: shortenSitcTitle(title),
+              isTotal
+            };
+          });
+          // Ensure total is first
+          state.sitcList.sort((a, b) => (a.isTotal === b.isTotal ? a.title.localeCompare(b.title, 'nl') : a.isTotal ? -1 : 1));
+          const totalSitc = state.sitcList.find(s => s.isTotal) || state.sitcList[0];
+          state.totalSitcKey = totalSitc.key;
+          if (!state.selectedSitc || !state.sitcList.some(s => s.key === state.selectedSitc)) {
+            state.selectedSitc = state.totalSitcKey;
+          }
+          populateSitcDropdown();
+
+          // Map CategoryGroupID -> Group Title
+          const groupTitleById = new Map();
+          for (const g of (cgRes.value || [])) {
+            groupTitleById.set(g.ID, (g.Title || '').trim());
+          }
+
+          // Parse Landen (GEONOM)
+          state.landMeta.clear();
+          state.quickContinents = [];
+          state.quickPartners = [];
+          state.allSearchableCountries = [];
+          state.totalLandKey = null;
+
+          const rawLanden = landenRes.value || [];
+          for (const l of rawLanden) {
+            const key = l.Key;
+            const name = (l.Title || '').trim();
+            const groupName = groupTitleById.get(l.CategoryGroupID) || '';
+            const isTotal = /^T\d+/i.test(key) || /^totaal landen/i.test(name);
+
+            if (isTotal) {
+              state.totalLandKey = key;
+              state.landMeta.set(key, {
+                key,
+                name: 'Totaal alle landen',
+                shortLabel: 'Totaal alle landen',
+                type: 'TOTAL',
+                groupName: 'Totaal'
+              });
+              continue;
+            }
+
+            const contSpec = CONTINENT_SPECS.find(cs => cs.match.test(name));
+            const shortLabel = contSpec ? contSpec.shortLabel : name;
+            const type = contSpec
+              ? (contSpec.isBloc ? 'BLOC' : 'CONTINENT')
+              : (/^(niet-eu|overige)$/i.test(name) ? 'BLOC' : 'COUNTRY');
+
+            state.landMeta.set(key, { key, name, shortLabel, type, groupName });
+
+            state.allSearchableCountries.push({
+              key,
+              name,
+              shortLabel,
+              groupName: groupName || (type === 'CONTINENT' ? 'Werelddeel' : 'Land'),
+              searchKey: `${name} ${shortLabel}`.toLowerCase()
+            });
+          }
+
+          // Build ordered quickContinents
+          for (const spec of CONTINENT_SPECS) {
+            const found = rawLanden.find(l => spec.match.test((l.Title || '').trim()));
+            if (found) {
+              state.quickContinents.push({
+                key: found.Key,
+                name: (found.Title || '').trim(),
+                shortLabel: spec.shortLabel,
+                isContinent: !!spec.isContinent,
+                isBloc: !!spec.isBloc
+              });
+            }
+          }
+
+          // Build ordered quickPartners
+          for (const partnerName of PARTNER_NAMES) {
+            const found = rawLanden.find(l => (l.Title || '').trim().toLowerCase() === partnerName.toLowerCase());
+            if (found) {
+              state.quickPartners.push({
+                key: found.Key,
+                name: (found.Title || '').trim()
+              });
+            }
+          }
+
+          state.allSearchableCountries.sort((a, b) => a.name.localeCompare(b.name, 'nl'));
+          dom.countryCountHint.textContent = `${state.allSearchableCountries.length} landen & regio's beschikbaar`;
+
+          // Resolve European map countries dynamically against CBS /Landen
+          state.euMapEntries = EU_COUNTRY_PATHS.map(entry => {
+            if (entry.iso === 'NL') {
+              return { ...entry, key: null, isHome: true };
+            }
+            const match = rawLanden.find(l => (l.Title || '').trim().toLowerCase() === entry.name.toLowerCase());
+            return {
+              ...entry,
+              key: match ? match.Key : null,
+              isHome: false
+            };
+          });
+          state.euMapKeys = state.euMapEntries.map(e => e.key).filter(Boolean);
+
+          // Startup keys: Total + continents/EU + top partners + European map countries
+          state.startupKeys = Array.from(new Set([
+            state.totalLandKey,
+            ...state.quickContinents.map(c => c.key),
+            ...state.quickPartners.map(p => p.key),
+            ...state.euMapKeys
+          ].filter(Boolean)));
+
+          // Set default selection on first load (Total + EU + Duitsland + China + Verenigde Staten)
+          if (state.selectedRegions.size === 0) {
+            if (state.totalLandKey) state.selectedRegions.add(state.totalLandKey);
+            const eu = state.quickContinents.find(c => c.isBloc);
+            if (eu) state.selectedRegions.add(eu.key);
+            for (const pref of ['Duitsland', 'China', 'Verenigde Staten']) {
+              const p = state.quickPartners.find(x => x.name === pref);
+              if (p) state.selectedRegions.add(p.key);
+            }
+            state.focusRegion = state.totalLandKey || Array.from(state.selectedRegions)[0];
+          }
+
+          // Step 2: Fetch ONLY startup keys + any custom countries for active SITC & full JJ00 years
+          dom.loadingStepText.textContent =
+            `Stap 2/2: Jaarcijfers (${state.earliestYear}–${state.latestYear}) ophalen voor werelddelen en belangrijkste handelspartners...`;
+
+          state.dataBySitc.clear();
+          state.fetchedPairs.clear();
+
+          const keysToFetch = [...state.startupKeys, ...state.selectedCustomCountries];
+          await ensureDataLoaded(state.selectedSitc, keysToFetch, true);
+
+          dom.loadingBanner.classList.add('hidden');
+          dom.dashboardContent.classList.remove('hidden');
+
+          const nowStr = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+          setStatus('live', `Live CBS-data (t/m ${state.latestYear})`);
+          dom.lastUpdatedLabel.textContent = `Laatst ververst om ${nowStr}`;
+
+          renderQuickChips();
+          renderCustomChips();
+          updateAllViews();
+        } catch (err) {
+          console.error('CBS 85429NED load error:', err);
+          dom.loadingBanner.classList.add('hidden');
+          dom.errorBanner.classList.remove('hidden');
+          dom.errorDetailText.textContent =
+            'Kon geen verbinding maken met de CBS Open Data API (' + (err.message || 'onbekende fout') + '). Controleer de internetverbinding of probeer het opnieuw.';
+          setStatus('error', 'CBS niet bereikbaar');
+        }
+      }
+
+      async function handleSitcChange(newSitcKey) {
+        state.selectedSitc = newSitcKey;
+        dom.sitcLoadingSpinner.classList.remove('hidden');
+        dom.countryErrorMsg.textContent = '';
+        try {
+          const neededKeys = [...state.startupKeys, ...state.selectedCustomCountries];
+          await ensureDataLoaded(newSitcKey, neededKeys);
+          updateAllViews();
+        } catch (err) {
+          console.error('SITC fetch error:', err);
+          dom.countryErrorMsg.textContent = 'Ophalen van deze goederensectie mislukt. Probeer opnieuw.';
+        } finally {
+          dom.sitcLoadingSpinner.classList.add('hidden');
+        }
+      }
+
+      async function addCountry(landKey) {
+        closeAutocomplete();
+        dom.countrySearchInput.value = '';
+        dom.countryErrorMsg.textContent = '';
+
+        // If it's already a quick chip, just activate and focus it
+        if (isQuickChipKey(landKey)) {
+          state.selectedRegions.add(landKey);
+          state.focusRegion = landKey;
+          renderQuickChips();
+          updateAllViews();
+          return;
+        }
+
+        if (state.selectedCustomCountries.includes(landKey)) {
+          state.selectedRegions.add(landKey);
+          state.focusRegion = landKey;
+          updateAllViews();
+          return;
+        }
+
+        dom.countryLoadingSpinner.classList.remove('hidden');
+        try {
+          await ensureDataLoaded(state.selectedSitc, [landKey]);
+          const latest = getLatestNonNull(landKey);
+          if (!latest) {
+            dom.countryErrorMsg.textContent = `Geen handelscijfers gevonden voor ${getDisplayName(landKey)} in deze goederensectie.`;
+            return;
+          }
+          state.selectedCustomCountries.push(landKey);
+          state.selectedRegions.add(landKey);
+          state.focusRegion = landKey;
+          renderCustomChips();
+          updateAllViews();
+        } catch (err) {
+          console.error('Country fetch error:', err);
+          dom.countryErrorMsg.textContent = 'Ophalen van landcijfers mislukt. Probeer opnieuw.';
+        } finally {
+          dom.countryLoadingSpinner.classList.add('hidden');
+        }
+      }
+
+      function removeCustomCountry(landKey) {
+        state.selectedCustomCountries = state.selectedCustomCountries.filter(k => k !== landKey);
+        state.selectedRegions.delete(landKey);
+        if (state.selectedRegions.size === 0 && state.totalLandKey) {
+          state.selectedRegions.add(state.totalLandKey);
+        }
+        if (state.focusRegion === landKey) {
+          state.focusRegion = state.selectedRegions.has(state.totalLandKey)
+            ? state.totalLandKey
+            : Array.from(state.selectedRegions)[0];
+        }
+        renderQuickChips();
+        renderCustomChips();
+        updateAllViews();
+      }
+
+      // ============================================================
+      // UI Rendering: SITC Dropdown, Chips & Autocomplete
+      // ============================================================
+      function populateSitcDropdown() {
+        dom.sitcSelect.innerHTML = '';
+        for (const s of state.sitcList) {
+          const opt = document.createElement('option');
+          opt.value = s.key;
+          opt.textContent = s.shortTitle;
+          if (s.key === state.selectedSitc) opt.selected = true;
+          dom.sitcSelect.appendChild(opt);
+        }
+      }
+
+      function renderQuickChips() {
+        dom.quickChipsGrid.innerHTML = '';
+
+        // 1. Totaal alle landen (referentie)
+        if (state.totalLandKey) {
+          const isActive = state.selectedRegions.has(state.totalLandKey);
+          const totalBtn = document.createElement('button');
+          totalBtn.type = 'button';
+          totalBtn.className = 'region-chip nl-chip' + (isActive ? ' active' : '');
+          totalBtn.innerHTML = `<span class="chip-swatch" style="background:${getRegionColor(state.totalLandKey)}"></span><span>Totaal alle landen (referentie)</span>`;
+          totalBtn.addEventListener('click', () => toggleRegion(state.totalLandKey));
+          dom.quickChipsGrid.appendChild(totalBtn);
+        }
+
+        // 2. Continents & EU
+        for (const c of state.quickContinents) {
+          const isActive = state.selectedRegions.has(c.key);
+          const color = getRegionColor(c.key);
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'region-chip' + (isActive ? ' active' : '');
+          btn.innerHTML = `<span class="chip-swatch" style="background:${isActive ? color : '#cbd5e1'}"></span><span>${escapeHtml(c.shortLabel)}</span>`;
+          btn.addEventListener('click', () => toggleRegion(c.key));
+          dom.quickChipsGrid.appendChild(btn);
+        }
+
+        // Visual separator between continents and top partner countries
+        const sep = document.createElement('span');
+        sep.className = 'chip-group-sep';
+        sep.setAttribute('aria-hidden', 'true');
+        dom.quickChipsGrid.appendChild(sep);
+
+        // 3. Top trading partner countries
+        for (const p of state.quickPartners) {
+          const isActive = state.selectedRegions.has(p.key);
+          const color = getRegionColor(p.key);
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'region-chip' + (isActive ? ' active' : '');
+          btn.innerHTML = `<span class="chip-swatch" style="background:${isActive ? color : '#cbd5e1'}"></span><span>${escapeHtml(p.name)}</span>`;
+          btn.addEventListener('click', () => toggleRegion(p.key));
+          dom.quickChipsGrid.appendChild(btn);
+        }
+      }
+
+      function renderCustomChips() {
+        dom.customChipsRow.innerHTML = '';
+        if (state.selectedCustomCountries.length === 0) {
+          dom.customChipsRow.classList.add('hidden');
+          return;
+        }
+        dom.customChipsRow.classList.remove('hidden');
+
+        const label = document.createElement('span');
+        label.style.fontSize = '0.8rem';
+        label.style.fontWeight = '600';
+        label.style.color = 'var(--text-muted)';
+        label.textContent = 'Toegevoegde landen:';
+        dom.customChipsRow.appendChild(label);
+
+        for (const key of state.selectedCustomCountries) {
+          const name = getDisplayName(key);
+          const color = getRegionColor(key);
+          const chip = document.createElement('span');
+          chip.className = 'muni-chip';
+          chip.innerHTML = `
+            <span class="chip-swatch" style="background:${color}"></span>
+            <span>${escapeHtml(name)}</span>
+            <button type="button" class="muni-remove" aria-label="Verwijder ${escapeHtml(name)}">&times;</button>
+          `;
+          chip.querySelector('.muni-remove').addEventListener('click', () => removeCustomCountry(key));
+          dom.customChipsRow.appendChild(chip);
+        }
+      }
+
+      function toggleRegion(key) {
+        if (state.selectedRegions.has(key)) {
+          if (state.selectedRegions.size === 1) return;
+          state.selectedRegions.delete(key);
+          if (state.focusRegion === key) {
+            state.focusRegion = state.selectedRegions.has(state.totalLandKey)
+              ? state.totalLandKey
+              : Array.from(state.selectedRegions)[0];
+          }
+        } else {
+          state.selectedRegions.add(key);
+          if (key !== state.totalLandKey) {
+            state.focusRegion = key;
+          }
+        }
+        renderQuickChips();
+        updateAllViews();
+      }
+
+      function updateAutocomplete(query) {
+        const q = query.trim().toLowerCase();
+        if (q.length < 1) {
+          closeAutocomplete();
+          return;
+        }
+
+        const starts = [];
+        const contains = [];
+        for (const item of state.allSearchableCountries) {
+          if (item.name.toLowerCase().startsWith(q) || item.shortLabel.toLowerCase().startsWith(q)) {
+            starts.push(item);
+          } else if (item.searchKey.includes(q)) {
+            contains.push(item);
+          }
+        }
+        const matches = [...starts, ...contains].slice(0, 12);
+        state.autocompleteMatches = matches;
+        state.autocompleteIndex = matches.length ? 0 : -1;
+
+        dom.countryAutocomplete.innerHTML = '';
+        if (matches.length === 0) {
+          dom.countryAutocomplete.innerHTML =
+            '<li class="autocomplete-empty">Geen land of regio gevonden voor "' + escapeHtml(query) + '"</li>';
+        } else {
+          matches.forEach((m, idx) => {
+            const li = document.createElement('li');
+            li.className = 'autocomplete-item' + (idx === 0 ? ' highlighted' : '');
+            li.setAttribute('role', 'option');
+            const already = state.selectedRegions.has(m.key);
+            li.innerHTML = `
+              <span>${escapeHtml(m.name)}${already ? ' <span style="color:var(--primary);font-size:0.78rem;">(actief)</span>' : ''}</span>
+              <span class="autocomplete-code">${escapeHtml(m.groupName)}</span>
+            `;
+            li.addEventListener('mousedown', e => {
+              e.preventDefault();
+              addCountry(m.key);
+            });
+            dom.countryAutocomplete.appendChild(li);
+          });
+        }
+
+        dom.countryAutocomplete.classList.remove('hidden');
+        dom.countrySearchInput.setAttribute('aria-expanded', 'true');
+      }
+
+      function closeAutocomplete() {
+        dom.countryAutocomplete.classList.add('hidden');
+        dom.countrySearchInput.setAttribute('aria-expanded', 'false');
+        state.autocompleteIndex = -1;
+        state.autocompleteMatches = [];
+      }
+
+      // ============================================================
+      // KPI Rendering
+      // ============================================================
+      function updateFocusDropdown() {
+        const activeKeys = getOrderedSelectedRegions();
+        if (!activeKeys.includes(state.focusRegion)) {
+          state.focusRegion = activeKeys[0];
+        }
+        dom.kpiFocusSelect.innerHTML = '';
+        for (const key of activeKeys) {
+          const opt = document.createElement('option');
+          opt.value = key;
+          opt.textContent = getDisplayName(key);
+          if (key === state.focusRegion) opt.selected = true;
+          dom.kpiFocusSelect.appendChild(opt);
+        }
+      }
+
+      function renderKPIs() {
+        updateFocusDropdown();
+        const focusKey = state.focusRegion;
+        const focusName = getDisplayName(focusKey);
+        const sitcLabel = getSitcTitle(state.selectedSitc);
+
+        const latest = getLatestNonNull(focusKey);
+        const baseline = getEarliestNonNull(focusKey);
+
+        dom.kpiYearRangeBadge.textContent = `${sitcLabel} · Jaarcijfers ${state.earliestYear} – ${state.latestYear}`;
+
+        // KPI 1: Most recent value
+        const indLabel =
+          state.indicator === 'export' ? 'Uitvoerwaarde'
+          : state.indicator === 'import' ? 'Invoerwaarde'
+          : 'Handelsbalans';
+
+        dom.kpi1Label.textContent = `${indLabel} (${latest ? latest.year : '—'})`;
+        dom.kpi1Value.textContent = latest
+          ? formatMlnEuro(latest.value, state.indicator === 'balance')
+          : '—';
+        if (latest) {
+          const mldHint = formatMldHint(latest.value);
+          dom.kpi1Sub.textContent = mldHint ? `${focusName} · ${mldHint}` : focusName;
+        } else {
+          dom.kpi1Sub.textContent = `Geen data beschikbaar voor ${focusName}`;
+        }
+
+        // KPI 2: Difference vs 2015 (first year in series)
+        const baseYearLabel = baseline ? String(baseline.year) : String(state.earliestYear);
+        dom.kpi2Label.textContent = `Verschil t.o.v. ${baseYearLabel}`;
+        if (latest && baseline && latest.year !== baseline.year) {
+          const diff = latest.value - baseline.value;
+          dom.kpi2Value.textContent = formatMlnEuro(diff, true);
+          const dirClass = Math.abs(diff) < 1 ? 'neutral' : diff > 0 ? 'up' : 'down';
+
+          let badgeText = '';
+          if (baseline.value !== 0 && (state.indicator !== 'balance' || Math.sign(baseline.value) === Math.sign(latest.value))) {
+            const pct = (diff / Math.abs(baseline.value)) * 100;
+            badgeText = `${pct > 0 ? '+' : ''}${fmtDec1.format(pct)}%`;
+          } else {
+            badgeText = diff > 0 ? 'Verbetering' : diff < 0 ? 'Verslechtering' : 'Gelijk';
+          }
+
+          dom.kpi2Sub.innerHTML = `<span class="delta-badge ${dirClass}">${badgeText}</span> <span>In ${baseline.year}: ${formatMlnEuro(baseline.value, state.indicator === 'balance')}</span>`;
+        } else {
+          dom.kpi2Value.textContent = '—';
+          dom.kpi2Sub.textContent = 'Geen vergelijkingsjaar beschikbaar';
+        }
+
+        // KPI 3: Share in total Dutch trade (%)
+        const refYear = latest ? latest.year : state.latestYear;
+        const focusExp = getMetricValue(focusKey, refYear, state.selectedSitc, 'export');
+        const focusImp = getMetricValue(focusKey, refYear, state.selectedSitc, 'import');
+        const totalExp = getMetricValue(state.totalLandKey, refYear, state.selectedSitc, 'export');
+        const totalImp = getMetricValue(state.totalLandKey, refYear, state.selectedSitc, 'import');
+
+        if (state.indicator === 'export') {
+          dom.kpi3Label.textContent = `Aandeel in NL uitvoer (${refYear})`;
+          if (focusExp !== null && totalExp && totalExp > 0) {
+            const share = (focusExp / totalExp) * 100;
+            dom.kpi3Value.textContent = `${fmtDec1.format(share)}%`;
+            dom.kpi3Sub.textContent = focusKey === state.totalLandKey
+              ? `Referentie: totale Nederlandse uitvoer`
+              : `Van ${formatMlnEuro(totalExp)} totale NL uitvoer`;
+          } else {
+            dom.kpi3Value.textContent = '—';
+            dom.kpi3Sub.textContent = 'Aandeel niet te berekenen';
+          }
+        } else if (state.indicator === 'import') {
+          dom.kpi3Label.textContent = `Aandeel in NL invoer (${refYear})`;
+          if (focusImp !== null && totalImp && totalImp > 0) {
+            const share = (focusImp / totalImp) * 100;
+            dom.kpi3Value.textContent = `${fmtDec1.format(share)}%`;
+            dom.kpi3Sub.textContent = focusKey === state.totalLandKey
+              ? `Referentie: totale Nederlandse invoer`
+              : `Van ${formatMlnEuro(totalImp)} totale NL invoer`;
+          } else {
+            dom.kpi3Value.textContent = '—';
+            dom.kpi3Sub.textContent = 'Aandeel niet te berekenen';
+          }
+        } else {
+          // For balance, show share in total trade volume (export + import)
+          dom.kpi3Label.textContent = `Aandeel in totale handel (${refYear})`;
+          const focusVol = (focusExp ?? 0) + (focusImp ?? 0);
+          const totalVol = (totalExp ?? 0) + (totalImp ?? 0);
+          if (focusExp !== null && focusImp !== null && totalVol > 0) {
+            const share = (focusVol / totalVol) * 100;
+            dom.kpi3Value.textContent = `${fmtDec1.format(share)}%`;
+            dom.kpi3Sub.textContent = focusKey === state.totalLandKey
+              ? `Totale goederenhandel (in- + uitvoer)`
+              : `Aandeel in totale in- en uitvoer samen`;
+          } else {
+            dom.kpi3Value.textContent = '—';
+            dom.kpi3Sub.textContent = 'Aandeel niet te berekenen';
+          }
+        }
+
+        // KPI 4: Trade Balance (export minus import) with green/red badge
+        dom.kpi4Label.textContent = `Handelsbalans (${refYear})`;
+        if (focusExp !== null && focusImp !== null) {
+          const bal = focusExp - focusImp;
+          dom.kpi4Value.textContent = formatMlnEuro(bal, true);
+          const cls = bal > 0 ? 'up' : bal < 0 ? 'down' : 'neutral';
+          const badgeLabel = bal > 0 ? 'Handelsoverschot' : bal < 0 ? 'Handelstekort' : 'In evenwicht';
+          dom.kpi4Sub.innerHTML = `<span class="delta-badge ${cls}">${badgeLabel}</span> <span>Uit ${formatMlnEuro(focusExp)} &middot; In ${formatMlnEuro(focusImp)}</span>`;
+        } else {
+          dom.kpi4Value.textContent = '—';
+          dom.kpi4Sub.textContent = 'Geen invoer- of uitvoercijfers beschikbaar';
+        }
+      }
+
+      // ============================================================
+      // Chart.js Custom Plugin: Zero Balance Reference Line
+      // ============================================================
+      const zeroLinePlugin = {
+        id: 'zeroBalanceLine',
+        afterDatasetsDraw(chart) {
+          if (state.indicator !== 'balance') return;
+          const { ctx, chartArea, scales } = chart;
+          if (!chartArea || !scales.y) return;
+          const yPos = scales.y.getPixelForValue(0);
+          if (yPos < chartArea.top || yPos > chartArea.bottom) return;
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.setLineDash([6, 5]);
+          ctx.lineWidth = 1.6;
+          ctx.strokeStyle = 'rgba(15, 23, 42, 0.45)';
+          ctx.moveTo(chartArea.left, yPos);
+          ctx.lineTo(chartArea.right, yPos);
+          ctx.stroke();
+
+          ctx.setLineDash([]);
+          ctx.font = '600 11px Inter, sans-serif';
+          ctx.fillStyle = '#475569';
+          ctx.textAlign = 'right';
+          ctx.fillText('Evenwicht (0 mln euro)', chartArea.right - 6, yPos - 6);
+          ctx.restore();
+        }
+      };
+
+      // ============================================================
+      // Main Line Chart Rendering (2015 - latest)
+      // ============================================================
+      function renderMainLineChart() {
+        const visibleYears = state.periods
+          .map(p => p.year)
+          .filter(yr => yr >= state.startYear);
+
+        const activeRegions = getOrderedSelectedRegions();
+        const sitcLabel = getSitcTitle(state.selectedSitc);
+
+        if (state.indicator === 'export') {
+          dom.mainChartTitle.textContent = `Uitvoerwaarde van Nederland (${state.startYear} – ${state.latestYear})`;
+          dom.mainChartSubtitle.textContent = `Ontwikkeling van de export in mln euro · ${sitcLabel}. Beweeg over de grafiek voor exacte jaarcijfers.`;
+        } else if (state.indicator === 'import') {
+          dom.mainChartTitle.textContent = `Invoerwaarde van Nederland (${state.startYear} – ${state.latestYear})`;
+          dom.mainChartSubtitle.textContent = `Ontwikkeling van de import in mln euro · ${sitcLabel}. Beweeg over de grafiek voor exacte jaarcijfers.`;
+        } else {
+          dom.mainChartTitle.textContent = `Handelsbalans van Nederland (${state.startYear} – ${state.latestYear})`;
+          dom.mainChartSubtitle.textContent = `Uitvoerwaarde minus invoerwaarde in mln euro · ${sitcLabel}. Boven de stippellijn = overschot, eronder = tekort.`;
+        }
+
+        const ytdHint = state.partialYtdNote
+          ? ` Het lopende deeljaar (${state.partialYtdNote}) is weggelaten voor een eerlijke jaarvergelijking.`
+          : '';
+        dom.mainChartNote.textContent =
+          `Bron: CBS Open Data, tabel 85429NED (${state.schema.uitvoerField} / ${state.schema.invoerField}, goederensectie: ${sitcLabel}).${ytdHint}`;
+
+        const datasets = activeRegions.map(key => {
+          const isTotal = key === state.totalLandKey;
+          const color = getRegionColor(key);
+          return {
+            label: getDisplayName(key),
+            data: visibleYears.map(yr => getMetricValue(key, yr)),
+            borderColor: color,
+            backgroundColor: color,
+            borderWidth: isTotal ? 3.2 : 2.3,
+            pointRadius: 3.5,
+            pointHoverRadius: 6,
+            tension: 0.22,
+            spanGaps: false
+          };
+        });
+
+        const yScaleOptions = {
+          grid: { color: '#e2e8f0' },
+          beginAtZero: state.indicator !== 'balance',
+          ticks: {
+            color: '#475569',
+            font: { size: 12, family: 'Inter, sans-serif' },
+            callback: val => formatAxisTick(val)
+          }
+        };
+
+        if (mainLineChart) {
+          mainLineChart.destroy();
+        }
+
+        const ctx = document.getElementById('mainLineChart').getContext('2d');
+        mainLineChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: visibleYears,
+            datasets
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+              mode: 'index',
+              intersect: false
+            },
+            plugins: {
+              legend: {
+                position: 'top',
+                align: 'start',
+                labels: {
+                  usePointStyle: true,
+                  pointStyle: 'circle',
+                  boxWidth: 8,
+                  padding: 16,
+                  color: '#0f172a',
+                  font: { size: 12.5, weight: '600', family: 'Inter, sans-serif' }
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(15, 23, 42, 0.94)',
+                titleFont: { size: 13, weight: '700', family: 'Inter, sans-serif' },
+                bodyFont: { size: 12.5, family: 'Inter, sans-serif' },
+                padding: 12,
+                cornerRadius: 8,
+                callbacks: {
+                  label: ctxItem => {
+                    const v = ctxItem.parsed.y;
+                    if (v === null || v === undefined) return `${ctxItem.dataset.label}: geen data`;
+                    const formatted = formatMlnEuro(v, state.indicator === 'balance');
+                    if (state.indicator === 'balance') {
+                      const tag = v > 0 ? 'overschot' : v < 0 ? 'tekort' : 'evenwicht';
+                      return `${ctxItem.dataset.label}: ${formatted} (${tag})`;
+                    }
+                    return `${ctxItem.dataset.label}: ${formatted}`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: {
+                  color: '#475569',
+                  font: { size: 12, family: 'Inter, sans-serif' },
+                  maxRotation: 0
+                }
+              },
+              y: yScaleOptions
+            }
+          },
+          plugins: [zeroLinePlugin]
+        });
+      }
+
+      // ============================================================
+      // Verdiepende grafiek 1: Horizontal Ranking of Top Trade Partners
+      // ============================================================
+      function renderRankingBarChart() {
+        const year = state.rankingYear || state.latestYear;
+        dom.rankingYearSlider.value = String(year);
+        dom.rankingYearValue.textContent = String(year);
+        dom.rankingYearFirstBtn.classList.toggle('active', year === state.earliestYear);
+        dom.rankingYearLatestBtn.classList.toggle('active', year === state.latestYear);
+
+        // Rank individual partner countries: quickPartners + custom countries (excluding continent/EU/total aggregates)
+        const partnerKeys = Array.from(new Set([
+          ...state.quickPartners.map(p => p.key),
+          ...state.selectedCustomCountries.filter(k => {
+            const m = state.landMeta.get(k);
+            return !m || m.type === 'COUNTRY';
+          })
+        ]));
+
+        const totalRef = state.indicator === 'export'
+          ? getMetricValue(state.totalLandKey, year, state.selectedSitc, 'export')
+          : state.indicator === 'import'
+            ? getMetricValue(state.totalLandKey, year, state.selectedSitc, 'import')
+            : null;
+
+        const items = [];
+        for (const key of partnerKeys) {
+          const val = getMetricValue(key, year);
+          if (val === null) continue;
+          items.push({
+            key,
+            name: getDisplayName(key),
+            value: val,
+            isCustom: state.selectedCustomCountries.includes(key)
+          });
+        }
+
+        // Sort descending by value (or by signed value for balance so surpluses are at top and deficits at bottom)
+        items.sort((a, b) => b.value - a.value);
+
+        const indLabel =
+          state.indicator === 'export' ? 'uitvoerwaarde'
+          : state.indicator === 'import' ? 'invoerwaarde'
+          : 'handelsbalans';
+
+        dom.rankingChartTitle.textContent = `Belangrijkste handelspartners (${year})`;
+        dom.rankingChartSubtitle.textContent =
+          `Ranglijst op basis van ${indLabel} (${getSitcTitle(state.selectedSitc)})`;
+
+        if (rankingBarChart) {
+          rankingBarChart.destroy();
+        }
+
+        const ctx = document.getElementById('rankingBarChart').getContext('2d');
+        rankingBarChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: items.map(i => i.isCustom ? `${i.name} ★` : i.name),
+            datasets: [{
+              data: items.map(i => i.value),
+              backgroundColor: items.map(i => {
+                if (state.indicator === 'balance') {
+                  return i.value >= 0 ? '#0f766e' : '#b91c1c';
+                }
+                if (state.selectedRegions.has(i.key)) return getRegionColor(i.key);
+                return '#94a3b8';
+              }),
+              borderRadius: 5,
+              barThickness: 18
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: 'rgba(15, 23, 42, 0.94)',
+                padding: 10,
+                cornerRadius: 8,
+                callbacks: {
+                  label: ctxItem => {
+                    const item = items[ctxItem.dataIndex];
+                    const formatted = formatMlnEuro(item.value, state.indicator === 'balance');
+                    if (totalRef && totalRef > 0) {
+                      const pct = (item.value / totalRef) * 100;
+                      return `${formatted} (${fmtDec1.format(pct)}% van NL totaal)`;
+                    }
+                    const tag = item.value >= 0 ? 'overschot' : 'tekort';
+                    return `${formatted} (${tag})`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: { color: '#e2e8f0' },
+                ticks: {
+                  color: '#475569',
+                  font: { size: 11.5, family: 'Inter, sans-serif' },
+                  callback: val => formatAxisTick(val)
+                }
+              },
+              y: {
+                grid: { display: false },
+                ticks: {
+                  color: '#0f172a',
+                  font: { size: 11.5, weight: '500', family: 'Inter, sans-serif' }
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // ============================================================
+      // Verdiepende grafiek 2: Continents Import vs Export / Re-exports
+      // ============================================================
+      function renderSecondary2Chart() {
+        const year = state.rankingYear || state.latestYear;
+        const sitcLabel = getSitcTitle(state.selectedSitc);
+
+        if (secondary2Chart) {
+          secondary2Chart.destroy();
+        }
+
+        const ctx = document.getElementById('secondary2Chart').getContext('2d');
+
+        if (state.secondary2Mode === 'continents') {
+          const continents = state.quickContinents.filter(c => c.isContinent);
+          const labels = continents.map(c => c.shortLabel);
+          const exportVals = continents.map(c => getMetricValue(c.key, year, state.selectedSitc, 'export') ?? 0);
+          const importVals = continents.map(c => getMetricValue(c.key, year, state.selectedSitc, 'import') ?? 0);
+
+          dom.secondary2ChartTitle.textContent = `Handel per werelddeel: invoer vs. uitvoer (${year})`;
+          dom.secondary2ChartSubtitle.textContent = `Vergelijking van export en import per continent · ${sitcLabel}`;
+          dom.secondary2Note.textContent =
+            'Gekoppeld aan het jaartal van de slider links. Vergelijk het Europese exportoverschot met het Aziatische importoverschot.';
+
+          secondary2Chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels,
+              datasets: [
+                {
+                  label: 'Uitvoer (export)',
+                  data: exportVals,
+                  backgroundColor: '#1d4ed8',
+                  borderRadius: 5
+                },
+                {
+                  label: 'Invoer (import)',
+                  data: importVals,
+                  backgroundColor: '#cbd5e1',
+                  borderRadius: 5
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'top',
+                  align: 'end',
+                  labels: {
+                    usePointStyle: true,
+                    pointStyle: 'rectRounded',
+                    color: '#0f172a',
+                    font: { size: 12, weight: '600', family: 'Inter, sans-serif' }
+                  }
+                },
+                tooltip: {
+                  backgroundColor: 'rgba(15, 23, 42, 0.94)',
+                  padding: 10,
+                  cornerRadius: 8,
+                  callbacks: {
+                    label: ctxItem => `${ctxItem.dataset.label}: ${formatMlnEuro(ctxItem.parsed.y)}`
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  grid: { display: false },
+                  ticks: {
+                    color: '#0f172a',
+                    font: { size: 11.5, weight: '500', family: 'Inter, sans-serif' }
+                  }
+                },
+                y: {
+                  beginAtZero: true,
+                  grid: { color: '#e2e8f0' },
+                  ticks: {
+                    color: '#475569',
+                    font: { size: 11.5, family: 'Inter, sans-serif' },
+                    callback: val => formatAxisTick(val)
+                  }
+                }
+              }
+            }
+          });
+        } else {
+          // Export composition: Nederlands product vs Wederuitvoer vs Overige uitvoer/doorvoer
+          const focusKey = state.focusRegion || state.totalLandKey;
+          const focusName = getDisplayName(focusKey);
+          const years = state.periods.map(p => p.year);
+
+          const prodNl = [];
+          const reExport = [];
+          const otherExp = [];
+
+          for (const yr of years) {
+            const row = getRow(state.selectedSitc, focusKey, yr);
+            const tot = row && typeof row[state.schema.uitvoerField] === 'number' ? row[state.schema.uitvoerField] : null;
+            const nl = row && typeof row[state.schema.productNlField] === 'number' ? row[state.schema.productNlField] : null;
+            const wed = row && typeof row[state.schema.wederuitvoerField] === 'number' ? row[state.schema.wederuitvoerField] : null;
+
+            prodNl.push(nl ?? 0);
+            reExport.push(wed ?? 0);
+            const rem = tot !== null && nl !== null && wed !== null ? Math.max(0, tot - nl - wed) : 0;
+            otherExp.push(rem);
+          }
+
+          dom.secondary2ChartTitle.textContent = `Samenstelling uitvoer: ${focusName}`;
+          dom.secondary2ChartSubtitle.textContent = `Nederlands product vs. wederuitvoer (${state.earliestYear} – ${state.latestYear}) · ${sitcLabel}`;
+          dom.secondary2Note.textContent =
+            'Wederuitvoer laat de doorvoerfunctie van Nederland zien (mainports Rotterdam & Schiphol). Verander de focusregio boven de KPI-kaarten.';
+
+          secondary2Chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: years,
+              datasets: [
+                {
+                  label: 'Nederlands product',
+                  data: prodNl,
+                  backgroundColor: '#1d4ed8',
+                  borderRadius: 3
+                },
+                {
+                  label: 'Wederuitvoer',
+                  data: reExport,
+                  backgroundColor: '#0f766e',
+                  borderRadius: 3
+                },
+                {
+                  label: 'Overig / uitgaande doorvoer',
+                  data: otherExp,
+                  backgroundColor: '#cbd5e1',
+                  borderRadius: 3
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'top',
+                  align: 'end',
+                  labels: {
+                    usePointStyle: true,
+                    pointStyle: 'rectRounded',
+                    color: '#0f172a',
+                    font: { size: 11.5, weight: '600', family: 'Inter, sans-serif' }
+                  }
+                },
+                tooltip: {
+                  backgroundColor: 'rgba(15, 23, 42, 0.94)',
+                  padding: 10,
+                  cornerRadius: 8,
+                  callbacks: {
+                    label: ctxItem => `${ctxItem.dataset.label}: ${formatMlnEuro(ctxItem.parsed.y)}`
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  stacked: true,
+                  grid: { display: false },
+                  ticks: {
+                    color: '#0f172a',
+                    font: { size: 11.5, weight: '500', family: 'Inter, sans-serif' }
+                  }
+                },
+                y: {
+                  stacked: true,
+                  beginAtZero: true,
+                  grid: { color: '#e2e8f0' },
+                  ticks: {
+                    color: '#475569',
+                    font: { size: 11.5, family: 'Inter, sans-serif' },
+                    callback: val => formatAxisTick(val)
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+
+      // ============================================================
+      // Choropleth Map of Europe (Interactive Trade Partners)
+      // ============================================================
+      function toggleMapCountry(landKey) {
+        if (!landKey) return;
+        if (isQuickChipKey(landKey)) {
+          toggleRegion(landKey);
+          return;
+        }
+        if (state.selectedRegions.has(landKey)) {
+          removeCustomCountry(landKey);
+        } else {
+          if (!state.selectedCustomCountries.includes(landKey)) {
+            state.selectedCustomCountries.push(landKey);
+          }
+          state.selectedRegions.add(landKey);
+          state.focusRegion = landKey;
+          renderCustomChips();
+          updateAllViews();
+        }
+      }
+
+      function positionMapTooltip(ev) {
+        const rect = dom.euMapStage.getBoundingClientRect();
+        const tipW = dom.mapTooltip.offsetWidth || 210;
+        const tipH = dom.mapTooltip.offsetHeight || 95;
+        let x = ev.clientX - rect.left + 14;
+        let y = ev.clientY - rect.top - 12;
+        if (x + tipW > rect.width - 8) x = ev.clientX - rect.left - tipW - 14;
+        if (y + tipH > rect.height - 8) y = rect.height - tipH - 8;
+        if (y < 8) y = 8;
+        dom.mapTooltip.style.left = x + 'px';
+        dom.mapTooltip.style.top = y + 'px';
+      }
+
+      function renderEuropeMap() {
+        const year = state.mapYear || state.latestYear;
+        if (!year) return;
+
+        dom.mapYearSlider.value = String(year);
+        dom.mapYearValue.textContent = String(year);
+        dom.mapYearFirstBtn.classList.toggle('active', year === state.earliestYear);
+        dom.mapYearLatestBtn.classList.toggle('active', year === state.latestYear);
+
+        const sitcLabel = getSitcTitle(state.selectedSitc);
+        const indicatorLabel =
+          state.indicator === 'export' ? 'Uitvoerwaarde (export)'
+          : state.indicator === 'import' ? 'Invoerwaarde (import)'
+          : 'Handelsbalans (uitvoer − invoer)';
+
+        dom.mapChartTitle.textContent = `Kaart van Europa — ${indicatorLabel} (${year})`;
+        dom.mapChartSubtitle.textContent =
+          `Europese verdeling per handelspartner · ${sitcLabel}. Klik op een land om het toe te voegen aan of te verwijderen uit de grafieken.`;
+        dom.mapLegendTitle.textContent =
+          state.indicator === 'balance' ? 'Legenda (mln euro · tekort vs. overschot)' : 'Legenda (mln euro · kwantielen)';
+        dom.mapSummaryTitle.textContent = `Samenvatting Europa (${year})`;
+
+        const isBalance = state.indicator === 'balance';
+        dom.mapLegendHint.textContent = isBalance
+          ? 'Rood betekent een Nederlands handelstekort (meer import dan export), groenblauw een handelsoverschot. Klik op een land om het te selecteren.'
+          : 'Donkerder blauw betekent een hogere handelswaarde (5 klassen met gelijke aantallen landen). Donkergrijs = Nederland (thuisland).';
+
+        const entries = state.euMapEntries.map(e => ({
+          ...e,
+          value: e.key ? getMetricValue(e.key, year) : null
+        }));
+
+        const validEntries = entries.filter(e => !e.isHome && e.value !== null && !Number.isNaN(e.value));
+        const validVals = validEntries.map(e => e.value).sort((a, b) => a - b);
+        const hasValues = validVals.length > 0;
+
+        let classes = [];
+        let getClassIndex;
+
+        if (!isBalance) {
+          // 5-class quantile scale so Germany doesn't compress all other European countries into class 0
+          const n = validVals.length;
+          const cuts = [];
+          for (let i = 0; i < 5; i++) {
+            const loIdx = Math.floor((i * n) / 5);
+            const hiIdx = i === 4 ? n - 1 : Math.max(loIdx, Math.floor(((i + 1) * n) / 5) - 1);
+            cuts.push({
+              min: hasValues ? validVals[loIdx] : 0,
+              max: hasValues ? validVals[hiIdx] : 0,
+              style: MAP_SCALE_SEQ[i]
+            });
+          }
+          classes = cuts.map((c, idx) => ({
+            bg: c.style.bg,
+            text: c.style.text,
+            label: hasValues
+              ? `${formatMlnEuro(c.min)} – ${formatMlnEuro(c.max)}`
+              : '—',
+            min: c.min,
+            max: c.max,
+            idx
+          }));
+          getClassIndex = val => {
+            if (val === null || Number.isNaN(val) || !hasValues) return -1;
+            for (let i = 0; i < 4; i++) {
+              if (val <= cuts[i].max) return i;
+            }
+            return 4;
+          };
+        } else {
+          // 5-class diverging scale centered at 0 (2 deficit classes, 3 surplus classes)
+          const negs = validVals.filter(v => v < 0);
+          const poss = validVals.filter(v => v >= 0);
+          const negMed = negs.length ? negs[Math.floor(negs.length / 2)] : -1000;
+          const posQ1 = poss.length ? poss[Math.floor(poss.length / 3)] : 1000;
+          const posQ2 = poss.length ? poss[Math.floor((2 * poss.length) / 3)] : 5000;
+
+          classes = [
+            { bg: MAP_SCALE_BAL[0].bg, text: MAP_SCALE_BAL[0].text, label: `< ${formatMlnEuro(negMed, true)} (groot tekort)` },
+            { bg: MAP_SCALE_BAL[1].bg, text: MAP_SCALE_BAL[1].text, label: `${formatMlnEuro(negMed, true)} – € 0 mln (tekort)` },
+            { bg: MAP_SCALE_BAL[2].bg, text: MAP_SCALE_BAL[2].text, label: `€ 0 – ${formatMlnEuro(posQ1, true)} (klein overschot)` },
+            { bg: MAP_SCALE_BAL[3].bg, text: MAP_SCALE_BAL[3].text, label: `${formatMlnEuro(posQ1, true)} – ${formatMlnEuro(posQ2, true)}` },
+            { bg: MAP_SCALE_BAL[4].bg, text: MAP_SCALE_BAL[4].text, label: `> ${formatMlnEuro(posQ2, true)} (groot overschot)` }
+          ];
+          getClassIndex = val => {
+            if (val === null || Number.isNaN(val) || !hasValues) return -1;
+            if (val < negMed) return 0;
+            if (val < 0) return 1;
+            if (val <= posQ1) return 2;
+            if (val <= posQ2) return 3;
+            return 4;
+          };
+        }
+
+        const classCounts = new Array(5).fill(0);
+        validEntries.forEach(e => {
+          const ci = getClassIndex(e.value);
+          if (ci >= 0) classCounts[ci] += 1;
+        });
+
+        // Build SVG
+        const svgNS = 'http://www.w3.org/2000/svg';
+        dom.euMapSvg.innerHTML = '';
+
+        const defs = document.createElementNS(svgNS, 'defs');
+        const clip = document.createElementNS(svgNS, 'clipPath');
+        clip.setAttribute('id', 'euFrameClip');
+        const clipRect = document.createElementNS(svgNS, 'rect');
+        clipRect.setAttribute('x', '80');
+        clipRect.setAttribute('y', '48');
+        clipRect.setAttribute('width', '475');
+        clipRect.setAttribute('height', '415');
+        clip.appendChild(clipRect);
+        defs.appendChild(clip);
+        dom.euMapSvg.appendChild(defs);
+
+        const pathsGroup = document.createElementNS(svgNS, 'g');
+        pathsGroup.setAttribute('clip-path', 'url(#euFrameClip)');
+        const labelsGroup = document.createElementNS(svgNS, 'g');
+        labelsGroup.setAttribute('clip-path', 'url(#euFrameClip)');
+
+        const totalRef = state.indicator === 'export'
+          ? getMetricValue(state.totalLandKey, year, state.selectedSitc, 'export')
+          : state.indicator === 'import'
+            ? getMetricValue(state.totalLandKey, year, state.selectedSitc, 'import')
+            : null;
+
+        for (const entry of entries) {
+          const pathEl = document.createElementNS(svgNS, 'path');
+          pathEl.setAttribute('d', entry.d);
+
+          if (entry.isHome) {
+            pathEl.setAttribute('class', 'country-path nl-home');
+            pathEl.setAttribute('aria-label', 'Nederland (thuisland)');
+            const showHomeTip = ev => {
+              dom.mapTooltip.innerHTML = `
+                <div class="map-tooltip-title">Nederland (thuisland)</div>
+                <div style="font-size:0.78rem; color:#cbd5e1;">Alle waarden op de kaart tonen de goederenhandel van Nederland met het betreffende Europese land.</div>
+              `;
+              dom.mapTooltip.classList.remove('hidden');
+              positionMapTooltip(ev);
+            };
+            pathEl.addEventListener('mouseenter', showHomeTip);
+            pathEl.addEventListener('mousemove', positionMapTooltip);
+            pathEl.addEventListener('mouseleave', () => dom.mapTooltip.classList.add('hidden'));
+            pathsGroup.appendChild(pathEl);
+
+            const nlText = document.createElementNS(svgNS, 'text');
+            nlText.setAttribute('x', String(entry.lx));
+            nlText.setAttribute('y', String(entry.ly));
+            nlText.setAttribute('fill', '#ffffff');
+            nlText.setAttribute('class', 'country-iso-label');
+            nlText.textContent = 'NL';
+            labelsGroup.appendChild(nlText);
+            continue;
+          }
+
+          const ci = getClassIndex(entry.value);
+          const styleObj = ci >= 0 ? classes[ci] : { bg: '#e2e8f0', text: '#64748b' };
+          const isSelected = entry.key && state.selectedRegions.has(entry.key);
+
+          pathEl.setAttribute('fill', styleObj.bg);
+          pathEl.setAttribute('class', 'country-path' + (isSelected ? ' selected' : ''));
+          pathEl.setAttribute('tabindex', '0');
+          pathEl.setAttribute('role', 'button');
+          pathEl.setAttribute('aria-label', `${entry.name}: ${formatMlnEuro(entry.value, isBalance)}`);
+
+          const showTip = ev => {
+            const shareHtml = (entry.value !== null && totalRef && totalRef > 0)
+              ? `<div style="font-size:0.78rem; color:#cbd5e1;">Aandeel in NL totaal: <strong>${fmtDec1.format((entry.value / totalRef) * 100)}%</strong></div>`
+              : (entry.value !== null && isBalance)
+                ? `<div style="font-size:0.78rem; color:#cbd5e1;">${entry.value >= 0 ? 'Nederlands handelsoverschot' : 'Nederlands handelstekort'}</div>`
+                : '';
+            const actionHint = isSelected
+              ? 'Klik om te verwijderen uit grafiek'
+              : 'Klik om toe te voegen aan grafiek';
+            dom.mapTooltip.innerHTML = `
+              <div class="map-tooltip-title">${escapeHtml(entry.name)} (${year})</div>
+              <div class="map-tooltip-val">${formatMlnEuro(entry.value, isBalance)}</div>
+              ${shareHtml}
+              <div class="map-tooltip-hint">${actionHint}</div>
+            `;
+            dom.mapTooltip.classList.remove('hidden');
+            positionMapTooltip(ev);
+          };
+
+          pathEl.addEventListener('mouseenter', showTip);
+          pathEl.addEventListener('mousemove', positionMapTooltip);
+          pathEl.addEventListener('mouseleave', () => dom.mapTooltip.classList.add('hidden'));
+          pathEl.addEventListener('click', () => toggleMapCountry(entry.key));
+          pathEl.addEventListener('keydown', ev => {
+            if (ev.key === 'Enter' || ev.key === ' ') {
+              ev.preventDefault();
+              toggleMapCountry(entry.key);
+            }
+          });
+          pathsGroup.appendChild(pathEl);
+
+          if (MAP_LABEL_ISOS.has(entry.iso)) {
+            const textEl = document.createElementNS(svgNS, 'text');
+            textEl.setAttribute('x', String(entry.lx));
+            textEl.setAttribute('y', String(entry.ly));
+            textEl.setAttribute('fill', styleObj.text);
+            textEl.setAttribute('class', 'country-iso-label');
+            if (styleObj.text === '#ffffff') {
+              textEl.setAttribute('style', 'text-shadow: 0 1px 2px rgba(15,23,42,0.5);');
+            }
+            textEl.textContent = entry.iso;
+            labelsGroup.appendChild(textEl);
+          }
+        }
+
+        dom.euMapSvg.appendChild(pathsGroup);
+        dom.euMapSvg.appendChild(labelsGroup);
+
+        // Render Legend
+        dom.mapLegendList.innerHTML = '';
+        if (hasValues) {
+          classes.forEach((cls, i) => {
+            const row = document.createElement('div');
+            row.className = 'legend-row';
+            row.innerHTML = `
+              <span class="legend-left">
+                <span class="legend-swatch" style="background:${cls.bg};"></span>
+                <span>${escapeHtml(cls.label)}</span>
+              </span>
+              <span class="legend-count">${classCounts[i]} ${classCounts[i] === 1 ? 'land' : 'landen'}</span>
+            `;
+            dom.mapLegendList.appendChild(row);
+          });
+        } else {
+          dom.mapLegendList.innerHTML = '<div style="font-size:0.84rem; color:var(--text-muted);">Geen Europese handelscijfers voor deze selectie.</div>';
+        }
+
+        // Render Summary
+        const sorted = [...validEntries].sort((a, b) => b.value - a.value);
+        dom.mapSummaryList.innerHTML = '';
+        if (sorted.length > 0) {
+          const highest = sorted[0];
+          const lowest = sorted[sorted.length - 1];
+          const euBloc = state.quickContinents.find(c => c.isBloc);
+          const euVal = euBloc ? getMetricValue(euBloc.key, year) : null;
+          const totalVal = getMetricValue(state.totalLandKey, year);
+          const euShareStr = (euVal !== null && totalVal && totalVal > 0 && !isBalance)
+            ? ` (${fmtDec1.format((euVal / totalVal) * 100)}%)`
+            : '';
+
+          const rows = [
+            { k: isBalance ? 'Grootste overschot' : 'Grootste partner', v: `${highest.name} (${formatMlnEuro(highest.value, isBalance)})` },
+            { k: isBalance ? 'Grootste tekort' : 'Kleinste in kaart', v: `${lowest.name} (${formatMlnEuro(lowest.value, isBalance)})` },
+            { k: 'EU (excl. NL)', v: euVal !== null ? `${formatMlnEuro(euVal, isBalance)}${euShareStr}` : '—' }
+          ];
+          for (const r of rows) {
+            const div = document.createElement('div');
+            div.className = 'map-summary-row';
+            div.innerHTML = `<span class="map-summary-key">${r.k}</span><span class="map-summary-val">${escapeHtml(r.v)}</span>`;
+            dom.mapSummaryList.appendChild(div);
+          }
+        } else {
+          dom.mapSummaryList.innerHTML = '<div style="font-size:0.84rem; color:var(--text-muted);">Geen gegevens beschikbaar.</div>';
+        }
+      }
+
+      function updateAllViews() {
+        renderKPIs();
+        renderMainLineChart();
+        renderEuropeMap();
+        renderRankingBarChart();
+        renderSecondary2Chart();
+      }
+
+      // ============================================================
+      // Event Listeners
+      // ============================================================
+      document.querySelectorAll('.indicator-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.indicator-btn').forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-selected', 'false');
+          });
+          btn.classList.add('active');
+          btn.setAttribute('aria-selected', 'true');
+          state.indicator = btn.dataset.indicator;
+          updateAllViews();
+        });
+      });
+
+      dom.yearRangeToggle.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          dom.yearRangeToggle.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.startYear = parseInt(btn.dataset.startyear, 10);
+          renderMainLineChart();
+        });
+      });
+
+      dom.sitcSelect.addEventListener('change', e => {
+        handleSitcChange(e.target.value);
+      });
+
+      dom.kpiFocusSelect.addEventListener('change', e => {
+        state.focusRegion = e.target.value;
+        renderKPIs();
+        if (state.secondary2Mode === 'reexport') {
+          renderSecondary2Chart();
+        }
+      });
+
+      dom.resetRegionsBtn.addEventListener('click', () => {
+        state.selectedRegions = new Set(state.totalLandKey ? [state.totalLandKey] : []);
+        state.selectedCustomCountries = [];
+        state.focusRegion = state.totalLandKey;
+        dom.countryErrorMsg.textContent = '';
+        renderQuickChips();
+        renderCustomChips();
+        updateAllViews();
+      });
+
+      dom.rankingYearSlider.addEventListener('input', e => {
+        state.rankingYear = parseInt(e.target.value, 10);
+        renderRankingBarChart();
+        if (state.secondary2Mode === 'continents') {
+          renderSecondary2Chart();
+        }
+      });
+
+      dom.rankingYearFirstBtn.addEventListener('click', () => {
+        state.rankingYear = state.earliestYear;
+        renderRankingBarChart();
+        if (state.secondary2Mode === 'continents') {
+          renderSecondary2Chart();
+        }
+      });
+
+      dom.rankingYearLatestBtn.addEventListener('click', () => {
+        state.rankingYear = state.latestYear;
+        renderRankingBarChart();
+        if (state.secondary2Mode === 'continents') {
+          renderSecondary2Chart();
+        }
+      });
+
+      dom.mapYearSlider.addEventListener('input', e => {
+        state.mapYear = parseInt(e.target.value, 10);
+        renderEuropeMap();
+      });
+
+      dom.mapYearFirstBtn.addEventListener('click', () => {
+        state.mapYear = state.earliestYear;
+        renderEuropeMap();
+      });
+
+      dom.mapYearLatestBtn.addEventListener('click', () => {
+        state.mapYear = state.latestYear;
+        renderEuropeMap();
+      });
+
+      dom.secondary2ModeToggle.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          dom.secondary2ModeToggle.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.secondary2Mode = btn.dataset.mode;
+          renderSecondary2Chart();
+        });
+      });
+
+      // Autocomplete keyboard & input handling
+      dom.countrySearchInput.addEventListener('input', e => {
+        updateAutocomplete(e.target.value);
+      });
+
+      dom.countrySearchInput.addEventListener('keydown', e => {
+        if (dom.countryAutocomplete.classList.contains('hidden')) return;
+        const items = dom.countryAutocomplete.querySelectorAll('.autocomplete-item');
+        if (!items.length) return;
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          state.autocompleteIndex = (state.autocompleteIndex + 1) % items.length;
+          highlightAutocomplete(items);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          state.autocompleteIndex = (state.autocompleteIndex - 1 + items.length) % items.length;
+          highlightAutocomplete(items);
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          const chosen = state.autocompleteMatches[state.autocompleteIndex];
+          if (chosen) addCountry(chosen.key);
+        } else if (e.key === 'Escape') {
+          closeAutocomplete();
+        }
+      });
+
+      function highlightAutocomplete(items) {
+        items.forEach((el, idx) => {
+          el.classList.toggle('highlighted', idx === state.autocompleteIndex);
+          if (idx === state.autocompleteIndex) {
+            el.scrollIntoView({ block: 'nearest' });
+          }
+        });
+      }
+
+      document.addEventListener('click', e => {
+        if (!e.target.closest('.search-wrapper')) {
+          closeAutocomplete();
+        }
+      });
+
+      dom.reloadBtn.addEventListener('click', () => loadInitialData());
+      dom.retryBtn.addEventListener('click', () => loadInitialData());
+
+      // ============================================================
+      // Start
+      // ============================================================
+      loadInitialData();
+    })();
+  </script>
+</body>
+</html>
